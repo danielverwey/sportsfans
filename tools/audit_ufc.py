@@ -41,7 +41,7 @@ for b in B:
     if b['round'] is not None and not (1 <= b['round'] <= 5) and b['date'] >= '1999-07-16': n('round out of range', f'{b["id"]} R{b["round"]}')
     if b['time'] and not re.fullmatch(r'\d{1,2}:\d{2}', b['time']): n('time not m:ss', f'{b["id"]} {b["time"]!r}')
     if b['time'] and re.fullmatch(r'\d{1,2}:\d{2}', b['time']) and b['date'] >= '1999-07-16' and int(b['time'].split(':')[0]) * 60 + int(b['time'].split(':')[1]) > 300: n('time past five minutes', f'{b["id"]} {b["time"]}')
-    if b['mk'] == 'DEC' and b['y'] >= 2001 and b['time'] and b['time'] != '5:00' and not (b['dk'] == 'technical'): n('decision not at 5:00', f'{b["id"]} {b["time"]}')
+    if b['mk'] == 'DEC' and b['y'] >= 2001 and b['time'] and b['time'] != '5:00' and 'technical' not in (b['method'] or '').lower(): n('decision not at 5:00', f'{b["id"]} {b["time"]}')
     if b['title'] and b['mk'] == 'DEC' and b['y'] >= 2001 and b['round'] not in (5, None): n('title decision not after five rounds', f'{b["id"]} R{b["round"]}')
     if not b['wc']: n('bout without a weight class', b['id'])
     if b['secs'] is None and b['round'] and b['time']: n('elapsed time not computed', b['id'])

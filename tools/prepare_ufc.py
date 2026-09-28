@@ -1,18 +1,70 @@
 """Bring the UFC harvest into the site.
 
-  python3 tools/prepare_ufc.py [build/harvest/ufc.json]
+  python3 tools/prepare_ufc.py [build/harvest/ufc.json | path/to/ufc_fight_atlas_1993_2026.html]
 
-Reads the clean-room harvest (tools/harvest/wiki_ufc.py: events, bouts, fighters from Wikipedia, CC BY-SA 4.0; fighter
-facts from Wikidata, CC0) and writes data/ufc.json — the archive the atlas, the static pages and the reading edition
-read. Everything derived here is derived from the transcribed rows and marked as such in the method note: the division
-key from the weight-class label, the method kind from the method text, the title flag from the notes, elapsed time from
-round and time, each fighter's record from the bouts. Nothing else is altered.
+Reads a clean-room harvest of Wikipedia's event articles (CC BY-SA 4.0) — either the workflow's build/harvest/ufc.json
+(tools/harvest/wiki_ufc.py) or Daniel's atlas prototype with the same archive embedded in its <script id="archive-data">
+(every event with the article revision it was read from) — and writes data/ufc.json, the archive the atlas, the static
+pages and the reading edition read. Everything derived here is derived from the transcribed rows and marked as such in
+the method note: the division key from the weight-class label, the method kind from the method text, the title flag
+from the notes, elapsed time from round and time, each fighter's record from the bouts. Nothing else is altered.
 """
 import json, re, sys, pathlib, collections, datetime
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ROOT/'build'/'harvest'/'ufc.json')
-H = json.loads(src.read_text(encoding='utf-8'))
 slug = lambda s: re.sub(r'[^a-z0-9]+', '-', str(s).lower().replace('’', '').replace("'", '')).strip('-')
+
+def load(path):
+    """The harvest shape (events / bouts / fighters), from the workflow's JSON or from the prototype's embedded archive."""
+    txt = path.read_text(encoding='utf-8')
+    if path.suffix.lower() in ('.html', '.htm'):
+        m = re.search(r'<script id="archive-data"[^>]*>(.*?)</script>', txt, re.S); txt = m.group(1)
+    D = json.loads(txt)
+    if 'fights' not in D: return D
+    # ---- the prototype's archive → the harvest shape
+    F = D['fighters'] if isinstance(D['fighters'], dict) else {f['id']: f for f in D['fighters']}
+    fid = {}; taken = set()
+    for pid, f in F.items():
+        base = slug(f.get('wikiTitle') or f['name']) or 'unknown'; s = base; k = 2
+        while s in taken: s = f'{base}-{k}'; k += 1
+        taken.add(s); fid[pid] = s
+    fighters = {fid[pid]: {'id': fid[pid], 'name': f['name'], 'title': (f.get('wikiTitle') or '').replace('_', ' ') or None, 'url': f.get('url') or None} for pid, f in F.items()}
+    fights = {x['id']: x for x in D['fights']}
+    def card(sec):
+        c = (sec or 'Card').strip(); low = c.lower()
+        for a, b in (('early preliminary card', 'Early preliminary card'), ('preliminary card', 'Preliminary card'), ('main card', 'Main card')):
+            if low.startswith(a): c = b + c[len(a):]
+        return c
+    TITLE = {'undisputed': 'title', 'interim': 'interim', 'superfight': 'title', 'vacant': 'vacant', 'tournament': None}
+    events = []; bouts = []
+    for e in sorted(D['events'], key=lambda e: (e['date'], -int(e['id'].split('-')[-1]) if e['id'].split('-')[-1].isdigit() else 0)):
+        title = (e.get('wikiTitle') or e['name']).replace('_', ' ')
+        year_page = bool(re.fullmatch(r'\d{4} in UFC', title)) or bool(e.get('wikiAnchor'))  # several events share a year article: the event name is the id
+        eid = slug(e['name'] if year_page else title)
+        att = re.sub(r'[^0-9]', '', str(e.get('attendance') or '')); n = int(e['id'].split('-')[-1]) if e['id'].split('-')[-1].isdigit() else None
+        ev = {'id': eid, 'n': (D['coverage'].get('indexEvents', 0) - n + 1) if n else None, 'name': e['name'], 'title': title, 'date': e['date'], 'y': e['year'], 'venue': e.get('venue') or '', 'city': e.get('location') or '', 'attendance': int(att) if att else None, 'gate': None, 'buyrate': None, 'url': (e.get('url') or '') + ('#' + e['wikiAnchor'] if e.get('wikiAnchor') and e.get('url') and '#' not in e['url'] else ''), 'revid': e.get('sourceRevision'), 'bouts': [], 'bonuses': []}
+        for k, xid in enumerate(e['fights']):
+            x = fights.get(xid)
+            if not x: continue
+            a, b = x['fighters']; oc = x.get('outcomes') or ['W', 'L']
+            if oc == ['L', 'W']: a, b = b, a; oc = ['W', 'L']
+            sep = 'def.' if oc[0] == 'W' else 'vs.'
+            wc = x.get('division') or ''
+            if 'catch' in wc.lower() and x.get('weightLabel') and 'lb' in x['weightLabel'].lower(): wc = x['weightLabel']
+            bid = f'{eid}#{k + 1}'; ev['bouts'].append(bid)
+            det = (x.get('details') or '').strip(); tk = TITLE.get(x.get('title') or '', None)
+            if tk and 'eliminator' in det.lower(): tk = None  # a title eliminator is not a title bout
+            tm = x.get('time') or ''; tm = tm if re.fullmatch(r'\d{1,2}:\d{2}', tm) else None
+            bouts.append({'id': bid, 'e': eid, 'date': e['date'], 'y': e['year'], 'n': k + 1, 'card': card(x.get('section')), 'wc': wc, 'a': fid[a], 'b': fid[b], 'champ': [], 'sep': sep, 'method': x.get('method') or '', 'round': x.get('round'), 'time': tm, 'notes': det, 'title': tk, 'tour': 'tournament' if x.get('title') == 'tournament' else None})
+        events.append(ev)
+    issues = [{'event': o['event'], 'date': o['date'], 'issue': o.get('type', '').replace('_', ' ')} for o in D.get('coverage', {}).get('omittedEvents', [])]
+    return {'events': events, 'bouts': bouts, 'fighters': fighters, 'issues': issues,
+            'sources': [{'name': 'Wikipedia — List of UFC events and each event article, read at a fixed revision', 'url': 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'licence': 'CC BY-SA 4.0', 'licenceUrl': 'https://creativecommons.org/licenses/by-sa/4.0/'}],
+            'pages': D.get('sources', []), 'licence': D.get('license') or 'CC BY-SA 4.0', 'licenceUrl': D.get('licenseURL') or 'https://creativecommons.org/licenses/by-sa/4.0/', 'snapshot': D.get('snapshot'), 'attribution': D.get('attribution'),
+            'coverage': {'indexEvents': D.get('coverage', {}).get('indexEvents'), 'eventsWithoutResults': len(issues), 'fightersWithArticle': sum(1 for f in fighters.values() if f['title'])},
+            'method': 'Each past event in Wikipedia’s list of UFC events is read from its own article at a recorded revision: the results table gives the weight class, the two fighters, the result, the method, the round, the time and the notes; the infobox gives the date, venue, city and attendance. Events whose article carries no results table (cancelled cards) are listed as omitted. Fighters are identified by their article where they have one and by name otherwise.'}
+
+H = load(src)
 
 # ---- divisions: the weight-class label → a key, a display label, the limit, the sex
 DIVS = [('hw', 'Heavyweight', 265, 'M'), ('lhw', 'Light Heavyweight', 205, 'M'), ('mw', 'Middleweight', 185, 'M'), ('ww', 'Welterweight', 170, 'M'), ('lw', 'Lightweight', 155, 'M'), ('fw', 'Featherweight', 145, 'M'), ('bw', 'Bantamweight', 135, 'M'), ('flw', 'Flyweight', 125, 'M'),
@@ -113,6 +165,8 @@ def secs_of(rnd, tm, date):
 for b in H['bouts']:
     if b['e'] not in E: continue
     dk = div_of(b['wc']); t = title_of(b['notes'], b['card'], b['wc']); mk = method_kind(b['method'], b['sep'])
+    if b.get('title'): t['title'] = b['title']
+    if b.get('tour'): t['tour'] = t.get('tour') or 'round'
     res = 'W' if b['sep'] == 'def.' and mk not in ('NC', 'DRAW') else 'D' if mk == 'DRAW' else 'NC'
     w = b['a'] if res == 'W' else None
     rows.append({'id': b['id'], 'e': b['e'], 'y': b['y'], 'date': b['date'], 'n': b['n'], 'card': b['card'], 'ck': card_kind(b['card']), 'wc': b['wc'], 'div': dk, 'lb': catch_lb(b['wc']) if dk == 'catch' else DIV[dk]['lb'], 'a': b['a'], 'b': b['b'], 'w': w, 'res': res, 'method': b['method'], 'mk': mk, 'det': detail_of(b['method']), 'dk': dec_kind(b['method']) if mk == 'DEC' else '', 'round': b['round'], 'time': b['time'], 'secs': secs_of(b['round'], b['time'], b['date']), 'title': t.get('title'), 'tour': t.get('tour'), 'champ': b.get('champ') or [], 'notes': b['notes']})
@@ -155,7 +209,7 @@ for e in events:
     v['n'] += 1; v['first'] = min(v['first'], e['y']); v['last'] = max(v['last'], e['y']); v['events'].append(e['id']); e['venueId'] = key
 
 core = {'events': events, 'boutFields': BF, 'bouts': [[r.get(k) for k in BF] for r in rows], 'fighters': fighters, 'divisions': [DIV[k] for k, *_ in DIVS if div_seen[k]], 'venues': venues, 'issues': H.get('issues', []),
-        'sources': H.get('sources', []), 'licence': H.get('licence'), 'licenceUrl': H.get('licenceUrl'), 'snapshot': H.get('snapshot'), 'lastDate': max(e['date'] for e in events), 'lastYear': max(e['y'] for e in events),
+        'sources': H.get('sources', []), 'pages': H.get('pages', []), 'attribution': H.get('attribution'), 'licence': H.get('licence'), 'licenceUrl': H.get('licenceUrl'), 'snapshot': H.get('snapshot'), 'lastDate': max(e['date'] for e in events), 'lastYear': max(e['y'] for e in events),
         'coverage': dict(H.get('coverage', {}), events=len(events), bouts=len(rows), fighters=len(fighters), venues=len(venues), titleBouts=sum(1 for r in rows if r['title']), tournamentBouts=sum(1 for r in rows if r['tour']), withoutTime=sum(1 for r in rows if r['secs'] is None), womensBouts=sum(1 for r in rows if r['sex'] == 'W'), fightersWithNationality=sum(1 for f in fighters.values() if f['nat']), fightersWithBirthDate=sum(1 for f in fighters.values() if f['dob'])),
         'method': (H.get('method', '') + ' Derived here, from those rows alone: the division from the weight-class label (a catchweight between two women counts as a women’s bout), the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21 in July 1999; before that only a first-round time is taken as elapsed), each fighter’s record from the bouts in the archive. Venues are listed as the sources name them and never drawn.').strip()}
 out = ROOT/'data'/'ufc.json'; out.write_text(json.dumps(core, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')

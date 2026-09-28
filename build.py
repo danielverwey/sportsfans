@@ -16,7 +16,7 @@ SRC, DATA, DOCS, DROP = ROOT/'src', ROOT/'data', ROOT/'docs', ROOT/'HTML FILEs'
 sys.path.insert(0, str(ROOT/'tools')); import sitegen, reading
 ap = argparse.ArgumentParser(); ap.add_argument('--site', default='https://sportsfans.co.za'); ap.add_argument('--no-cname', action='store_true', help='skip docs/CNAME (for a *.github.io preview)'); ap.add_argument('--no-pages', action='store_true', help='skip the static entity pages'); ap.add_argument('--publish', default=None, help='comma-separated sports to publish (default: PUBLISH below)'); args = ap.parse_args()
 # Sports whose sources are clear go to docs/; the rest are built into build/held/ and stay off the site until their rights position settles.
-PUBLISH = ['f1', 'rugby', 'cricket', 'tennis', 'motogp', 'sbk', 'tt']; HELD = {}
+PUBLISH = ['f1', 'rugby', 'cricket', 'tennis', 'motogp', 'sbk', 'tt', 'ufc']; HELD = {}
 if args.publish: PUBLISH = [k for k in args.publish.split(',') if k]; HELD = {k: v for k, v in HELD.items() if k not in PUBLISH}
 HELD_DIR = ROOT/'build'/'held'
 SITE = args.site.rstrip('/')

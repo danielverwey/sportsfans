@@ -66,9 +66,9 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 
 ### UFC (harvest → prepare → publish)
 
-1. Actions → *Harvest · UFC from Wikipedia* → Run workflow (about 20 minutes; `limit` = 30 for a quick test). Download the `ufc-harvest` artifact.
-2. `python tools/prepare_ufc.py path/to/ufc.json` → `data/ufc.json`; `python tools/audit_ufc.py` → `audits/DATA-AUDIT-ufc.md`.
-3. Add `ufc` to `PUBLISH` in `build.py` (until then the atlas builds into `build/held/` and the hub shows no card), commit, push — the deploy workflow builds and publishes.
+1. Either Actions → *Harvest · UFC from Wikipedia* → Run workflow (about 20 minutes; `limit` = 30 for a quick test) and download the `ufc-harvest` artifact, or use a prototype page with the archive embedded in `<script id="archive-data">`.
+2. `python tools/prepare_ufc.py path/to/ufc.json` (or the `.html`) → `data/ufc.json`; `python tools/audit_ufc.py` → `audits/DATA-AUDIT-ufc.md`.
+3. Commit `data/ufc.json` and push — the deploy workflow builds and publishes.
 
 ### What is committed
 
