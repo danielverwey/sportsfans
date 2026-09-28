@@ -195,3 +195,30 @@ def reading_tt(core):
 
 def footer_tt(core):
     return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / ISLE OF MAN TT · THE MOUNTAIN EDITION</div><p>An independent, fan-made record of the Isle of Man TT from the first race of 1907. Winners and classifications transcribed from Wikipedia’s lists and race articles (CC BY-SA 4.0), the Mountain Course from OpenStreetMap; nothing from the event’s own results service or artwork is carried. Race averages are kept distinct from lap records. Latest included TT: {core.get("lastYear", "")}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · No affiliation with the Isle of Man TT Races, the ACU or the Isle of Man Government is implied</span><span><a href="https://de.wikipedia.org/wiki/Liste_der_Isle-of-Man-TT-Sieger" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.openstreetmap.org/relation/188240" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL) · <a href="#top">Back to top ↑</a></span></div></footer>'
+
+# ------------------------------------------------------------ UFC (the cage edition)
+def _ufc_rows(core):
+    BF = core['boutFields']; return [dict(zip(BF, x)) for x in core['bouts']]
+def reading_ufc(core):
+    """Every event, year by year: date, venue, main event, and every bout of the card."""
+    F = core['fighters']; pn = lambda i: F.get(i, {}).get('name', i); DL = {d['key']: d['label'] for d in core['divisions']}
+    rows = _ufc_rows(core); by_e = collections.defaultdict(list)
+    for b in rows: by_e[b['e']].append(b)
+    by = collections.defaultdict(list)
+    for e in core['events']: by[e['y']].append(e)
+    who = lambda b: f'<b>{E(pn(b["w"]))}</b> def. {E(pn(b["b"] if b["w"] == b["a"] else b["a"]))}' if b['res'] == 'W' else f'{E(pn(b["a"]))} vs. {E(pn(b["b"]))}'
+    out = ['<div id="staticArchive"><nav class="staticnav" aria-label="Year archive">' + ''.join(f'<a href="#static-{y}">{y}</a>' for y in sorted(by, reverse=True)) + '</nav>']
+    out.append(f'<section class="panel"><p class="eyebrow">UFC bouts · {min(by)}–{max(by)}</p><h2>Every card, on the page</h2><p>{len(core["events"])} events and {len(rows):,} bouts over {len(by)} years, each card in the order its source lists it — the main event first — with the weight class, the result, the method, the round and the time as recorded. Title bouts are marked. Nothing here is affiliated with the promotion; its names identify the events.</p></section>')
+    for y in sorted(by, reverse=True):
+        es = by[y]; out.append(f'<section class="panel" id="static-{y}"><p class="eyebrow">{y} · {len(es)} events · {sum(len(by_e[e["id"]]) for e in es)} bouts</p><h2>{y}</h2>')
+        for e in sorted(es, key=lambda e: e['date'], reverse=True):
+            bs = by_e[e['id']]
+            place = ' · '.join(E(x) for x in (e['venue'], e['city'], e['country']) if x); att = f' · attendance {e["att"]:,}' if e.get('att') else ''
+            out.append(f'<h3>{E(e["name"])}</h3><p class="small muted">{E(longdate(e["date"]))}{" · " + place if place else ""}{att}</p><div class="tablewrap"><table><thead><tr><th>Card</th><th>Weight class</th><th>Result</th><th>Method</th><th>R</th><th>Time</th><th>Note</th></tr></thead><tbody>')
+            for b in bs: out.append(f'<tr><td>{E(b["card"])}</td><td>{E(b["wc"] or DL.get(b["div"], b["div"]))}</td><td>{who(b)}</td><td>{E(b["method"])}</td><td>{b["round"] if b["round"] is not None else ""}</td><td>{E(b["time"] or "")}</td><td>{"Title bout. " if b["title"] else ""}{E(b["notes"]) if b["notes"] and not b["title"] else ""}</td></tr>')
+            out.append('</tbody></table></div>')
+        out.append('</section>')
+    out.append('</div>'); return '\n'.join(out)
+
+def footer_ufc(core):
+    return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / UFC BOUTS · THE CAGE EDITION</div><p>An independent, fan-made record of every UFC bout since the first tournament of 1993. Results, methods, rounds, times, venues and bonus awards transcribed from Wikipedia’s event articles (CC BY-SA 4.0); fighter nationality, birth date and height from Wikidata (CC0); nothing from the promotion’s own site, its statistics partner or its artwork is carried. Latest included event: {E(longdate(core.get("lastDate", "")))}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · No affiliation with the UFC, Zuffa or TKO Group Holdings is implied; their names are used only to identify the events</span><span><a href="https://en.wikipedia.org/wiki/List_of_UFC_events" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a> (CC0) · <a href="#top">Back to top ↑</a></span></div></footer>'

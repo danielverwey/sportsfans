@@ -82,3 +82,14 @@ Go-live for the domain does not wait for phases 1–4: the site is publishable w
 - [x] Isle of Man TT built as a new ode (`src/tt/`, `tools/prepare_tt.py`): the river of wins by marque with the war years open, the Mountain Course from OpenStreetMap with 56 named places, the ten-second start, the lap replay, riders, marques, classes, records, barcode, duel; five km/h tables converted and four unreadable averages set aside, all listed in the data
 - [x] Contribute address on every page: sportsfans.co.za@gmail.com
 - [ ] Run the *Circuit outlines from OpenStreetMap* workflow for `motogp` and `sbk` (Assen, Brno, Sachsenring, Catalunya, Phillip Island, Silverstone, Valencia, Motegi, Sepang and others still show the ring of winners)
+
+## 8. Home links, the outline workflow, the sitemap, and UFC on open data (28 September 2026)
+
+- [x] Every atlas links back to the landing page: the brand, "all atlases" in the strap line, and the footer (`build.py` `production()`)
+- [x] `tools/osm_outlines.py` rewritten: three Overpass mirrors with backoff, a 5 km second pass, a route-relation pass for the public-road courses, Snaefell copied from the TT archive, a job summary that lists what was found and what was skipped and why; the workflow now rebuilds `docs/` and deploys, and does both sports in one run
+- [x] Workflows moved to the Node 24 action versions (checkout v5, setup-python v6, setup-node v5, upload-artifact v5, upload-pages-artifact v5, deploy-pages v5)
+- [x] Sitemap split into an index with one file per atlas (`sitemap.xml` → `sitemap-<sport>.xml`)
+- [x] UFC decided: the UFCStats-based prototype is retired; the atlas is rebuilt on Wikipedia (CC BY-SA 4.0) and Wikidata (CC0) — `tools/harvest/wiki_ufc.py` + the *Harvest · UFC from Wikipedia* workflow write `build/harvest/ufc.json`; `tools/prepare_ufc.py` turns it into `data/ufc.json`; `src/ufc/` is the ode (River of bouts by division · Arenas listed, never drawn · Stage: Season, Event as the tower, Divisions, Fighters, Venues, Records, Barcode, Duel; the opening is a fenced ring, not the eight-sided mark); `tools/audit_ufc.py`; static pages in `tools/sitegen.py`; the hub card and the licences entry appear only once `ufc` is in `PUBLISH`
+- [ ] Run the *Harvest · UFC from Wikipedia* workflow, download the `ufc-harvest` artifact, send `ufc.json` back; then `python tools/prepare_ufc.py build/harvest/ufc.json`, `python tools/audit_ufc.py`, add `ufc` to `PUBLISH`, build, verify, push
+- [ ] Per-fight strike and grappling statistics are not carried (they only exist in the promotion's own statistics service); the atlas reads results, methods, rounds, times, titles and bonus awards instead
+- [ ] NBA: the same route — a Wikipedia harvest of every season's game log is impractical; decide between Basketball-Reference terms (no bulk redistribution) and holding the atlas off the site

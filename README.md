@@ -64,6 +64,16 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 
 `build.py` asserts that each archive is embedded unchanged in the offline edition and that the carried reading editions and footers are present verbatim; it then writes the shells, assets, data files, reading editions, static pages, hub, sitemap, robots and 404. The build is reproducible: the same sources give the same bytes.
 
+### UFC (harvest → prepare → publish)
+
+1. Actions → *Harvest · UFC from Wikipedia* → Run workflow (about 20 minutes; `limit` = 30 for a quick test). Download the `ufc-harvest` artifact.
+2. `python tools/prepare_ufc.py path/to/ufc.json` → `data/ufc.json`; `python tools/audit_ufc.py` → `audits/DATA-AUDIT-ufc.md`.
+3. Add `ufc` to `PUBLISH` in `build.py` (until then the atlas builds into `build/held/` and the hub shows no card), commit, push — the deploy workflow builds and publishes.
+
+### What is committed
+
+`src/`, `data/`, `tools/`, the workflows and the notes. `docs/` is **not** committed: the *Build and deploy* workflow runs `python build.py` on every push to `main` and publishes the result, so the site can never drift from its sources and nobody needs Python or Node on their own machine to release. A local `python build.py` is only for previewing (`node tools/check_site.js`).
+
 ## Verify
 
 ```

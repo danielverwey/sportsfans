@@ -12,36 +12,48 @@ the same within 5 km, then the roads of a named route relation or motor-sport tr
 public-road courses: Dundrod, Clady, Opatija, Solitude…). The Snaefell Mountain Course is copied from the
 TT archive (data/tt.json), which already carries it from OSM relation 188240. Circuits with an F1DB survey
 keep it. Overpass is shared public infrastructure: one query at a time, a descriptive User-Agent, a pause
-between calls, and on 429/5xx the request moves to the next mirror after a backoff. Everything found and
+between calls, three tries per query across mirrors with a short backoff, a mirror rested after repeated refusals, and a
+run that stops itself after OUTLINES_MINUTES (100) keeping every outline found so far. Everything found and
 everything skipped (with the reason) is written to the GitHub job summary when there is one.
 """
 import json, math, os, pathlib, re, sys, time, urllib.error, urllib.request, urllib.parse
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 UA = 'sportsfans.co.za atlas build (https://sportsfans.co.za; sportsfans.co.za@gmail.com) python-urllib'
 ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']
-BACKOFF = [8, 20, 45, 90]  # seconds after a refusal, per retry
+BACKOFF = [6, 18]            # seconds after a refusal, per retry (three tries per query in all)
+MIRROR_REST = 600            # a mirror that fails twice running is left alone for ten minutes
+DEADLINE_MIN = float(os.environ.get('OUTLINES_MINUTES', '100'))  # the run stops itself before the job's timeout and keeps what it has
+T0 = time.time()
 sys.setrecursionlimit(20000)
+_bad = {}  # mirror → (consecutive failures, time of the last one)
 
 class OverpassError(Exception): pass
 
-def overpass(query, tries=None):
-    """POST a query, rotating mirrors: a 429 (slot busy), 5xx (overloaded) or a dropped connection waits and tries the next."""
-    tries = tries if tries is not None else len(ENDPOINTS) + len(BACKOFF)
-    errors = []
+def _mirrors():
+    now = time.time(); live = [m for m in ENDPOINTS if not (_bad.get(m, (0, 0))[0] >= 2 and now - _bad[m][1] < MIRROR_REST)]
+    return live or ENDPOINTS
+
+def overpass(query, tries=3):
+    """POST a query, rotating mirrors: a 429 (slot busy), 5xx (overloaded) or a dropped connection waits and tries the next.
+    A mirror that keeps failing is rested so the run does not spend its time on it."""
+    errors = []; ms = _mirrors()
     for i in range(tries):
-        url = ENDPOINTS[i % len(ENDPOINTS)]
+        url = ms[i % len(ms)]
         req = urllib.request.Request(url, data=urllib.parse.urlencode({'data': query}).encode(), headers={'User-Agent': UA})
         try:
-            with urllib.request.urlopen(req, timeout=150) as r: body = r.read().decode('utf-8')
-            try: return json.loads(body)
+            with urllib.request.urlopen(req, timeout=120) as r: body = r.read().decode('utf-8')
+            try: out = json.loads(body); _bad[url] = (0, 0); return out
             except ValueError: errors.append(f'{url}: not JSON ({body[:80]!r})')
         except urllib.error.HTTPError as e:
             errors.append(f'{url}: HTTP {e.code}')
             if e.code == 400: raise OverpassError(f'query rejected by {url}: ' + e.read().decode("utf-8", "replace")[:300])
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             errors.append(f'{url}: {getattr(e, "reason", e)}')
+        n, _ = _bad.get(url, (0, 0)); _bad[url] = (n + 1, time.time())
         if i < tries - 1: time.sleep(BACKOFF[min(i, len(BACKOFF) - 1)])
     raise OverpassError('; '.join(errors))
+
+def out_of_time(): return (time.time() - T0) / 60 > DEADLINE_MIN
 
 def geocode(name, country):
     """Nominatim search for a circuit by name (one request per second, descriptive User-Agent, as their policy asks)."""
@@ -173,23 +185,26 @@ def main(tags):
         assets_p = ROOT/'src'/'bikes'/f'assets_{tag}.json'; assets = json.loads(assets_p.read_text(encoding='utf-8'))
         osm = assets.setdefault('osm', {}); venues = assets.get('venues', {}); done = []; skipped = []
         tt = ROOT/'data'/'tt.json'
+        stopped = False
         for cid, c in A['circuits'].items():
             if cid in osm or cid in venues: continue
+            if out_of_time(): stopped = True; skipped.append((c['name'], f'not tried: the run reached its {DEADLINE_MIN:.0f}-minute limit')); continue
             if cid == 'isle-of-man-tt-mountain-course' and tt.exists():
                 course = json.loads(tt.read_text(encoding='utf-8')).get('course') or {}
-                if course.get('d'): osm[cid] = course['d']; done.append((c['name'], 'Snaefell Mountain Course from the TT archive (OSM relation 188240)')); failed_all = False; continue
+                if course.get('d'): osm[cid] = course['d']; done.append((c['name'], 'Snaefell Mountain Course from the TT archive (OSM relation 188240)')); failed_all = False; assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8'); continue
             try:
                 path, how = outline_for(c)
             except OverpassError as e: skipped.append((c['name'], f'Overpass unavailable: {e}')); any_error = True; time.sleep(5); continue
             except Exception as e: skipped.append((c['name'], f'error: {type(e).__name__} {e}')); any_error = True; continue
             failed_all = False
-            if path: osm[cid] = path; done.append((c['name'], how)); print('ok ', c['name'], '·', how)
-            else: skipped.append((c['name'], how)); print('--- ', c['name'], '·', how)
+            if path: osm[cid] = path; done.append((c['name'], how)); print('ok ', c['name'], '·', how, flush=True); assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
+            else: skipped.append((c['name'], how)); print('--- ', c['name'], '·', how, flush=True)
             time.sleep(2)
         assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
+        if stopped: print(f'{tag}: stopped at the {DEADLINE_MIN:.0f}-minute limit; run the workflow again for the rest', flush=True)
         print(f'{tag}: {len(done)} new outlines, {len(osm)} from OSM in all; skipped {len(skipped)}')
         for n, why in skipped: print('   -', n, '·', why)
-        report += [f'### {tag}: {len(done)} new outlines, {len(osm)} from OSM in all, {len(skipped)} without', '']
+        report += [f'### {tag}: {len(done)} new outlines, {len(osm)} from OSM in all, {len(skipped)} without' + (' · stopped at the time limit, run again for the rest' if stopped else ''), '']
         if done: report += ['| Found | How |', '|---|---|'] + [f'| {n} | {how} |' for n, how in done] + ['']
         if skipped: report += ['| Still without an outline | Why |', '|---|---|'] + [f'| {n} | {why} |' for n, why in skipped] + ['']
     summary = os.environ.get('GITHUB_STEP_SUMMARY')

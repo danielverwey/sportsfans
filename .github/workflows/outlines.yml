@@ -1,17 +1,19 @@
 name: Circuit outlines from OpenStreetMap
 # On demand: fetches the mapped track for every MotoGP / WorldSBK circuit that has no outline yet, writes it into
-# src/bikes/assets_<sport>.json (osm), rebuilds docs/ so the deploy gate stays green, commits, deploys.
+# src/bikes/assets_<sport>.json (osm), checks the build, commits, deploys.
 # What was found and what was not — with the reason — is printed on the run's summary page.
 # © OpenStreetMap contributors, ODbL.
 on:
   workflow_dispatch:
     inputs:
       sport: { description: 'motogp, sbk, or both (space-separated)', required: true, default: 'motogp sbk' }
+      minutes: { description: 'stop after this many minutes, keeping what was found', required: false, default: '100' }
 permissions: { contents: write, pages: write, id-token: write }
 concurrency: { group: sweep, cancel-in-progress: false }
 jobs:
   outlines:
     runs-on: ubuntu-latest
+    timeout-minutes: 120   # the script stops itself at 100 minutes and keeps what it found; run again for the rest
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
@@ -19,6 +21,7 @@ jobs:
       - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - name: Fetch outlines
+        env: { OUTLINES_MINUTES: '${{ inputs.minutes }}' }
         run: python tools/osm_outlines.py ${{ inputs.sport }}
       - name: Anything new?
         id: diff
@@ -34,7 +37,7 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: |
           git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
-          git add src/bikes docs
+          git add src/bikes
           git commit -m "outlines: ${{ inputs.sport }} from OpenStreetMap"
           git push
           echo "changed=true" >> $GITHUB_OUTPUT

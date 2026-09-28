@@ -18,7 +18,7 @@ git remote add origin https://github.com/<you>/Sportsfans.git
 git push -u origin main
 ```
 
-Turn on Pages: **Settings → Pages → Build and deployment → Source: GitHub Actions.** The `Build and deploy` workflow runs on every push to `main`: it rebuilds `docs/` (including the data files and offline editions, which are not committed), refuses if the committed pages drifted, checks every internal link and publishes. The site appears within a couple of minutes. (Deploy-from-branch with `/docs` also works, but the sweepers rely on the Actions route.)
+Turn on Pages: **Settings → Pages → Build and deployment → Source: GitHub Actions.** The `Build and deploy` workflow runs on every push to `main`: it builds `docs/` (including the data files and offline editions, which are not committed), refuses if the committed pages drifted, checks every internal link and publishes. The site appears within a couple of minutes. (Deploy-from-branch with `/docs` also works, but the sweepers rely on the Actions route.)
 
 ## The domain: sportsfans.co.za
 
@@ -68,11 +68,11 @@ Sweepers for the other sports are switched on as each one's rights position and 
 1. Replace `data/<sport>.json` with the newer export. For cricket and tennis, run `python tools/prepare_cricket.py <export>` or `python tools/prepare_tennis.py <export>` instead: they write the core file and the yearly shards.
 2. `python build.py`
 3. `node tools/check_site.js <sport>` and `python tools/check_links.py` — both must end clean.
-4. Commit `data/` and `docs/` together and push. The deploy workflow rebuilds, checks and publishes; the static pages, sitemap, reading edition and offline edition all come from the same build.
+4. Commit `data/` (and `src/` if it changed) and push. `docs/` is not committed: the deploy workflow builds, checks and publishes; the static pages, sitemap, reading edition and offline edition all come from the same build.
 
 ## What is in the repository
 
-About 420 MB: the archives and their shards (130 MB in `data/`), the reading editions and ~22,000 static pages (290 MB in `docs/`). `docs/data/`, `docs/downloads/` and `HTML FILEs/` are not committed — the build regenerates them from `data/` and `src/`, and the deploy workflow does the same before publishing. The published site is about 400 MB, within GitHub Pages’ 1 GB limit, served gzip-compressed.
+About 130 MB: the archives and their shards in `data/`, the sources in `src/`, the tools and the notes. `docs/` (the built site, ~440 MB with the data files and offline editions) and `HTML FILEs/` are not committed — the deploy workflow builds `docs/` from `data/` and `src/` on every push and publishes it.
 
 ## Sharing a single atlas without the site
 

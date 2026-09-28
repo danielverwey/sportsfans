@@ -1,0 +1,31 @@
+name: Harvest · UFC from Wikipedia
+# On demand: the clean-room UFC archive — every past event's results table, bonus awards, venue and city from
+# Wikipedia (CC BY-SA 4.0), fighter nationality, date of birth and height from Wikidata (CC0). Writes
+# build/harvest/ufc.json and a coverage report as a downloadable artifact; nothing is committed by this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      from: { description: 'first year', required: false, default: '1993' }
+      to: { description: 'last year', required: false, default: '' }
+      limit: { description: 'only the last N events (a quick test); blank for all', required: false, default: '' }
+      wikidata: { description: 'also read fighter nationality / birth date / height from Wikidata', required: false, default: 'true' }
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - run: pip install beautifulsoup4 lxml
+      - name: Harvest
+        run: |
+          ARGS="--from ${{ inputs.from }}"
+          [ -n "${{ inputs.to }}" ] && ARGS="$ARGS --to ${{ inputs.to }}"
+          [ -n "${{ inputs.limit }}" ] && ARGS="$ARGS --limit ${{ inputs.limit }}"
+          [ "${{ inputs.wikidata }}" != "true" ] && ARGS="$ARGS --no-wikidata"
+          python tools/harvest/wiki_ufc.py $ARGS
+      - name: Report
+        run: cat build/harvest/ufc.md >> $GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v5
+        with: { name: ufc-harvest, path: build/harvest/ }
