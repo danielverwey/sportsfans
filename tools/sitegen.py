@@ -4,7 +4,10 @@ Every season, driver/rider/player, constructor/maker/nation, circuit/ground and 
 of its own — crawlable, linkable, permanent — rendered from the same archive the atlas embeds. Each page
 opens the interactive atlas at the matching view through a deep link (#tab=…&…).
 """
-import html, json, re, collections
+import html, json, re, collections, datetime
+def longdate(iso):
+    try: d = datetime.date.fromisoformat(iso); return f'{d.day} {d.strftime("%B %Y")}'
+    except Exception: return iso or ''
 E = lambda s: html.escape(str(s if s is not None else ''), quote=True)
 def slug(s):
     s = re.sub(r'[^a-z0-9]+', '-', str(s).lower()).strip('-'); return s or 'x'
@@ -48,7 +51,7 @@ footer{padding:30px 0 60px;color:var(--muted);font:11px var(--mono);letter-spaci
 .lic h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:22px;text-transform:uppercase;margin:28px 0 8px}.lic p{color:var(--muted);max-width:900px;margin:6px 0}.lic p b{color:var(--ink);font-weight:600}.lic .tag{display:inline-block;font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);border-radius:4px;padding:2px 7px;margin-left:8px;color:var(--accent)}
 '''
 
-SPORTS = {'f1': ('F1', 'Formula 1'), 'rugby': ('Rugby', 'Rugby union'), 'cricket': ('Cricket', 'Cricket'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'motogp': ('MotoGP', 'MotoGP'), 'sbk': ('WorldSBK', 'World Superbike')}
+SPORTS = {'f1': ('F1', 'Formula 1'), 'rugby': ('Rugby', 'Rugby union'), 'cricket': ('Cricket', 'Cricket'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'motogp': ('MotoGP', 'MotoGP'), 'sbk': ('WorldSBK', 'World Superbike'), 'ufc': ('UFC', 'UFC bouts')}
 
 CONTACT = 'sportsfans.co.za@gmail.com'
 NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. Contribute — a correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.'
@@ -439,11 +442,12 @@ def gen_licences(*, site, v, published, held):
     rel = '../'
     def src(title, url, terms, use, tag=''):
         return f'<p><b><a class="q" href="{E(url)}" target="_blank" rel="noopener">{E(title)}</a></b>{f"<span class=tag>{E(tag)}</span>" if tag else ""}<br>{terms}<br><span style="color:var(--dim)">Used for: {use}</span></p>'
+    ufc_lic = ('<h3>UFC</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every past event in the list of UFC events and each event’s own article — the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus awards. Nothing is taken from the promotion’s own site or its statistics partner.', 'CC BY-SA 4.0') + src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'fighter nationality, date of birth and height, where the fighter has an article.', 'CC0 1.0') + '<p><b>The data file <code>/data/ufc.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike. No logos, marks or official artwork are included; the promotion’s names appear only to identify the events.</p>\n') if 'ufc' in (published or []) else ''
     body = f'''<p class="eyebrow">Sources and licences</p><h1>Where the numbers <span>come from</span></h1>
 <p class="lede">Every atlas is built from sources that state their terms, or from facts that belong to no one. This page lists each source, the terms it publishes, and the licence that applies to each data file this site serves. The site itself is <b>non-commercial for good</b>: two of its backbone sources permit nothing else, and the rest are honoured in the same spirit. Checked 28 September 2026.</p>
 <div class="lic">
 <h3>The site’s own commitments</h3>
-<p>{E(NOTICE)}</p>
+<p>{NOTICE}</p>
 <p>The page code is released under the MIT licence (see the repository). Fonts are served from Google Fonts under the SIL Open Font License. No logos are used anywhere; team, national and manufacturer colours are editorial interpretations of racing and playing identities.</p>
 
 <h3>Formula 1</h3>
@@ -467,9 +471,10 @@ def gen_licences(*, site, v, published, held):
 {src('F1DB', 'https://github.com/f1db/f1db', 'CC BY 4.0.', 'circuit surveys at venues Formula 1 has raced, used where OpenStreetMap has no raceway mapped.', 'CC BY 4.0')}
 <p><b>The data files <code>/data/motogp.json</code>, <code>/data/sbk.json</code> and <code>/data/tt.json</code></b> are CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the geometry inside them is ODbL. No logos, marks or official artwork are included.</p>
 
+{ufc_lic}
 <h3>Cricket</h3>
 {src('Cricsheet', 'https://cricsheet.org/', 'Open Data Commons Attribution License (ODC-By 1.0): attribution required, which this page and the atlas give.', 'ball-by-ball scorecards of every international it covers (men’s Tests and ODIs from 2001–02, T20Is from 2005, the women’s game from its first recorded matches); every batting, bowling and line-up figure, every innings worm and every player-season total on the atlas is computed from them.', 'ODC-By 1.0')}
-{src('Historical results (Kaggle: “Cricket Test nations 1877–2025”)', 'https://www.kaggle.com/', 'Match results are facts; the compilation is credited here and its own licence is stated on its Kaggle page.', 'dates, sides, results and margins of internationals before the Cricsheet era.')}
+{src('Historical results (Kaggle: “Cricket match dataset, Test nations 1877–2025”, Qammar Shahzad)', 'https://www.kaggle.com/datasets/qammarshahzad/cricket-match-dataset-test-nations-18772025', 'Match results are facts; the compilation is credited here and its own licence is stated on its Kaggle page.', 'dates, sides, results and margins of internationals before the Cricsheet era.')}
 {src('International Cricket Council', 'https://www.icc-cricket.com/', 'Published results of ICC events, used as facts.', 'World Cup, T20 World Cup, Champions Trophy and World Test Championship winners, runners-up and finals.')}
 <p><b>The data files <code>/data/cricket.json</code> and <code>/data/cricket_details/</code></b>: the scorecard-derived parts are ODC-By 1.0 (attribute Cricsheet); the historical results are facts compiled from the sources above. No logos or marks are included.</p>
 
@@ -483,7 +488,7 @@ def gen_licences(*, site, v, published, held):
 <p>Basketball box scores and mixed-martial-arts fight records are facts recorded from public sources; each atlas will name its sources and their terms here when it is published.</p>
 
 <h3>Trademarks</h3>
-<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
+<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
 </div>'''
     return sitegen_page(site=site, v=v, body=body, published=published)
 def sitegen_page(*, site, v, body, published):
@@ -758,4 +763,87 @@ def gen_tt(A, *, site, v):
     out.append(('tt/seasons/index.html', page(site=site, sport='tt', depth=2, title='The Isle of Man TT, year by year, 1907–2026 · APEX', desc='Every TT week on its own page.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Years', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>TT week</span></h1><p class="lede">{len(years)} years with a TT.</p>' + index_list([(str(y), f'tt/seasons/{y}/', f'{len(by_year[y])} races') for y in reversed(years)], rel), path='tt/seasons/', v=v)))
     out.append(('tt/riders/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT riders · APEX', desc='Every rider with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>rider</span></h1><p class="lede">{len(by_r):,} riders with a recorded result.</p>' + index_list(sorted([(pn(i), f'tt/riders/{slug(i)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for i, rr in by_r.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='tt/riders/', v=v)))
     out.append(('tt/marques/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT marques · APEX', desc='Every marque with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Marques', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>marque</span></h1>' + index_list(sorted([(m, f'tt/marques/{slug(m)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for m, rr in by_m.items() if m != 'Unrecorded'], key=lambda t: (t[0], t[1])), rel), path='tt/marques/', v=v)))
+    return out
+
+# ============================================================ UFC (the cage edition) ============================================================
+def gen_ufc(A, *, site, v):
+    out = []; BF = A['boutFields']; F = A['fighters']; DL = {d['key']: d['label'] for d in A['divisions']}; V = A['venues']
+    COL = {'hw': '#ff3642', 'lhw': '#ff8a3d', 'mw': '#ffd23f', 'ww': '#79d455', 'lw': '#2fd0c2', 'fw': '#4da3ff', 'bw': '#8f7bff', 'flw': '#ff7ad9', 'wsw': '#ffb3c7', 'wflw': '#c9a0ff', 'wbw': '#9fe0ff', 'wfw': '#ffe08a', 'wat': '#f4c2ff', 'open': '#c9ccd1', 'shw': '#a3bacc', 'catch': '#8b9099'}
+    col = lambda k: COL.get(k, '#8b9099'); pn = lambda i: F.get(i, {}).get('name', i); dlab = lambda k: DL.get(k, k)
+    bouts = [dict(zip(BF, x)) for x in A['bouts']]; E_ = {e['id']: e for e in A['events']}
+    by_e = collections.defaultdict(list)
+    for b in bouts: by_e[b['e']].append(b)
+    fl = lambda i, rel: f'<a class="q" href="{rel}ufc/fighters/{slug(i)}/">{E(pn(i))}</a>'
+    dl = lambda k, rel: f'<i class="dot" style="--c:{col(k)}"></i><a class="q" href="{rel}ufc/divisions/{k}/">{E(dlab(k))}</a>'
+    el = lambda e, rel: f'<a class="q" href="{rel}ufc/events/{e["id"]}/">{E(e["name"])}</a>'
+    vl = lambda vid, rel: f'<a class="q" href="{rel}ufc/venues/{vid}/">{E(V[vid]["name"])}</a>' if vid in V else ''
+    who = lambda b, rel: f'<b>{fl(b["w"], rel)}</b> def. {fl(b["b"] if b["w"] == b["a"] else b["a"], rel)}' if b['res'] == 'W' else f'{fl(b["a"], rel)} vs. {fl(b["b"], rel)}'
+    mk = lambda b: E(b['method'])
+    belt = lambda b: ' <span class="tag">title</span>' if b['title'] else ''
+    brow = lambda b, rel: [f'<a class="q" href="{rel}ufc/seasons/{b["y"]}/">{E(b["date"])}</a>', el(E_[b['e']], rel), dl(b['div'], rel), who(b, rel) + belt(b), mk(b), b['round'] if b['round'] is not None else '', E(b['time'] or '')]
+    BH = ['Date', 'Event', 'Division', 'Result', 'Method', 'R', 'Time']
+    by_year = collections.defaultdict(list)
+    for e in A['events']: by_year[e['y']].append(e)
+    years = sorted(by_year)
+    fin = lambda b: b['mk'] in ('KO', 'SUB')
+    # seasons
+    for y in years:
+        rel = '../../../'; es = by_year[y]; bs = [b for e in es for b in by_e[e['id']]]; prev = next((x for x in reversed(years) if x < y), None); nxt = next((x for x in years if x > y), None)
+        wins = collections.Counter(b['w'] for b in bs if b['w']); titles = [b for b in bs if b['title']]; divs = collections.Counter(b['div'] for b in bs)
+        top = wins.most_common(1)[0] if wins else None
+        body = f'''<p class="eyebrow">UFC bouts · the year</p><h1>{y} <span>in the cage</span></h1>
+<p class="lede">{len(es)} event{'' if len(es) == 1 else 's'} and {len(bs)} bouts, {len(titles)} of them title bouts; {pct(sum(1 for b in bs if fin(b)), len(bs))}% ended inside the distance.{f' Most wins of the year: <b>{E(pn(top[0]))}</b> ({top[1]}).' if top and top[1] > 1 else ''}</p>
+<a class="open" href="{rel}ufc/#season={y}&tab=season">Open {y} in the atlas →</a>{f'<a class="also" href="{rel}ufc/seasons/{prev}/">← {prev}</a>' if prev else ''}{f'<a class="also" href="{rel}ufc/seasons/{nxt}/">{nxt} →</a>' if nxt else ''}
+{kpis([('Events', len(es), ''), ('Bouts', len(bs), ''), ('Title bouts', len(titles), ''), ('Finishes', f'{pct(sum(1 for b in bs if fin(b)), len(bs))}%', '')])}
+<h2>The year’s cards</h2>{table(['Date', 'Event', 'Venue', 'Main event', 'Bouts'], [[E(e['date']), el(e, rel), (vl(e.get('venueId'), rel) + (' · ' + E(e['city']) if e['city'] else '')), (who(by_e[e['id']][0], rel) + belt(by_e[e['id']][0])) if by_e[e['id']] else '—', len(by_e[e['id']])] for e in es], num=(4,))}
+<h2>Divisions of the year</h2>{table(['Division', 'Bouts', 'Title bouts', 'Finish rate'], [[dl(d, rel), n, sum(1 for b in bs if b['div'] == d and b['title']), f'{pct(sum(1 for b in bs if b["div"] == d and fin(b)), n)}%'] for d, n in divs.most_common()], num=(1, 2, 3))}'''
+        out.append((f'ufc/seasons/{y}/index.html', page(site=site, sport='ufc', depth=3, title=f'UFC in {y} · every event and bout · APEX', desc=f'UFC in {y}: {len(es)} events, {len(bs)} bouts, {len(titles)} title bouts, with every result.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Years', rel + 'ufc/seasons/'), (str(y), None)], body=body, path=f'ufc/seasons/{y}/', v=v)))
+    # events
+    for e in A['events']:
+        rel = '../../../'; bs = by_e[e['id']]; m = bs[0] if bs else None
+        body = f'''<p class="eyebrow">UFC bouts · Event · {E(longdate(e['date']))}</p><h1>{E(e['short'])}{f' <span>{E(e["sub"])}</span>' if e['sub'] else ''}</h1>
+<p class="lede">{' · '.join(E(x) for x in (e['venue'], e['city'], e['country']) if x)}{f' · attendance {e["att"]:,}' if e.get('att') else ''}.{f' Main event: {who(m, rel)}, {E(m["method"])}{", round " + str(m["round"]) if m["round"] else ""}{" at " + E(m["time"]) if m["time"] else ""}.' if m else ''} {len(bs)} bout{'' if len(bs) == 1 else 's'}, {sum(1 for b in bs if b['title'])} title bout{'' if sum(1 for b in bs if b['title']) == 1 else 's'}, {sum(1 for b in bs if fin(b))} finish{'' if sum(1 for b in bs if fin(b)) == 1 else 'es'}.</p>
+<a class="open" href="{rel}ufc/#season={e['y']}&tab=event&event={e['id']}">Open in the atlas →</a>{f'<a class="also" href="{E(e["url"])}" target="_blank" rel="noopener">Wikipedia ↗</a>' if e.get('url') else ''}
+{kpis([('Bouts', len(bs), ''), ('Title bouts', sum(1 for b in bs if b['title']), ''), ('Finishes', sum(1 for b in bs if fin(b)), ''), ('Venue', vl(e.get('venueId'), rel) or '—', E(e['city']))])}
+<h2>The card</h2>{table(['Card', 'Division', 'Result', 'Method', 'R', 'Time'], [[E(b['card']), dl(b['div'], rel), who(b, rel) + belt(b), mk(b), b['round'] if b['round'] is not None else '', E(b['time'] or '')] for b in bs], num=(4,))}
+{('<h2>Bonus awards</h2><ul>' + ''.join(f'<li>{E(bn["t"])}: {", ".join(E(w) for w in bn["who"])}</li>' for bn in e['bonuses']) + '</ul>') if e.get('bonuses') else ''}'''
+        out.append((f'ufc/events/{e["id"]}/index.html', page(site=site, sport='ufc', depth=3, title=f'{e["name"]} · results · APEX', desc=f'{e["name"]}, {longdate(e["date"])}{", " + e["city"] if e["city"] else ""}: every bout with method, round and time.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Events', rel + 'ufc/events/'), (e['short'], None)], body=body, path=f'ufc/events/{e["id"]}/', v=v)))
+    # fighters
+    by_f = collections.defaultdict(list)
+    for b in bouts: by_f[b['a']].append(b); by_f[b['b']].append(b)
+    for fid, bb in by_f.items():
+        rel = '../../../'; f = F.get(fid, {'name': fid, 'rec': [0, 0, 0, 0]}); rec = f.get('rec', [0, 0, 0, 0]); wins = [b for b in bb if b['w'] == fid]; fins = [b for b in wins if fin(b)]; ys = sorted({b['y'] for b in bb}); divs = collections.Counter(b['div'] for b in bb); titles = [b for b in bb if b['title']]
+        body = f'''<p class="eyebrow">UFC bouts · Fighter · {ys[0]}{"–" + str(ys[-1]) if ys[-1] != ys[0] else ""}{" · " + E(f["nat"]) if f.get("nat") else ""}</p><h1>{E(f['name'])}</h1>
+<p class="lede">{rec[0]}–{rec[1]}{"–" + str(rec[2]) if rec[2] else ""}{f" ({rec[3]} no contest{'' if rec[3] == 1 else 's'})" if rec[3] else ""} in the archive over {len(bb)} bout{'' if len(bb) == 1 else 's'}; {len(fins)} finish{'' if len(fins) == 1 else 'es'}{f", {sum(1 for b in titles if b['w'] == fid)} title-bout win{'' if sum(1 for b in titles if b['w'] == fid) == 1 else 's'} from {len(titles)}" if titles else ''}. Divisions: {', '.join(f'{E(dlab(d))} {n}' for d, n in divs.most_common())}.{f' Born {E(longdate(f["dob"]))}.' if f.get('dob') else ''} The record is what the archive holds, not a career elsewhere.</p>
+<a class="open" href="{rel}ufc/#tab=fighters&fighter={fid}">Open in the atlas →</a>{f'<a class="also" href="{E(f["url"])}" target="_blank" rel="noopener">Wikipedia ↗</a>' if f.get('url') else ''}
+{kpis([('Wins', rec[0], ''), ('Losses', rec[1], ''), ('Finishes', len(fins), f'{sum(1 for b in fins if b["mk"] == "KO")} KO/TKO · {sum(1 for b in fins if b["mk"] == "SUB")} submissions'), ('Title bouts', len(titles), f'{sum(1 for b in titles if b["w"] == fid)} won')])}
+<h2>Every bout</h2>{table(['Date', 'Event', 'Division', 'Result', 'Method', 'R', 'Time'], [brow(b, rel) for b in sorted(bb, key=lambda b: b['date'], reverse=True)], num=(5,))}'''
+        out.append((f'ufc/fighters/{slug(fid)}/index.html', page(site=site, sport='ufc', depth=3, title=f'{f["name"]} · UFC record · APEX', desc=f'{f["name"]} in the UFC: {rec[0]}–{rec[1]}{"–" + str(rec[2]) if rec[2] else ""} over {len(bb)} bouts, {ys[0]}–{ys[-1]}, with every result.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', rel + 'ufc/fighters/'), (f['name'], None)], body=body, path=f'ufc/fighters/{slug(fid)}/', v=v)))
+    # divisions
+    by_d = collections.defaultdict(list)
+    for b in bouts: by_d[b['div']].append(b)
+    for k, bb in by_d.items():
+        rel = '../../../'; ys = sorted({b['y'] for b in bb}); wins = collections.Counter(b['w'] for b in bb if b['w']); titles = sorted([b for b in bb if b['title']], key=lambda b: b['date'])
+        body = f'''<p class="eyebrow">UFC bouts · Division · {ys[0]}–{ys[-1]}</p><h1><i class="dot" style="--c:{col(k)};width:.5em;height:.5em;border-radius:6px;vertical-align:.15em"></i>{E(dlab(k))}</h1>
+<p class="lede">{len(bb):,} bouts, {len(titles)} of them title bouts, {ys[0]}–{ys[-1]}; {pct(sum(1 for b in bb if fin(b)), len(bb))}% ended inside the distance.{f' Most wins in the division: <b>{E(pn(wins.most_common(1)[0][0]))}</b> ({wins.most_common(1)[0][1]}).' if wins else ''}</p>
+<a class="open" href="{rel}ufc/#tab=divisions&dv={k}">Open in the atlas →</a>
+{kpis([('Bouts', f'{len(bb):,}', ''), ('Title bouts', len(titles), ''), ('Finish rate', f'{pct(sum(1 for b in bb if fin(b)), len(bb))}%', ''), ('Fighters', len({x for b in bb for x in (b['a'], b['b'])}), '')])}
+{('<h2>Most wins</h2>' + table(['Fighter', 'Wins', 'Finishes'], [[fl(i, rel), n, sum(1 for b in bb if b['w'] == i and fin(b))] for i, n in wins.most_common(25)], num=(1, 2))) if wins else ''}
+{('<h2>Title bouts, in order</h2>' + table(BH, [brow(b, rel) for b in reversed(titles)], num=(5,))) if titles else ''}'''
+        out.append((f'ufc/divisions/{k}/index.html', page(site=site, sport='ufc', depth=3, title=f'UFC {dlab(k)} · every title bout and record · APEX', desc=f'The UFC {dlab(k)} division: {len(bb):,} bouts, {len(titles)} title bouts, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Divisions', rel + 'ufc/divisions/'), (dlab(k), None)], body=body, path=f'ufc/divisions/{k}/', v=v)))
+    # venues
+    for vid, vv in V.items():
+        rel = '../../../'; es = [E_[i] for i in vv['events'] if i in E_]; bs = [b for e in es for b in by_e[e['id']]]; divs = collections.Counter(b['div'] for b in bs)
+        body = f'''<p class="eyebrow">UFC bouts · Venue · {vv['first']}–{vv['last']}</p><h1>{E(vv['name'])}</h1>
+<p class="lede">{' · '.join(E(x) for x in (vv['city'], vv['country']) if x and x != vv['name'])}. {len(es)} event{'' if len(es) == 1 else 's'} and {len(bs)} bouts, {sum(1 for b in bs if b['title'])} of them title bouts.{f' Busiest division: {E(dlab(divs.most_common(1)[0][0]))}.' if divs else ''} Venues are listed as the sources name them, never drawn.</p>
+<a class="open" href="{rel}ufc/#tab=venues&venue={vid}">Open in the atlas →</a>
+{kpis([('Events', len(es), ''), ('Bouts', len(bs), ''), ('Title bouts', sum(1 for b in bs if b['title']), ''), ('Years', f'{vv["first"]}–{vv["last"]}', '')])}
+<h2>Every card here</h2>{table(['Date', 'Event', 'Main event', 'Bouts'], [[f'<a class="q" href="{rel}ufc/seasons/{e["y"]}/">{E(e["date"])}</a>', el(e, rel), (who(by_e[e['id']][0], rel) + belt(by_e[e['id']][0])) if by_e[e['id']] else '—', len(by_e[e['id']])] for e in sorted(es, key=lambda e: e['date'], reverse=True)], num=(3,))}'''
+        out.append((f'ufc/venues/{vid}/index.html', page(site=site, sport='ufc', depth=3, title=f'{vv["name"]} · UFC events · APEX', desc=f'UFC at {vv["name"]}: {len(es)} events, {len(bs)} bouts, {vv["first"]}–{vv["last"]}.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Venues', rel + 'ufc/venues/'), (vv['name'], None)], body=body, path=f'ufc/venues/{vid}/', v=v)))
+    rel = '../../'
+    out.append(('ufc/seasons/index.html', page(site=site, sport='ufc', depth=2, title='UFC year by year, 1993–2026 · APEX', desc='Every year of UFC bouts on its own page.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Years', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>year</span></h1><p class="lede">{len(years)} years with a card.</p>' + index_list([(str(y), f'ufc/seasons/{y}/', f'{len(by_year[y])} events · {sum(len(by_e[e["id"]]) for e in by_year[y])} bouts') for y in reversed(years)], rel), path='ufc/seasons/', v=v)))
+    out.append(('ufc/events/index.html', page(site=site, sport='ufc', depth=2, title='Every UFC event · APEX', desc='Every UFC event on its own page, with every bout.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Events', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>event</span></h1><p class="lede">{len(A["events"])} events.</p>' + index_list([(e['name'], f'ufc/events/{e["id"]}/', f'{e["date"]} · {len(by_e[e["id"]])} bouts') for e in reversed(A['events'])], rel), path='ufc/events/', v=v)))
+    out.append(('ufc/fighters/index.html', page(site=site, sport='ufc', depth=2, title='UFC fighters · APEX', desc='Every fighter with a bout in the archive.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>fighter</span></h1><p class="lede">{len(by_f):,} fighters with a bout.</p>' + index_list(sorted([(pn(i), f'ufc/fighters/{slug(i)}/', f'{sum(1 for b in bb if b["w"] == i)}–{sum(1 for b in bb if b["res"] == "W" and b["w"] != i)} · {len(bb)} bouts') for i, bb in by_f.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='ufc/fighters/', v=v)))
+    out.append(('ufc/divisions/index.html', page(site=site, sport='ufc', depth=2, title='UFC divisions · APEX', desc='Every division with a bout in the archive.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Divisions', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>division</span></h1>' + index_list([(dlab(d['key']), f'ufc/divisions/{d["key"]}/', f'{len(by_d[d["key"]]):,} bouts') for d in A['divisions'] if by_d[d['key']]], rel), path='ufc/divisions/', v=v)))
+    out.append(('ufc/venues/index.html', page(site=site, sport='ufc', depth=2, title='UFC venues · APEX', desc='Every venue that has staged a UFC event, listed.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Venues', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>venue</span></h1><p class="lede">{len(V)} venues, listed as the sources name them.</p>' + index_list(sorted([(vv['name'], f'ufc/venues/{vid}/', f'{vv["n"]} events · {", ".join(x for x in (vv["city"], vv["country"]) if x and x != vv["name"])}') for vid, vv in V.items()], key=lambda t: (-int(t[2].split(' ')[0]), t[0])), rel), path='ufc/venues/', v=v)))
     return out

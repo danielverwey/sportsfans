@@ -349,7 +349,7 @@ function init(){
   $('#theme').innerHTML=`<option value="champion">Marque of the year</option>`+topM.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('');
   fillSeasons();
   const cov=A.coverage||{};
-  $('#edition').innerHTML=`<span><span class="live"></span><b>${fmt(RACES.length)}</b> races</span><span><b>${S.length}</b> TT weeks</span><span><b>${fmt(cov.results)}</b> recorded results</span><span><b>${fmt(Object.keys(RIDERS).length)}</b> riders</span><span>through <b>${A.lastYear}</b></span>`;
+  $('#edition').innerHTML=`<span><span class="live"></span><b>${fmt(RACES.length)}</b> races</span><span><b>${S.length}</b> TT weeks</span><span><b>${fmt(cov.results)}</b> recorded results</span><span><b>${fmt(cov.winnerOnly)}</b> races winner-only</span><span><b>${fmt(Object.keys(RIDERS).length)}</b> riders</span><span>through <b>${A.lastYear}</b></span>`;
   $('#reading').open=false;
   const deep=readRoute();if(deep){tourStop();$('#family').value=state.family;$('#eraSelect').value=state.era;fillSeasons();}
   drawSources();applyTheme();drawRiver();drawCourse();render();lightsOut();if(deep&&(state.tab!=='season'||state.whole||state.era!=='all'))setTimeout(()=>$('#stage').scrollIntoView({behavior:'auto',block:'start'}),60);

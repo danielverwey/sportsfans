@@ -432,3 +432,7 @@ table tr.win td{color:var(--ink)}table tr.win td b{color:var(--accent)}
 .card .panel h2{font-family:var(--display);font-weight:900;font-style:italic;text-transform:uppercase;font-size:34px;letter-spacing:-.02em;line-height:.95}
 .ctl .field{min-width:0;max-width:100%}.ctl select{max-width:100%}
 .cal .sc span{font:900 22px/1 var(--display);font-style:italic;color:var(--ink);letter-spacing:-.02em}.cal .sc small{font:9px var(--mono);color:var(--muted);margin-left:4px;letter-spacing:.1em}
+
+/* the way in: a visible button from the opening to the Stage */
+.explore{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 16px;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font:700 11px var(--mono);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;background:color-mix(in srgb,var(--accent) 10%,transparent);transition:background .2s,color .2s}
+.explore:hover,.explore:focus-visible{background:var(--accent);color:var(--on-accent,#07080a)}

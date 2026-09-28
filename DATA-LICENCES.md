@@ -17,7 +17,7 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 | MotoGP, WorldSBK, Isle of Man TT | OpenStreetMap | ODbL 1.0 | circuit outlines; the Mountain Course and its named places | ODbL |
 | MotoGP, WorldSBK | F1DB | CC BY 4.0 | circuit surveys at shared venues | attribution |
 | Cricket | [Cricsheet](https://cricsheet.org/register/) | ODC-By 1.0 | scorecards from 2001 (men) / first recorded matches (women); every player figure | `data/cricket.json`, `data/cricket_details/`: ODC-By 1.0 for scorecard-derived parts; attribute Cricsheet |
-| Cricket | Kaggle, "Test nations 1877–2025" | licence as stated on Kaggle | historical results (facts) | — |
+| Cricket | Kaggle, "Cricket match dataset, Test nations 1877–2025" (kaggle.com/datasets/qammarshahzad/cricket-match-dataset-test-nations-18772025) | licence as stated on Kaggle | historical results (facts) | — |
 | Cricket | ICC | published results | ICC event winners and finals (facts) | — |
 | NBA (in preparation) | [FiveThirtyEight](https://github.com/fivethirtyeight/data) | CC BY 4.0 | historical results and Elo | attribution |
 | NBA (in preparation) | Basketball-Reference / NBA.com via Kaggle mirrors | facts free; bulk republishing not permitted by their terms; NBA statistics for private, non-commercial use | box scores, player seasons | non-commercial |
@@ -28,3 +28,11 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 Fonts: Google Fonts, SIL Open Font License. Circuit geometry: © OpenStreetMap contributors, ODbL, where used. Code: MIT.
 
 Trademarks: every championship, team, event, venue and manufacturer name is the trademark of its owner and is used only to identify what the numbers describe. No logos are used.
+
+## UFC (`data/ufc.json`)
+
+- **Wikipedia** — the "List of UFC events" article and each event's own article: the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus-award list. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Harvested by `tools/harvest/wiki_ufc.py` in the *Harvest · UFC from Wikipedia* workflow; every event carries the revision id it was read from.
+- **Wikidata** — fighter nationality, date of birth and height, where the fighter has an article (CC0 1.0).
+- Nothing is taken from the promotion's own site or its statistics partner; the earlier UFCStats-based prototype is retired and its data is not carried. Per-fight strike and grappling counts are therefore absent.
+- Derived in `tools/prepare_ufc.py` from the transcribed rows alone: the division key from the weight-class label, the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21, July 1999), each fighter's record from the bouts in the archive.
+- The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike. No logos, marks or official artwork; the promotion's names identify the events and nothing on the site is affiliated with it.

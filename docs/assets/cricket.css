@@ -410,3 +410,7 @@ details.inn table td:first-child{white-space:nowrap}
 @media (max-width:560px){ .champ-card{padding:20px 16px} .podium{gap:6px} .podium .step{padding:12px 8px 8px;min-width:0} .podium .step .pos{font-size:36px} .podium .step .nm{font-size:16px;overflow-wrap:anywhere} .podium .step .pt{font-size:10px;letter-spacing:.04em;overflow-wrap:anywhere} .river-axis{overflow:hidden} }
 
 @media (max-width:560px){ details.inn td.dim{white-space:normal;min-width:96px;font-size:11px;line-height:1.25} details.inn table td:first-child{white-space:normal;min-width:88px} details.inn table td,details.inn table th{padding:5px 5px} details.inn > summary .tot{font-size:22px} }
+
+/* the way in: a visible button from the opening to the Stage */
+.explore{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 16px;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font:700 11px var(--mono);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;background:color-mix(in srgb,var(--accent) 10%,transparent);transition:background .2s,color .2s}
+.explore:hover,.explore:focus-visible{background:var(--accent);color:var(--on-accent,#07080a)}

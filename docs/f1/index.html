@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
-<link rel="stylesheet" href="../assets/f1.css?v=90ca27787b">
-<style>.brand a.home{color:inherit;text-decoration:none}.brand small a{white-space:nowrap}.brand a.home:hover i{color:var(--ink,#fff)}.brand small a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,#2a2d33)}.brand small a:hover{color:var(--accent,#FF8000)}footer p.small a{color:inherit}</style>
+<link rel="stylesheet" href="../assets/f1.css?v=d468d8fda5">
+<style>.switch{display:flex;gap:6px;flex-wrap:wrap;padding:12px 0 0;font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase}.switch a{color:var(--muted);text-decoration:none;padding:6px 10px;border:1px solid var(--line);border-radius:6px}.switch a.on{color:var(--accent);border-color:var(--accent)}.switch a:hover{color:var(--ink);border-color:var(--muted)}.switch a.go{margin-left:auto;color:var(--accent);border-color:var(--accent)}.switch a.go:hover{background:var(--accent);color:var(--on-accent,#07080a)}.brand a.home{color:inherit;text-decoration:none}.brand small a{white-space:nowrap}.brand a.home:hover i{color:var(--ink,#fff)}.brand small a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,#2a2d33)}.brand small a:hover{color:var(--accent,#FF8000)}footer p.small a{color:inherit}</style>
 <link rel="canonical" href="https://sportsfans.co.za/f1/">
 <meta property="og:url" content="https://sportsfans.co.za/f1/">
 </head>
@@ -33,6 +33,7 @@
   </div>
 </header>
 
+<nav class="switch" aria-label="Other atlases"><a href="../">All atlases</a><a href="../f1/" class=on>F1</a><a href="../rugby/">Rugby</a><a href="../cricket/">Cricket</a><a href="../tennis/">Tennis</a><a href="../tt/">TT</a><a href="../motogp/">MotoGP</a><a href="../sbk/">WorldSBK</a><a class="go" href="#stage" onclick="document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});return false">Explore the data ↓</a></nav>
 <main id="main">
 
 <section id="river" aria-labelledby="riverH">
@@ -44,6 +45,7 @@
     <div>
       <p class="river-lede">Every Grand Prix point ever scored, flowing left to right in the colours of the constructor that scored it. The river widens as the calendar grows. <b>Hover a year</b> to read it; <b>click</b> to step onto its grid.</p>
       <div class="edition" id="edition"></div>
+      <a class="explore" href="#stage" onclick="document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});return false">Explore the data ↓</a>
     </div>
   </div>
   <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Constructor points share by season, 1950 to 2026"></svg><div class="river-tip" id="riverTip"></div></div>
@@ -85,7 +87,7 @@
 
 <details id="reading" open>
   <summary>
-    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every season, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">The complete archive as plain reading matter — classification tables, standings and era notes for all seventy-seven seasons. This is what you get with scripts off, in print, or on a slow connection.</p></div>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every season, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">The whole archive as plain reading matter — classification tables, standings and era notes for all seventy-seven seasons. This is what you get with scripts off, in print, or on a slow connection.</p></div>
     <span class="btn">Open / close</span>
   </summary>
   <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
@@ -99,7 +101,7 @@
 </div>
 
 <script>
-(async()=>{const L=document.getElementById('lights');try{if(['apex-lights','apex-kickoff','apex-toss','apex-serve'].some(k=>sessionStorage.getItem(k)==='1')&&L)L.style.display='none';}catch(e){}
+(async()=>{const L=document.getElementById('lights');try{if(['apex-lights','apex-kickoff','apex-toss','apex-serve','apex-tt','apex-ufc'].some(k=>sessionStorage.getItem(k)==='1')&&L)L.style.display='none';}catch(e){}
 const fail=m=>{if(L)L.remove();const v=document.getElementById('view');if(v)v.innerHTML='<p class="muted" style="margin-top:22px">The archive could not be loaded ('+m+'). <a href="reading/">Open the reading edition</a> or <a href="../downloads/">download the self-contained atlas</a>.</p>';};
 try{const r=await fetch('../data/f1.json?v=4b1760222d');if(!r.ok)throw new Error('HTTP '+r.status);window.DATA=await r.json();}catch(e){fail(e.message);return;}
 const s=document.createElement('script');s.src='../assets/f1.js?v=2ac5bc14ad';s.onerror=()=>fail('script');document.body.appendChild(s);})();

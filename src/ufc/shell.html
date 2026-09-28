@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APEX / An Ode to the Cage · UFC bouts · 1993–2026</title>
+<meta name="description" content="Every UFC bout since 1993 drawn as a river of division colours, every arena listed, every card opened as a tower of results — method, round, time, title bouts — with fighters, divisions, records and head-to-heads. Independent and unaffiliated.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Skip to the data</a>
+
+<div id="lights" role="dialog" aria-label="The door">
+  <svg class="ko" viewBox="0 0 600 360" aria-hidden="true"><ellipse class="cage" cx="300" cy="230" rx="230" ry="78" fill="none" stroke="#2e333d" stroke-width="3"/><g stroke="#2e333d" stroke-width="3" stroke-linecap="round"><line x1="70" y1="230" x2="70" y2="150"/><line x1="140" y1="290" x2="140" y2="210"/><line x1="300" y1="308" x2="300" y2="228"/><line x1="460" y1="290" x2="460" y2="210"/><line x1="530" y1="230" x2="530" y2="150"/><line x1="140" y1="170" x2="140" y2="90"/><line x1="460" y1="170" x2="460" y2="90"/></g><ellipse class="cage-lit" cx="300" cy="230" rx="230" ry="78" fill="none" stroke="var(--accent,#ff3642)" stroke-width="4"/><g class="door"><path d="M220 302 Q300 316 380 302" fill="none" stroke="var(--accent,#ff3642)" stroke-width="7" stroke-linecap="round"/></g><text class="cnt" x="300" y="60" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" letter-spacing="3" fill="#8b9099">THE DOOR CLOSES</text></svg>
+  <div class="cap">The door closes · then the whole record</div>
+  <button type="button" id="skipLights">Skip ⏎</button>
+</div>
+
+<div class="wrap" id="top">
+<header class="mast">
+  <div class="brand">APEX <i>/</i> <small>An ode to the cage · UFC bouts · 1993–2026</small></div>
+  <div class="ctl">
+    <div class="field"><label for="division">Division</label><select id="division"></select></div>
+    <div class="field"><label for="eraSelect">Era lens</label><select id="eraSelect"></select></div>
+    <div class="field"><label for="season">Season</label><select id="season"></select></div>
+    <div class="field"><label for="theme">Colours</label><select id="theme"><option value="champion">Division of the year</option></select></div>
+  </div>
+</header>
+
+<main id="main">
+
+<section id="river" aria-labelledby="riverH">
+  <div class="river-title">
+    <div>
+      <p class="eyebrow">I · The River</p>
+      <h1 id="riverH">Thirty-three <span>years</span> inside the cage</h1>
+    </div>
+    <div>
+      <p class="river-lede">Every bout the promotion has staged, flowing left to right in the colours of its divisions — eight-man openweight tournaments in 1993, fourteen weight classes and forty cards a year now. The river thickens as the calendar fills. <b>Hover a year</b> to read it; <b>click</b> to step into that year. Pick a division above.</p>
+      <div class="edition" id="edition"></div>
+      <a class="explore" href="#stage" onclick="document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});return false">Explore the data ↓</a>
+    </div>
+  </div>
+  <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Share of the year’s bouts by division, year by year"></svg><div class="river-tip" id="riverTip"></div></div>
+  <div class="river-axis" id="riverAxis"></div>
+  <div class="river-legend" id="riverLegend" aria-label="Highlight a division"></div>
+</section>
+
+<section id="grid" aria-labelledby="gridH">
+  <div class="sect-head">
+    <div>
+      <p class="eyebrow">II · The Arenas</p>
+      <h2 id="gridH">Every venue, in its colours</h2>
+      <p id="gridLede"></p>
+    </div>
+    <div class="tools">
+      <input type="search" id="gridFind" placeholder="Find a venue, city or country" aria-label="Find a venue">
+      <select id="gridMin" aria-label="Minimum events"><option value="3" selected>3+ events</option><option value="10">10+ events</option><option value="1">Every venue</option></select>
+      <select id="gridSort" aria-label="Sort venues"><option value="count">Most events</option><option value="name">A – Z</option><option value="country">By country</option><option value="recent">Most recent</option></select>
+    </div>
+  </div>
+  <div class="circuits" id="circuits"></div>
+</section>
+
+<section id="stage" aria-labelledby="stageH">
+  <div class="stagebar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div id="stageStatus" class="small muted mono"></div>
+  </div>
+  <div class="sect-head" style="margin-top:30px">
+    <div>
+      <p class="eyebrow">III · The Stage</p>
+      <h2 id="stageH">Year, card, division, fighter</h2>
+    </div>
+  </div>
+  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
+  <div class="era-text" id="eraContext"></div>
+  <div id="view" aria-live="polite"></div>
+</section>
+
+<details id="sourcesBox">
+  <summary>Sources, coverage &amp; calculations</summary>
+  <div id="sourcesBody"></div>
+</details>
+
+<details id="reading" open>
+  <summary>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every card, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">Every event of every year as plain reading matter, with its main event, venue and every result. This is what you get with scripts off, in print, or in a preview that blocks interactive pages.</p></div>
+    <span class="btn">Open / close</span>
+  </summary>
+  <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
+__STATIC__
+</details>
+
+</main>
+__FOOTER__
+</div>
+
+<script id="archive-data" type="application/json">__DATA__</script>
+<script>
+__APP__
+</script>
+</body>
+</html>

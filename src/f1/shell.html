@@ -43,6 +43,7 @@ __CSS__
     <div>
       <p class="river-lede">Every Grand Prix point ever scored, flowing left to right in the colours of the constructor that scored it. The river widens as the calendar grows. <b>Hover a year</b> to read it; <b>click</b> to step onto its grid.</p>
       <div class="edition" id="edition"></div>
+      <a class="explore" href="#stage" onclick="document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});return false">Explore the data ↓</a>
     </div>
   </div>
   <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Constructor points share by season, 1950 to 2026"></svg><div class="river-tip" id="riverTip"></div></div>
@@ -84,7 +85,7 @@ __CSS__
 
 <details id="reading" open>
   <summary>
-    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every season, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">The complete archive as plain reading matter — classification tables, standings and era notes for all seventy-seven seasons. This is what you get with scripts off, in print, or on a slow connection.</p></div>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every season, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">The whole archive as plain reading matter — classification tables, standings and era notes for all seventy-seven seasons. This is what you get with scripts off, in print, or on a slow connection.</p></div>
     <span class="btn">Open / close</span>
   </summary>
   <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
