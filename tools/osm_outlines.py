@@ -84,6 +84,7 @@ def route_ways(lat, lon, radius=8000):
          f'out geom;')
     return overpass(q).get('elements', [])
 
+MIN_LAP_KM, MAX_LAP_KM = 1.5, 30.0  # a racing lap; shorter is a kart track or a fragment, longer is a ring road
 def loop_km(loop):
     """Length of a lon/lat polyline in km (equirectangular, fine at circuit scale)."""
     lat0 = sum(p[1] for p in loop) / len(loop); k = math.cos(math.radians(lat0))
@@ -109,6 +110,7 @@ def stitch(ways):
         return abs(sum((a[0] * k) * b[1] - (b[0] * k) * a[1] for a, b in zip(loop, loop[1:] + loop[:1]))) / 2
     closed = [s for s in segs if s[0] == s[-1]]
     best = max(closed, key=area) if closed else None; best_a = area(best) if best else 0
+    longcyc = max(closed, key=chain_length) if closed else None  # the longest simple cycle, kept beside the largest-area one
     # adjacency: endpoint → [(segment index, oriented points)]
     adj = {}
     for i, s in enumerate(segs):
@@ -122,8 +124,9 @@ def stitch(ways):
             nxt = pts[-1]; new_path = path + pts[1:]
             if nxt == start:
                 a = area(new_path)
-                nonlocal best, best_a
+                nonlocal best, best_a, longcyc
                 if a > best_a: best, best_a = new_path, a
+                if longcyc is None or chain_length(new_path) > chain_length(longcyc): longcyc = new_path
                 continue
             if nxt in seen_nodes: continue
             seen_nodes.add(nxt); used.add(i); dfs(start, nxt, used, new_path); used.discard(i); seen_nodes.discard(nxt)
@@ -141,8 +144,15 @@ def stitch(ways):
                 if s[-1] == loop[0]: loop = s[:-1] + loop; pool.pop(i); changed = True; break
                 if s[0] == loop[0]: loop = s[::-1][:-1] + loop; pool.pop(i); changed = True; break
         if longest is None or chain_length(loop) > chain_length(longest): longest = loop
+    # an oval inside a road course encloses more area than the lap that uses part of it: when a much longer simple
+    # cycle exists, the longer one is the lap
+    if best is not None and longcyc is not None and chain_length(longcyc) >= 1.4 * chain_length(best): best = longcyc; best_a = area(best)
     # a closed cycle wins unless it is a fragment (a roundabout, a link) beside a much longer open chain
     if best is not None and best_a > 0 and (longest is None or chain_length(best) >= 0.5 * chain_length(longest)): return best
+    # an open chain whose ends nearly meet (a missing node at the line) is closed
+    if longest is not None and len(longest) > 2:
+        lat0 = longest[0][1]; k = math.cos(math.radians(lat0)); gap = math.hypot((longest[0][0] - longest[-1][0]) * k, longest[0][1] - longest[-1][1]) * 111.32
+        if gap <= 0.3 and gap <= 0.03 * chain_length(longest) * 111.32: longest = longest + [longest[0]]
     return longest
 
 def to_path(loop):
@@ -172,22 +182,32 @@ def outline_for(c):
         loop = stitch(ways)
         if loop and len(loop) >= 12:
             km = loop_km(loop)
-            if how.startswith('route') and not 1.5 <= km <= 30: time.sleep(2); continue  # a ring road or a fragment, not a lap
+            if not MIN_LAP_KM <= km <= MAX_LAP_KM: time.sleep(2); continue  # a fragment (a kart track, a pit straight, a piece of a demolished circuit) or a ring road, not a lap
             return to_path(loop), f'{how} · {len(ways)} ways · {len(loop)} points · {km:.1f} km' + ('' if loop[0] == loop[-1] else ' · open')
         time.sleep(2)
     return None, 'no mapped track (no raceway within 5 km, no circuit route relation within 8 km)'
 
+# outlines fetched before the lap-length guard existed that turned out to be fragments; they are dropped and fetched again
+REFETCH = {'dundrod-circuit', 'imatra-circuit', 'autodromo-internacional-nelson-piquet', 'shah-alam-circuit', 'phakisa-freeway'} | set(os.environ.get('OUTLINES_REFETCH', '').replace(',', ' ').split())
+
 def main(tags):
     report = ['## Circuit outlines from OpenStreetMap', '']
     failed_all = True; any_error = False
+    shared = {}  # cid → path found for another sport in an earlier run: the same venue needs no second query
+    for other in ROOT.glob('src/bikes/assets_*.json'):
+        for cid, d in json.loads(other.read_text(encoding='utf-8')).get('osm', {}).items():
+            if cid not in REFETCH: shared.setdefault(cid, d)
     for tag in tags:
         A = json.loads((ROOT/'data'/f'{tag}.json').read_text(encoding='utf-8'))
         assets_p = ROOT/'src'/'bikes'/f'assets_{tag}.json'; assets = json.loads(assets_p.read_text(encoding='utf-8'))
         osm = assets.setdefault('osm', {}); venues = assets.get('venues', {}); done = []; skipped = []
+        for cid in list(osm):
+            if cid in REFETCH: osm.pop(cid); print('dropped', cid, '(fragment from an earlier run; fetching again)', flush=True)
         tt = ROOT/'data'/'tt.json'
         stopped = False
         for cid, c in A['circuits'].items():
             if cid in osm or cid in venues: continue
+            if cid in shared: osm[cid] = shared[cid]; done.append((c['name'], 'same venue, outline found for the other championship')); failed_all = False; assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8'); continue
             if out_of_time(): stopped = True; skipped.append((c['name'], f'not tried: the run reached its {DEADLINE_MIN:.0f}-minute limit')); continue
             if cid == 'isle-of-man-tt-mountain-course' and tt.exists():
                 course = json.loads(tt.read_text(encoding='utf-8')).get('course') or {}
@@ -197,7 +217,7 @@ def main(tags):
             except OverpassError as e: skipped.append((c['name'], f'Overpass unavailable: {e}')); any_error = True; time.sleep(5); continue
             except Exception as e: skipped.append((c['name'], f'error: {type(e).__name__} {e}')); any_error = True; continue
             failed_all = False
-            if path: osm[cid] = path; done.append((c['name'], how)); print('ok ', c['name'], '·', how, flush=True); assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
+            if path: osm[cid] = path; shared[cid] = path; done.append((c['name'], how)); print('ok ', c['name'], '·', how, flush=True); assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
             else: skipped.append((c['name'], how)); print('--- ', c['name'], '·', how, flush=True)
             time.sleep(2)
         assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
