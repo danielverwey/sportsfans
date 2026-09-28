@@ -1,0 +1,20 @@
+name: Circuit outlines from OpenStreetMap
+# On demand: fetches raceway geometry for every circuit of a bikes archive and writes it into
+# src/bikes/assets_<sport>.json (osm), committing the result. © OpenStreetMap contributors, ODbL.
+on:
+  workflow_dispatch:
+    inputs:
+      sport: { description: 'motogp or sbk', required: true, default: 'motogp' }
+permissions: { contents: write }
+jobs:
+  outlines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: python tools/osm_outlines.py ${{ inputs.sport }}
+      - run: |
+          git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
+          git add src/bikes/assets_${{ inputs.sport }}.json
+          git diff --cached --quiet || (git commit -m "outlines: ${{ inputs.sport }} from OpenStreetMap" && git push)

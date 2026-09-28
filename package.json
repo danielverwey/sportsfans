@@ -1,0 +1,11 @@
+{
+  "name": "apex-sports-atlases",
+  "private": true,
+  "version": "1.0.0",
+  "description": "APEX / sports atlases — F1, rugby union, MotoGP, WorldSBK",
+  "scripts": {
+    "build": "python build.py",
+    "check": "node tools/check_site.js"
+  },
+  "devDependencies": { "playwright": "^1.47.0" }
+}

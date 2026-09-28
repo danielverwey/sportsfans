@@ -1,0 +1,48 @@
+name: Sweep · Formula 1
+# Every Monday morning: the current season from Jolpica, through the gate, rebuilt, committed, deployed.
+# Nothing reaches the site unless the gate passes; an idle week commits nothing.
+on:
+  schedule: [{ cron: '0 6 * * 1' }]
+  workflow_dispatch:
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep, cancel-in-progress: false }
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Harvest the current season
+        run: python tools/harvest/f1.py
+      - name: Anything new?
+        id: diff
+        run: |
+          if git diff --quiet -- data/f1.json; then echo "changed=false" >> $GITHUB_OUTPUT; echo "no change"; else echo "changed=true" >> $GITHUB_OUTPUT; fi
+      - name: Gate
+        if: steps.diff.outputs.changed == 'true'
+        run: python tools/gate.py f1
+      - name: Rebuild and check
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          python build.py
+          python tools/check_links.py
+      - name: Commit
+        id: commit
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
+          git add data/f1.json docs audits build/harvest/f1.md
+          git commit -m "data: f1 sweep $(date -u +%Y-%m-%d)" -m "$(cat build/harvest/f1.md)"
+          git push
+          echo "changed=true" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: f1-sweep-report, path: build/harvest/f1.md, if-no-files-found: ignore }
+  deploy:
+    needs: sweep
+    if: needs.sweep.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

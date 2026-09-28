@@ -1,0 +1,30 @@
+# Data licences
+
+What each source publishes about reuse, and the licence that applies to each data file the site serves. The live statement is `docs/licences/index.html` (https://sportsfans.co.za/licences/); this file is its repository copy. Checked 28 September 2026.
+
+The site is **non-commercial for good** — no advertising, sponsorship or paywall — because two backbone sources (Jolpica, Sackmann) permit nothing else.
+
+| Sport | Source | Terms it states | Used for | Data file licence |
+|---|---|---|---|---|
+| Formula 1 | [F1DB](https://github.com/f1db/f1db) | CC BY 4.0 | circuit outlines, track specifications, supplementary fastest laps | `data/f1.json`: **CC BY-NC-SA 4.0** (attribute F1DB and Jolpica; non-commercial; share alike) |
+| Formula 1 | [Jolpica F1](https://github.com/jolpica/jolpica-f1) | CC BY-NC-SA 4.0; API free for non-commercial use | results, sprints, standings | " |
+| Rugby | [Nuck's Rugby Archive](https://rugbyarchive.github.io/about.html) | no licence stated (hobby archive) | the ten nations' match archive | `data/rugby.json`: no licence granted for reuse; facts are free, compilations credited; permission being sought |
+| Rugby | [Springbok Rugby History](https://bokhist.com/) | no licence stated | Springbok record, player histories, squads | " |
+| Rugby | [Pick & Go](https://www.lassen.co.nz/pickandgo.php) | © www.pickandgo.nz, no terms | cross-check only | — |
+| Rugby | Wikipedia | CC BY-SA 4.0 | coaching lists | — |
+| MotoGP, WorldSBK, Isle of Man TT | Wikipedia (English season articles; the German list of TT winners) | CC BY-SA 4.0 | every result, calendar and published standing; every TT winner and classification | `data/motogp.json`, `data/sbk.json`, `data/tt.json`: CC BY-SA 4.0; attribute; share alike |
+| MotoGP, WorldSBK | Wikidata | CC0 1.0 | circuit coordinates and countries | — |
+| MotoGP, WorldSBK, Isle of Man TT | OpenStreetMap | ODbL 1.0 | circuit outlines; the Mountain Course and its named places | ODbL |
+| MotoGP, WorldSBK | F1DB | CC BY 4.0 | circuit surveys at shared venues | attribution |
+| Cricket | [Cricsheet](https://cricsheet.org/register/) | ODC-By 1.0 | scorecards from 2001 (men) / first recorded matches (women); every player figure | `data/cricket.json`, `data/cricket_details/`: ODC-By 1.0 for scorecard-derived parts; attribute Cricsheet |
+| Cricket | Kaggle, "Test nations 1877–2025" | licence as stated on Kaggle | historical results (facts) | — |
+| Cricket | ICC | published results | ICC event winners and finals (facts) | — |
+| NBA (in preparation) | [FiveThirtyEight](https://github.com/fivethirtyeight/data) | CC BY 4.0 | historical results and Elo | attribution |
+| NBA (in preparation) | Basketball-Reference / NBA.com via Kaggle mirrors | facts free; bulk republishing not permitted by their terms; NBA statistics for private, non-commercial use | box scores, player seasons | non-commercial |
+| Tennis | [Jeff Sackmann](https://github.com/JeffSackmann) | CC BY-NC-SA 4.0 | every ATP and WTA tour-level match from 1968, with statistics | `data/tennis.json`, `data/tennis_matches/`: CC BY-NC-SA 4.0; attribute; non-commercial; share alike |
+| Tennis | Wimbledon Compendium | published roll of honour (facts) | champions and finalists before 1968 | — |
+| UFC (in preparation) | UFCStats via a public mirror | Zuffa terms forbid scraping and copying; facts are free | fight records | — |
+
+Fonts: Google Fonts, SIL Open Font License. Circuit geometry: © OpenStreetMap contributors, ODbL, where used. Code: MIT.
+
+Trademarks: every championship, team, event, venue and manufacturer name is the trademark of its owner and is used only to identify what the numbers describe. No logos are used.

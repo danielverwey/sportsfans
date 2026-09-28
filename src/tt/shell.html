@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APEX / An Ode to the Mountain · Isle of Man TT · 1907–2026</title>
+<meta name="description" content="Every Isle of Man TT race since 1907 drawn as a river of marque colours, the Snaefell Mountain Course to its mapped line with every named corner, every race opened to its result sheet and replayed around the mountain. 693 races, 1907–2026.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Skip to the data</a>
+
+<div id="lights" role="dialog" aria-label="The start">
+  <svg class="ko" viewBox="0 0 600 360" aria-hidden="true"><line x1="60" y1="300" x2="540" y2="300" stroke="#2e333d" stroke-width="3"/><line x1="140" y1="240" x2="140" y2="300" stroke="#cfd3da" stroke-width="4"/><line x1="140" y1="240" x2="140" y2="300" stroke="#cfd3da" stroke-width="4"/><g class="bike b1" transform="translate(120 290)"><circle r="9" fill="var(--accent,#c9ccd1)" stroke="#07080a" stroke-width="2"/></g><g class="bike b2" transform="translate(120 290)"><circle r="9" fill="var(--accent,#c9ccd1)" stroke="#07080a" stroke-width="2" opacity=".75"/></g><g class="bike b3" transform="translate(120 290)"><circle r="9" fill="var(--accent,#c9ccd1)" stroke="#07080a" stroke-width="2" opacity=".5"/></g><text class="cnt" x="140" y="225" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" letter-spacing="3" fill="#8b9099">10 SECONDS</text></svg>
+  <div class="cap">One at a time, ten seconds apart · then the whole record</div>
+  <button type="button" id="skipLights">Skip ⏎</button>
+</div>
+
+<div class="wrap" id="top">
+<header class="mast">
+  <div class="brand">APEX <i>/</i> <small>An ode to the Mountain · Isle of Man TT · 1907–2026</small></div>
+  <div class="ctl">
+    <div class="field"><label for="family">Class</label><select id="family"></select></div>
+    <div class="field"><label for="eraSelect">Era lens</label><select id="eraSelect"></select></div>
+    <div class="field"><label for="season">Season</label><select id="season"></select></div>
+    <div class="field"><label for="theme">Colours</label><select id="theme"><option value="champion">Marque of the year</option></select></div>
+  </div>
+</header>
+
+<main id="main">
+
+<section id="river" aria-labelledby="riverH">
+  <div class="river-title">
+    <div>
+      <p class="eyebrow">I · The River</p>
+      <h1 id="riverH">A hundred and twenty <span>years</span> over the mountain</h1>
+    </div>
+    <div>
+      <p class="river-lede">Every TT race ever won, flowing left to right in the colours of the winning marque — one race a year at St John’s in 1907, a week of ten today. The wars, the foot-and-mouth year and the pandemic leave the river open where no TT ran. <b>Hover a year</b> to read it; <b>click</b> to step into that week. Pick a class above.</p>
+      <div class="edition" id="edition"></div>
+    </div>
+  </div>
+  <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Share of TT wins by marque, year by year"></svg><div class="river-tip" id="riverTip"></div></div>
+  <div class="river-axis" id="riverAxis"></div>
+  <div class="river-legend" id="riverLegend" aria-label="Highlight a marque"></div>
+</section>
+
+<section id="grid" aria-labelledby="gridH">
+  <div class="sect-head">
+    <div>
+      <p class="eyebrow">II · The Course</p>
+      <h2 id="gridH">The Mountain, to its own line</h2>
+      <p id="courseLede"></p>
+    </div>
+  </div>
+  <div class="course">
+    <div class="course-map"><svg id="courseSvg" viewBox="0 0 500 500" role="img" aria-label="The Snaefell Mountain Course, drawn from OpenStreetMap"></svg><p class="small dim" style="margin:8px 0 0">© OpenStreetMap contributors, ODbL · today’s mapped road, not a historical survey · hover a place to find it on the line</p></div>
+    <div class="course-side"><p class="eyebrow">The lap, place by place</p><div class="places" id="places"></div><div class="kpis" id="otherCourses" style="margin-top:14px;grid-template-columns:1fr"></div></div>
+  </div>
+</section>
+
+<section id="stage" aria-labelledby="stageH">
+  <div class="stagebar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div id="stageStatus" class="small muted mono"></div>
+  </div>
+  <div class="sect-head" style="margin-top:30px">
+    <div>
+      <p class="eyebrow">III · The Stage</p>
+      <h2 id="stageH">Week, race, rider, marque</h2>
+    </div>
+  </div>
+  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
+  <div class="era-text" id="eraContext"></div>
+  <div id="view" aria-live="polite"></div>
+</section>
+
+<details id="sourcesBox">
+  <summary>Sources, coverage &amp; calculations</summary>
+  <div id="sourcesBody"></div>
+</details>
+
+<details id="reading" open>
+  <summary>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every race, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">Every TT race of every year as plain reading matter, with winner, machine, course and speed. This is what you get with scripts off, in print, or in a preview that blocks interactive pages.</p></div>
+    <span class="btn">Open / close</span>
+  </summary>
+  <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
+__STATIC__
+</details>
+
+</main>
+__FOOTER__
+</div>
+
+<script id="archive-data" type="application/json">__DATA__</script>
+<script>
+__APP__
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+ "senna": {
+  "wins": 41,
+  "podiums": 80
+ },
+ "prost": {
+  "wins": 51,
+  "podiums": 106
+ },
+ "michael_schumacher": {
+  "wins": 91,
+  "podiums": 155
+ },
+ "fangio": {
+  "wins": 24,
+  "podiums": 35
+ },
+ "clark": {
+  "wins": 25,
+  "podiums": 32
+ },
+ "stewart": {
+  "wins": 27,
+  "podiums": 43
+ },
+ "lauda": {
+  "wins": 25,
+  "podiums": 54
+ },
+ "mansell": {
+  "wins": 31,
+  "podiums": 59
+ },
+ "hakkinen": {
+  "wins": 20,
+  "podiums": 51
+ },
+ "raikkonen": {
+  "wins": 21,
+  "podiums": 103
+ },
+ "vettel": {
+  "wins": 53,
+  "podiums": 122
+ },
+ "rosberg": {
+  "wins": 23,
+  "podiums": 57
+ }
+}

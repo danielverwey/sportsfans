@@ -1,0 +1,53 @@
+/* ---------- Sources (carried from the prototype, with live counts) ---------- */
+function drawSources(){const t=T(),ms=M(),ps=P();$('#sourcesBody').innerHTML=`<p class="eyebrow">Ten-nation edition / ${day(A.asof)}</p><h2>One interface. Ten distinct records.</h2><div class="kpis">${kpi('Unique fixtures',fmt(A.matches.length),'shared records, viewed from either side')}${kpi('National perspectives','10','all opponents remain in each archive')}${kpi('Player snapshots',fmt(A.players.length),'selected records, not all players')}${kpi('Match span','1871–2026','latest captured match: '+day(A.through))}</div>
+<h3>Why these ten?</h3><p class="small muted">South Africa, New Zealand, Australia, Argentina, England, France, Ireland, Wales, Scotland and Italy are the longstanding nations of the Rugby Championship and Six Nations. This is an editorial cohort, not an official all-time top-ten ranking. Fiji, Samoa, Japan and other nations are retained as opponents; they are not selectable national perspectives in this edition.</p>
+<h3>Match records</h3><ol><li><a href="https://rugbyarchive.github.io/about.html" target="_blank" rel="noopener">Nuck’s Rugby Archive · historical match research</a><p>The principal source for the expanded national-team archive. Its public dataset combines reference books, union records and reporting. Fixtures marked as full internationals involving the ten selected nations were imported, awarded/abandoned fixtures excluded, and its uncertainty flags preserved. This is a curated independent archive, not a certified complete record from each union; the source itself identifies ongoing verification work.</p></li><li><a href="https://bokhist.com/StatOpponentSummary.aspx" target="_blank" rel="noopener">Springbok Rugby History · preserved South African record</a><p>All 577 match records, all 270 player snapshots, the captured player histories and eight World Cup squad lists from the previous edition are retained. The three conflicting dates against the Lions (1903), Australia (1992) and Australia (2021) follow this reconciled record. France’s 1907 fixture is present only from France’s perspective because it is absent from the Springbok capped archive.</p></li><li><a href="https://www.lassen.co.nz/pickandgo.php" target="_blank" rel="noopener">Pick &amp; Go · public latest-results cross-check</a><p>Public recent-result tables provide an additional cross-check. No restricted subscription records are included.</p></li></ol>
+<h3>Player records</h3><p class="small muted">South African profiles retain their original detailed coverage: 98 captured appearance histories, of which 67 reconcile to career cap totals. The other nine nations have selected published career tables, primarily the linked national-team record pages, with primary-union checks where available. Each player has source links. Career snapshots can lag match results, and separate fields can have different update cut-offs. They are not a current squad list. Unknown values stay unavailable.</p>
+<h3>Coaches</h3><p class="small muted">${Object.entries(A.coachCoverage).map(([n,c])=>`<b>${esc(n)}</b> from ${c.firstYear}, ${c.profiles} profiles, ${c.linked} linked matches. ${esc(c.note)}`).join(' ')} Coaching snapshot dated ${day(A.coachAsOf)}.</p>
+<h3>Recognition and early history</h3><p class="small muted">The default full archive includes source-classified internationals and retained historical capped fixtures. The standard-internationals setting removes the marked legacy and early Olympic records. Individual unions can recognise a match differently; switching sides may therefore change a small number of historical meetings. France’s broader archive reaches the 1900 Olympics; its first standard Test is in 1906. The Springbok record includes 15 historical fixtures against South America, the NZ Cavaliers and World Invitation.</p>
+<h3>Scores, eras and calculations</h3><p class="small muted">The selected nation’s score is always first. Wins, losses, draws and home/away settings are recalculated for that perspective. Win rate is wins divided by all matches, including draws. Before 1885 the archive’s numeric scores count goals; these fixtures contribute to results but are excluded from point sums, average margins and point-margin records. Other historical changes in scoring values remain unadjusted. Streaks follow the filtered match sequence. The rivalry web colours each ribbon by the share of decided meetings each side has won.</p>
+<h3>World Cups and competition coverage</h3><p class="small muted">All ten men’s World Cups from 1987 to 2023 are represented. Cancelled 2019 fixtures are excluded from played-match totals. Knockout stages follow each complete tournament’s final eight played fixtures; the 1999 quarter-final playoffs are separated. Competition views show a team’s matches, not an official bonus-point league table. Historical competition labels and venue identities can be incomplete.</p>
+<h3>Theme and offline use</h3><p class="small muted">Colours and simplified jersey illustrations are inspired by national kits; they are not official union graphics. All data and code are embedded. Source links require internet access. This is a dated snapshot, not a live feed.</p>
+<h3>Current colours: ${esc(t.name)}</h3><p class="small muted">${t.count} match records from ${t.from}, through ${day(t.through)}. ${ps.length} captured player snapshots. ${ms.filter(m=>m.dateUncertain).length} match dates carry source uncertainty flags.</p>`;}
+
+/* ---------- render, navigation, events ---------- */
+function render(){drawTabs();if(tour.stopped||!tour.timer)drawEraStrip();const v={matches:matchesView,carpet:carpetView,rivals:rivalsView,cups:cupsView,players:playersView,grounds:groundsView,coaches:coachesView,records:recordsView,heat:heatView,duel:duelView}[state.tab];try{v();if(state.tab==='matches'&&state.match!=null)runPitch();}catch(e){$('#view').innerHTML=`<p class="muted">Something in this view could not be drawn: ${esc(e.message)}</p>`;console.error(e);}}
+function go(tab,scroll=false){state.tab=tab;state.page=0;render();if(scroll)$('#stage').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});}
+function refreshAll(){applyTheme();drawJerseys();drawHero();drawWeb();drawTide();drawSources();render();}
+function setTeam(name){if(!teamBy[name])return;state.team=name;state.match=null;state.opp=null;state.player=null;state.ground=null;state.coach=null;state.focusOpp=null;state.pA=state.pB=null;$('#teamSelect').value=name;refreshAll();$('#web').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});}
+function setEra(id){tourStop();state.era=id;$('#eraSelect').value=id;state.page=0;drawHero();drawWeb();drawTide();render();}
+function init(){
+  $('#teamSelect').innerHTML=TEAMS.map(t=>`<option value="${esc(t.name)}">${esc(t.name)} · ${esc(t.nickname)}</option>`).join('');$('#teamSelect').value=state.team;
+  $('#eraSelect').innerHTML=ERAS.map(e=>`<option value="${e.id}">${esc(e.label)}</option>`).join('');
+  $('#reading').open=false;
+  refreshAll();curtain();
+  $('#teamSelect').addEventListener('change',e=>setTeam(e.target.value));
+  $('#eraSelect').addEventListener('change',e=>setEra(e.target.value));
+  $('#scope').addEventListener('change',e=>{state.scope=e.target.value;drawHero();drawWeb();drawTide();render();});
+  $('#tideMode').addEventListener('change',e=>{state.tideMode=e.target.value;drawTide();});
+  $('#jerseyRow').addEventListener('click',e=>{const b=e.target.closest('[data-team]');if(b)setTeam(b.dataset.team);});
+  $('#latest').addEventListener('click',e=>openMatch(+e.currentTarget.dataset.match));
+  $('#tideLegend').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;state.focusOpp=state.focusOpp===b.dataset.o?null:b.dataset.o;drawTide();});
+  $('#eraStrip').addEventListener('click',e=>{const s=e.target.closest('[data-era]');if(s)setEra(state.era===s.dataset.era?'all':s.dataset.era);});
+  $('#eraStrip').addEventListener('pointerenter',()=>tourPause(),{passive:true});$('#eraStrip').addEventListener('pointerleave',()=>{if(!tour.stopped)tourStart();},{passive:true});
+  $('#eraStrip').addEventListener('mouseover',e=>{const s=e.target.closest('[data-era]');if(s&&!tour.stopped)drawEraStrip(s.dataset.era);});
+  if('IntersectionObserver' in window){new IntersectionObserver(en=>{tour.visible=en[0].isIntersecting;if(tour.visible)tourStart();else tourPause();},{threshold:.2}).observe($('#eraStrip'));}else{tour.visible=true;tourStart();}
+  $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;if(b.dataset.tab==='rivals')state.opp=null;if(b.dataset.tab==='players')state.player=null;if(b.dataset.tab==='grounds')state.ground=null;if(b.dataset.tab==='coaches')state.coach=null;if(b.dataset.tab==='matches')state.match=null;go(b.dataset.tab);});
+  $('#view').addEventListener('click',e=>{const a=e.target.closest('[data-match],[data-opp],[data-player],[data-ground],[data-coach],[data-cup],[data-tab],[data-team],[data-more],[data-close]');if(!a)return;if(a.tagName==='A')e.preventDefault();const d=a.dataset;
+    if(d.close){state.match=null;render();return;}
+    if(d.more){state.page++;render();return;}
+    if(d.tab){if(d.clear)state[d.clear]=null;go(d.tab);return;}
+    if(d.team){setTeam(d.team);return;}
+    if(d.match!==undefined){openMatch(+d.match);return;}
+    if(d.opp){state.opp=d.opp;go('rivals',true);return;}
+    if(d.player){state.player=d.player;go('players',true);return;}
+    if(d.ground){state.ground=d.ground;go('grounds',true);return;}
+    if(d.coach){state.coach=d.coach;go('coaches',true);return;}
+    if(d.cup){state.cup=+d.cup;render();return;}});
+  $('#view').addEventListener('change',e=>{const t=e.target;const map={fRes:'result',fLoc:'loc',fComp:'comp',fSort:'sort',pSort:'playerSort',heatBy:'heatBy',heatMetric:'heatMetric'};if(map[t.id]){state[map[t.id]]=t.value;state.page=0;render();return;}
+    if(t.id==='duelBy'){state.duelBy=t.value;render();}else if(t.id==='dA'){if(state.duelBy==='nation')state.dA=t.value;else state.pA=t.value;render();}else if(t.id==='dB'){if(state.duelBy==='nation')state.dB=t.value;else state.pB=t.value;render();}});
+  let it;$('#view').addEventListener('input',e=>{const t=e.target;if(t.id==='q'||t.id==='pq'){clearTimeout(it);const key=t.id==='q'?'q':'pq';const v=t.value;const id=t.id;it=setTimeout(()=>{state[key]=v;state.page=0;render();const f=$('#'+id);if(f){f.focus();f.setSelectionRange(v.length,v.length);}},220);}});
+  const sb=$('#sources');if(sb){sb.addEventListener('click',()=>{$('#sourcesBox').open=true;$('#sourcesBox').scrollIntoView({behavior:RM?'auto':'smooth'});});}
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>drawTide(),150);});
+}
+init();

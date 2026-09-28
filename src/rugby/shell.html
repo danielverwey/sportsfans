@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>APEX / An Ode to the Test Match · Ten Nations · 1871–2026</title>
+<meta name="description" content="A hundred and fifty-six years of international rugby union drawn as a river of nation colours, every ground in the colours of the side that has won there most, every Test opened to its sheet. 3,960 Test matches, ten nations, 1871–2026.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Skip to the data</a>
+
+<div id="lights" role="dialog" aria-label="Kick-off">
+  <svg class="ko" viewBox="0 0 600 360" aria-hidden="true"><path class="arc" d="M120 300 Q 290 -100 455 180"/><path class="post" d="M430 330V140M480 330V140M430 220h50"/><line x1="40" y1="330" x2="560" y2="330" stroke="#2e333d" stroke-width="3"/><g transform="translate(120 300)"><g class="ball"><ellipse rx="26" ry="16" transform="rotate(-25)" fill="var(--accent,#5cd4a1)" stroke="#07080a" stroke-width="2"/><path d="M-14 0h28M-8-5v10M0-6v12M8-5v10" stroke="#07080a" stroke-width="2" stroke-linecap="round" transform="rotate(-25)" opacity=".7"/></g></g></svg>
+  <div class="cap">Kick-off · then the whole record</div>
+  <button type="button" id="skipLights">Skip ⏎</button>
+</div>
+
+<div class="wrap" id="top">
+<header class="mast">
+  <div class="brand">APEX <i>/</i> <small>An ode to the Test match · ten nations · 1871–2026</small></div>
+  <div class="ctl">
+    <div class="field"><label for="eraSelect">Era lens</label><select id="eraSelect"></select></div>
+    <div class="field"><label for="season">Season</label><select id="season"></select></div>
+    <div class="field"><label for="theme">Colours</label><select id="theme"><option value="champion">Best record’s colours</option></select></div>
+  </div>
+</header>
+
+<main id="main">
+
+<section id="river" aria-labelledby="riverH">
+  <div class="river-title">
+    <div>
+      <p class="eyebrow">I · The River</p>
+      <h1 id="riverH">A hundred and fifty-six <span>years</span> in one current</h1>
+    </div>
+    <div>
+      <p class="river-lede">Every Test win ever recorded, flowing left to right in the colours of the nation that won it — a draw counts half to each side. The river widens as the calendar grows. <b>Hover a year</b> to read it; <b>click</b> to step into it.</p>
+      <div class="edition" id="edition"></div>
+    </div>
+  </div>
+  <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Share of Test wins by nation, year by year, 1871 to 2026"></svg><div class="river-tip" id="riverTip"></div></div>
+  <div class="river-axis" id="riverAxis"></div>
+  <div class="river-legend" id="riverLegend" aria-label="Highlight a nation"></div>
+</section>
+
+<section id="grid" aria-labelledby="gridH">
+  <div class="sect-head">
+    <div>
+      <p class="eyebrow">II · The Grounds</p>
+      <h2 id="gridH">Every ground, in its colours</h2>
+      <p id="gridLede"></p>
+    </div>
+    <div class="tools">
+      <input type="search" id="gridFind" placeholder="Find a ground, city or country" aria-label="Find a ground">
+      <select id="gridMin" aria-label="Minimum Tests"><option value="3" selected>3+ Tests</option><option value="10">10+ Tests</option><option value="1">Every ground</option></select>
+      <select id="gridSort" aria-label="Sort grounds"><option value="count">Most Tests</option><option value="name">A – Z</option><option value="country">By country</option><option value="recent">Most recent</option></select>
+    </div>
+  </div>
+  <div class="circuits" id="circuits"></div>
+</section>
+
+<section id="stage" aria-labelledby="stageH">
+  <div class="stagebar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div id="stageStatus" class="small muted mono"></div>
+  </div>
+  <div class="sect-head" style="margin-top:30px">
+    <div>
+      <p class="eyebrow">III · The Stage</p>
+      <h2 id="stageH">Season, match, nation, player</h2>
+    </div>
+  </div>
+  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
+  <div class="era-text" id="eraContext"></div>
+  <div id="view" aria-live="polite"></div>
+</section>
+
+<details id="sourcesBox">
+  <summary>Sources, coverage &amp; recognition</summary>
+  <div id="sourcesBody"></div>
+</details>
+
+<details id="reading" open>
+  <summary>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Ten nations, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">Every match of every nation as plain reading matter, with each coaching record. This is what you get with scripts off, in print, or in a preview that blocks interactive pages.</p></div>
+    <span class="btn">Open / close</span>
+  </summary>
+  <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
+__STATIC__
+</details>
+
+</main>
+__FOOTER__
+</div>
+
+<script id="archive-data" type="application/json">__DATA__</script>
+<script>
+__APP__
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+name: Harvest · MotoGP and WorldSBK from Wikipedia
+# On demand: the clean-room rebuild. Writes build/harvest/<sport>.json and a coverage report as
+# artifacts for review; nothing is committed by this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      sport: { description: 'motogp or sbk', required: true, default: 'motogp' }
+      from: { description: 'first season', required: false, default: '' }
+      to: { description: 'last season', required: false, default: '' }
+      articles: { description: 'also read race articles (slower, fuller)', required: false, default: 'true' }
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install beautifulsoup4 lxml
+      - name: Harvest
+        run: |
+          ARGS=""
+          [ -n "${{ inputs.from }}" ] && ARGS="$ARGS --from ${{ inputs.from }}"
+          [ -n "${{ inputs.to }}" ] && ARGS="$ARGS --to ${{ inputs.to }}"
+          [ "${{ inputs.articles }}" != "true" ] && ARGS="$ARGS --no-articles"
+          python tools/harvest/wiki_bikes.py ${{ inputs.sport }} $ARGS
+      - uses: actions/upload-artifact@v4
+        with: { name: '${{ inputs.sport }}-harvest', path: build/harvest/ }
