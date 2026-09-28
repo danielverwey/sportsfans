@@ -1,20 +1,45 @@
 name: Circuit outlines from OpenStreetMap
-# On demand: fetches raceway geometry for every circuit of a bikes archive and writes it into
-# src/bikes/assets_<sport>.json (osm), committing the result. © OpenStreetMap contributors, ODbL.
+# On demand: fetches the mapped track for every MotoGP / WorldSBK circuit that has no outline yet, writes it into
+# src/bikes/assets_<sport>.json (osm), rebuilds docs/ so the deploy gate stays green, commits, deploys.
+# What was found and what was not — with the reason — is printed on the run's summary page.
+# © OpenStreetMap contributors, ODbL.
 on:
   workflow_dispatch:
     inputs:
-      sport: { description: 'motogp or sbk', required: true, default: 'motogp' }
-permissions: { contents: write }
+      sport: { description: 'motogp, sbk, or both (space-separated)', required: true, default: 'motogp sbk' }
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep, cancel-in-progress: false }
 jobs:
   outlines:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
-      - run: python tools/osm_outlines.py ${{ inputs.sport }}
-      - run: |
+      - name: Fetch outlines
+        run: python tools/osm_outlines.py ${{ inputs.sport }}
+      - name: Anything new?
+        id: diff
+        run: |
+          if git diff --quiet -- src/bikes; then echo "changed=false" >> $GITHUB_OUTPUT; echo "no new outlines"; else echo "changed=true" >> $GITHUB_OUTPUT; fi
+      - name: Rebuild and check
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          python build.py
+          python tools/check_links.py
+      - name: Commit
+        id: commit
+        if: steps.diff.outputs.changed == 'true'
+        run: |
           git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
-          git add src/bikes/assets_${{ inputs.sport }}.json
-          git diff --cached --quiet || (git commit -m "outlines: ${{ inputs.sport }} from OpenStreetMap" && git push)
+          git add src/bikes docs
+          git commit -m "outlines: ${{ inputs.sport }} from OpenStreetMap"
+          git push
+          echo "changed=true" >> $GITHUB_OUTPUT
+  deploy:
+    needs: outlines
+    if: needs.outlines.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

@@ -59,6 +59,7 @@ def parts_bike(tag):
     assert '</script>' not in data.decode('utf-8')
     return dict(key=tag, shell=shell, css=css.encode('utf-8'), app=bundle.encode('utf-8'), data=data, static=static, footer=footer, marker=b'type="application/json">', title={'motogp': 'MotoGP · An Ode to MotoGP · 1949–2026', 'sbk': 'WorldSBK · An Ode to World Superbike · 1988–2026'}[tag], global_='ARCHIVE', script_block='<script id="archive-data" type="application/json">__DATA__</script>\n<script>\n__APP__\n</script>')
 
+HOME_CSS = '.brand a.home{color:inherit;text-decoration:none}.brand small a{white-space:nowrap}.brand a.home:hover i{color:var(--ink,#fff)}.brand small a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line,#2a2d33)}.brand small a:hover{color:var(--accent,#FF8000)}footer p.small a{color:inherit}'
 NOTICE_HTML = '<div class="wrap"><p class="small dim" style="margin:-30px 0 40px;max-width:900px">' + sitegen.NOTICE + ' Sources and licences: <a href="https://sportsfans.co.za/licences/">sportsfans.co.za/licences</a>.</p></div>'
 def parts_cricket():
     d = SRC/'cricket'; data = (DATA/'cricket.json').read_bytes(); core = json.loads(data.decode('utf-8'))
@@ -100,7 +101,11 @@ def production(p, vcss, vjs, vdata):
     """The same shell, but the stylesheet, the application and the archive come from files — small HTML, cached assets."""
     key = p['key']; s = p['shell']
     assert s.count('<style>\n__CSS__\n</style>') == 1 and s.count(p['script_block']) == 1 and s.count('__STATIC__') == 1 and s.count('__FOOTER__') == 1
-    s = s.replace('<style>\n__CSS__\n</style>', f'<link rel="stylesheet" href="../assets/{key}.css?v={vcss}">\n<link rel="canonical" href="{SITE}/{key}/">\n<meta property="og:url" content="{SITE}/{key}/">')
+    s = s.replace('<style>\n__CSS__\n</style>', f'<link rel="stylesheet" href="../assets/{key}.css?v={vcss}">\n<style>{HOME_CSS}</style>\n<link rel="canonical" href="{SITE}/{key}/">\n<meta property="og:url" content="{SITE}/{key}/">')
+    # the way back: the brand is a link to the landing page, the strap line names it, the footer repeats it
+    assert s.count('<div class="brand">APEX <i>/</i> <small>') == 1, key
+    s = s.replace('<div class="brand">APEX <i>/</i> <small>', '<div class="brand"><a class="home" href="../" title="sportsfans.co.za · all atlases">APEX <i>/</i></a> <small>')
+    s = s.replace('</small></div>\n  <div class="ctl">', ' · <a href="../">all atlases</a></small></div>\n  <div class="ctl">', 1)
     loader = f'''<script>
 (async()=>{{const L=document.getElementById('lights');try{{if({LIGHT_KEYS}.some(k=>sessionStorage.getItem(k)==='1')&&L)L.style.display='none';}}catch(e){{}}
 const fail=m=>{{if(L)L.remove();const v=document.getElementById('view');if(v)v.innerHTML='<p class="muted" style="margin-top:22px">The archive could not be loaded ('+m+'). <a href="reading/">Open the reading edition</a> or <a href="../downloads/">download the self-contained atlas</a>.</p>';}};
@@ -109,7 +114,7 @@ const s=document.createElement('script');s.src='../assets/{key}.js?v={vjs}';s.on
 </script>'''
     s = s.replace(p['script_block'], loader)
     s = s.replace('__STATIC__', f'''<div class="panel" style="margin-top:16px"><p style="margin:0">The reading edition is its own page — every table of the archive as plain HTML, with no scripts needed: <a href="reading/">open the reading edition →</a></p><p class="small muted" style="margin:8px 0 0">Also: <a href="../downloads/">the self-contained offline atlas</a> (one HTML file with everything inside), and the static pages for every <a href="seasons/">season</a>{', <a href="drivers/">driver</a>, <a href="constructors/">constructor</a> and <a href="circuits/">circuit</a>' if key == 'f1' else (', <a href="nations/">nation</a>, <a href="players/">player</a>, <a href="grounds/">ground</a> and <a href="coaches/">coach</a>' if key == 'rugby' else (', <a href="teams/">team</a>, <a href="players/">player</a> and <a href="grounds/">ground</a>' if key == 'cricket' else (', <a href="players/">player</a>, <a href="tournaments/">tournament</a> and <a href="nations/">nation</a>' if key == 'tennis' else (', <a href="riders/">rider</a> and <a href="marques/">marque</a>' if key == 'tt' else ', <a href="riders/">rider</a>, <a href="makers/">maker</a> and <a href="circuits/">circuit</a>'))))}.</p></div>''')
-    s = s.replace('__FOOTER__', p['footer'].decode('utf-8').replace('Self-contained offline HTML', 'sportsfans.co.za edition').replace('fixed offline snapshot', 'dated snapshot') + '\n' + NOTICE_HTML.replace('<div class="wrap">', '').replace('</p></div>', '</p>').replace('https://sportsfans.co.za/licences/', '../licences/'))
+    s = s.replace('__FOOTER__', p['footer'].decode('utf-8').replace('Self-contained offline HTML', 'sportsfans.co.za edition').replace('fixed offline snapshot', 'dated snapshot') + '\n' + NOTICE_HTML.replace('<div class="wrap">', '').replace('</p></div>', '</p>').replace('https://sportsfans.co.za/licences/', '../licences/').replace('max-width:900px">', 'max-width:900px"><a href="../">sportsfans.co.za · all atlases</a> · <a href="../downloads/">offline editions</a> · <a href="reading/">reading edition</a>. ', 1))
     return s.encode('utf-8')
 
 def reading_page(p, vsite):
@@ -265,9 +270,16 @@ if __name__ == '__main__':
     urls.append(f'{SITE}/downloads/')
     (DOCS/'.nojekyll').write_text('')
     (DOCS/'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /data/\nSitemap: {SITE}/sitemap.xml\n')
+    # sitemap index → one sitemap per atlas (Search Console then reports coverage per sport; each file stays far below the 50,000-url limit)
     pri = lambda u: '1.0' if u == f'{SITE}/' else '0.9' if u.count('/') == 4 else '0.6'
-    (DOCS/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>{u}</loc><priority>{pri(u)}</priority></url>\n' for u in urls) + '</urlset>\n')
-    (DOCS/'404.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APEX / Not found</title><style>body{margin:0;background:#07080a;color:#f4f4f2;font:16px/1.5 Barlow,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center}h1{font:900 italic 72px/1 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:-.03em;margin:0 0 12px}a{color:#FF8000}</style></head><body><div><h1>Off the racing line</h1><p>That page is not in the atlas. <a href="/">Back to the four odes</a></p></div></body></html>')
+    groups = {}
+    for u in urls:
+        seg = u[len(SITE) + 1:].split('/')[0]; groups.setdefault(seg if seg in PUBLISH else 'site', []).append(u)
+    for g in [f.name for f in DOCS.glob('sitemap-*.xml')]: (DOCS/g).unlink()
+    for g, us in groups.items():
+        (DOCS/f'sitemap-{g}.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>{u}</loc><priority>{pri(u)}</priority></url>\n' for u in us) + '</urlset>\n')
+    (DOCS/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<sitemap><loc>{SITE}/sitemap-{g}.xml</loc></sitemap>\n' for g in ['site'] + [k for k in PUBLISH if k in groups]) + '</sitemapindex>\n')
+    (DOCS/'404.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APEX / Not found</title><style>body{margin:0;background:#07080a;color:#f4f4f2;font:16px/1.5 Barlow,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center}h1{font:900 italic 72px/1 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:-.03em;margin:0 0 12px}a{color:#FF8000}</style></head><body><div><h1>Off the racing line</h1><p>That page is not in the atlas. <a href="/">Back to the atlases</a></p></div></body></html>')
     if not args.no_cname and '.github.io' not in SITE: (DOCS/'CNAME').write_text(SITE.replace('https://', '').replace('http://', '').split('/')[0] + '\n')
     elif (DOCS/'CNAME').exists(): (DOCS/'CNAME').unlink()
     print(f'hub, reading editions, {pages_n:,} static pages, {len(urls):,} sitemap urls, robots, 404 → {DOCS}')

@@ -11,8 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - name: Rebuild and confirm nothing drifts
         run: |
@@ -20,7 +20,7 @@ jobs:
           git diff --exit-code --stat -- docs || (echo "docs/ is out of date: run python build.py and commit" && exit 1)
       - name: Every internal link resolves
         run: python tools/check_links.py
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with: { path: docs }
   deploy:
     needs: build
@@ -30,4 +30,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

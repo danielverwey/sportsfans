@@ -12,8 +12,8 @@ jobs:
     outputs:
       changed: ${{ steps.commit.outputs.changed }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
       - name: Harvest the current season
         run: python tools/harvest/f1.py
@@ -38,7 +38,7 @@ jobs:
           git commit -m "data: f1 sweep $(date -u +%Y-%m-%d)" -m "$(cat build/harvest/f1.md)"
           git push
           echo "changed=true" >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with: { name: f1-sweep-report, path: build/harvest/f1.md, if-no-files-found: ignore }
   deploy:

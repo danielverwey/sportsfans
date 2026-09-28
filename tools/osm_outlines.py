@@ -1,25 +1,47 @@
 #!/usr/bin/env python3
 """Circuit outlines from OpenStreetMap (© OpenStreetMap contributors, ODbL).
 
-For each circuit in a bikes archive, query Overpass for highway=raceway ways near the circuit's
-coordinates, stitch the closed loop, and write a 500×500 SVG path into src/bikes/assets_<sport>.json
+For each circuit in a bikes archive that has no outline yet, query Overpass for the mapped track near the
+circuit's coordinates, stitch the lap, and write a 500×500 SVG path into src/bikes/assets_<sport>.json
 under "osm". Run where the network is open (GitHub Actions or a desktop):
 
-    python tools/osm_outlines.py motogp
-    python tools/osm_outlines.py sbk
+    python tools/osm_outlines.py motogp sbk
 
-Circuits without coordinates or without a mapped raceway are skipped and keep the ring-of-winners
-fallback. Overpass is public infrastructure: the script sends one query per circuit with a
-descriptive User-Agent and pauses between calls.
+Three passes per circuit, each only if the previous found nothing: highway=raceway ways within 2.5 km,
+the same within 5 km, then the roads of a named route relation or motor-sport track within 8 km (the
+public-road courses: Dundrod, Clady, Opatija, Solitude…). The Snaefell Mountain Course is copied from the
+TT archive (data/tt.json), which already carries it from OSM relation 188240. Circuits with an F1DB survey
+keep it. Overpass is shared public infrastructure: one query at a time, a descriptive User-Agent, a pause
+between calls, and on 429/5xx the request moves to the next mirror after a backoff. Everything found and
+everything skipped (with the reason) is written to the GitHub job summary when there is one.
 """
-import json, math, pathlib, sys, time, urllib.request, urllib.parse
+import json, math, os, pathlib, re, sys, time, urllib.error, urllib.request, urllib.parse
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-UA = 'sportsfans.co.za atlas build (https://sportsfans.co.za; contact via the site) python-urllib'
-OVERPASS = 'https://overpass-api.de/api/interpreter'
+UA = 'sportsfans.co.za atlas build (https://sportsfans.co.za; sportsfans.co.za@gmail.com) python-urllib'
+ENDPOINTS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']
+BACKOFF = [8, 20, 45, 90]  # seconds after a refusal, per retry
+sys.setrecursionlimit(20000)
 
-def overpass(query):
-    req = urllib.request.Request(OVERPASS, data=urllib.parse.urlencode({'data': query}).encode(), headers={'User-Agent': UA})
-    with urllib.request.urlopen(req, timeout=120) as r: return json.loads(r.read().decode('utf-8'))
+class OverpassError(Exception): pass
+
+def overpass(query, tries=None):
+    """POST a query, rotating mirrors: a 429 (slot busy), 5xx (overloaded) or a dropped connection waits and tries the next."""
+    tries = tries if tries is not None else len(ENDPOINTS) + len(BACKOFF)
+    errors = []
+    for i in range(tries):
+        url = ENDPOINTS[i % len(ENDPOINTS)]
+        req = urllib.request.Request(url, data=urllib.parse.urlencode({'data': query}).encode(), headers={'User-Agent': UA})
+        try:
+            with urllib.request.urlopen(req, timeout=150) as r: body = r.read().decode('utf-8')
+            try: return json.loads(body)
+            except ValueError: errors.append(f'{url}: not JSON ({body[:80]!r})')
+        except urllib.error.HTTPError as e:
+            errors.append(f'{url}: HTTP {e.code}')
+            if e.code == 400: raise OverpassError(f'query rejected by {url}: ' + e.read().decode("utf-8", "replace")[:300])
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            errors.append(f'{url}: {getattr(e, "reason", e)}')
+        if i < tries - 1: time.sleep(BACKOFF[min(i, len(BACKOFF) - 1)])
+    raise OverpassError('; '.join(errors))
 
 def geocode(name, country):
     """Nominatim search for a circuit by name (one request per second, descriptive User-Agent, as their policy asks)."""
@@ -32,8 +54,28 @@ def geocode(name, country):
     return None, None
 
 def raceway_ways(lat, lon, radius=2500):
-    q = f'[out:json][timeout:60];(way["highway"="raceway"](around:{radius},{lat},{lon}););out geom;'
+    q = f'[out:json][timeout:90];(way["highway"="raceway"](around:{radius},{lat},{lon}););out geom;'
     return overpass(q).get('elements', [])
+
+# a route relation is a circuit when its name says so as a word (circuit, course, autodrom, Rennstrecke, the Finnish and
+# Swedish track nouns) or ends in -ring/-strecke/-bana/-rata; bus, cycle, hiking and rail routes are never candidates
+ROUTE_NAME = '(^|[^a-z])(circuit|circuito|circuits|course|racecourse|rennstrecke|racing|autodrom|autodromo|autódromo|motodrom|moottorirata|motorbana|racerbana|rennen|grand prix|tourist trophy)([^a-z]|$)|ring$|strecke$|bana$|rata$'
+NOT_ROUTE = 'bus|bicycle|hiking|foot|walking|train|tram|ferry|railway|subway|light_rail|mtb|ski|horse|running|detour|trolleybus|canoe|inline_skates|piste|power|pipeline'
+def route_ways(lat, lon, radius=8000):
+    """The public-road courses: the member ways of a route relation named like a circuit, or of a relation or track
+    tagged for motor sport, within the radius. The stitcher then takes the largest closed cycle or the longest chain."""
+    q = (f'[out:json][timeout:120];'
+         f'(relation(around:{radius},{lat},{lon})["type"="route"]["name"~"{ROUTE_NAME}",i]["route"!~"{NOT_ROUTE}"];'
+         f'relation(around:{radius},{lat},{lon})["sport"~"motor"];'
+         f'relation(around:{radius},{lat},{lon})["type"="route"]["route"~"^(racing|motor|motorsport|road_racing)$"];)->.r;'
+         f'(way(r.r);way(around:{radius},{lat},{lon})["leisure"="track"]["sport"~"motor"];);'
+         f'out geom;')
+    return overpass(q).get('elements', [])
+
+def loop_km(loop):
+    """Length of a lon/lat polyline in km (equirectangular, fine at circuit scale)."""
+    lat0 = sum(p[1] for p in loop) / len(loop); k = math.cos(math.radians(lat0))
+    return sum(math.hypot((b[0] - a[0]) * k, b[1] - a[1]) for a, b in zip(loop, loop[1:])) * 111.32
 
 SIDE = ('pit', 'paddock', 'service', 'access', 'escape', 'run-off', 'runoff', 'kart', 'oval link', 'link road', 'bypass')
 def is_side(tags):
@@ -105,26 +147,55 @@ def to_path(loop):
     d = 'M' + ' L'.join(f'{x:.1f} {y:.1f}' for x, y in out) + (' Z' if loop[0] == loop[-1] else '')
     return d
 
-def main(tag):
-    A = json.loads((ROOT/'data'/f'{tag}.json').read_text(encoding='utf-8'))
-    assets_p = ROOT/'src'/'bikes'/f'assets_{tag}.json'; assets = json.loads(assets_p.read_text(encoding='utf-8'))
-    osm = assets.get('osm', {}); done = 0; skipped = []
-    for cid, c in A['circuits'].items():
-        if cid in osm: continue
-        lat, lon = c.get('lat'), c.get('lng') or c.get('lon')
-        if lat is None or lon is None:
-            try: lat, lon = geocode(c['name'], c.get('country', ''))
-            except Exception as e: lat = lon = None
-        if lat is None or lon is None: skipped.append((c['name'], 'not found by name')); continue
-        try:
-            ways = raceway_ways(lat, lon); loop = stitch(ways)
-            if not loop or len(loop) < 12: skipped.append((c['name'], 'no mapped raceway')); continue
-            osm[cid] = to_path(loop); done += 1; print('ok ', c['name'], len(loop), 'points')
-        except Exception as e:
-            skipped.append((c['name'], f'error {e}'))
+def outline_for(c):
+    """(path, how) for a circuit record, or (None, why)."""
+    lat, lon = c.get('lat'), c.get('lng') or c.get('lon')
+    if lat is None or lon is None:
+        try: lat, lon = geocode(c['name'], c.get('country', ''))
+        except Exception: lat = lon = None
+    if lat is None or lon is None: return None, 'no coordinates and not found by name'
+    for how, fetch in (('raceway 2.5 km', lambda: raceway_ways(lat, lon, 2500)), ('raceway 5 km', lambda: raceway_ways(lat, lon, 5000)), ('route relation 8 km', lambda: route_ways(lat, lon, 8000))):
+        ways = fetch()
+        if not ways: time.sleep(2); continue
+        loop = stitch(ways)
+        if loop and len(loop) >= 12:
+            km = loop_km(loop)
+            if how.startswith('route') and not 1.5 <= km <= 30: time.sleep(2); continue  # a ring road or a fragment, not a lap
+            return to_path(loop), f'{how} · {len(ways)} ways · {len(loop)} points · {km:.1f} km' + ('' if loop[0] == loop[-1] else ' · open')
         time.sleep(2)
-    assets['osm'] = osm; assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
-    print(f'{tag}: {done} new outlines, {len(osm)} total; skipped {len(skipped)}')
-    for n, why in skipped: print('   -', n, '·', why)
+    return None, 'no mapped track (no raceway within 5 km, no circuit route relation within 8 km)'
 
-if __name__ == '__main__': main(sys.argv[1])
+def main(tags):
+    report = ['## Circuit outlines from OpenStreetMap', '']
+    failed_all = True; any_error = False
+    for tag in tags:
+        A = json.loads((ROOT/'data'/f'{tag}.json').read_text(encoding='utf-8'))
+        assets_p = ROOT/'src'/'bikes'/f'assets_{tag}.json'; assets = json.loads(assets_p.read_text(encoding='utf-8'))
+        osm = assets.setdefault('osm', {}); venues = assets.get('venues', {}); done = []; skipped = []
+        tt = ROOT/'data'/'tt.json'
+        for cid, c in A['circuits'].items():
+            if cid in osm or cid in venues: continue
+            if cid == 'isle-of-man-tt-mountain-course' and tt.exists():
+                course = json.loads(tt.read_text(encoding='utf-8')).get('course') or {}
+                if course.get('d'): osm[cid] = course['d']; done.append((c['name'], 'Snaefell Mountain Course from the TT archive (OSM relation 188240)')); failed_all = False; continue
+            try:
+                path, how = outline_for(c)
+            except OverpassError as e: skipped.append((c['name'], f'Overpass unavailable: {e}')); any_error = True; time.sleep(5); continue
+            except Exception as e: skipped.append((c['name'], f'error: {type(e).__name__} {e}')); any_error = True; continue
+            failed_all = False
+            if path: osm[cid] = path; done.append((c['name'], how)); print('ok ', c['name'], '·', how)
+            else: skipped.append((c['name'], how)); print('--- ', c['name'], '·', how)
+            time.sleep(2)
+        assets_p.write_text(json.dumps(assets, separators=(',', ':')), encoding='utf-8')
+        print(f'{tag}: {len(done)} new outlines, {len(osm)} from OSM in all; skipped {len(skipped)}')
+        for n, why in skipped: print('   -', n, '·', why)
+        report += [f'### {tag}: {len(done)} new outlines, {len(osm)} from OSM in all, {len(skipped)} without', '']
+        if done: report += ['| Found | How |', '|---|---|'] + [f'| {n} | {how} |' for n, how in done] + ['']
+        if skipped: report += ['| Still without an outline | Why |', '|---|---|'] + [f'| {n} | {why} |' for n, why in skipped] + ['']
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if summary:
+        with open(summary, 'a', encoding='utf-8') as f: f.write('\n'.join(report) + '\n')
+    if failed_all and any_error:
+        print('every request failed: Overpass could not be reached from this runner', file=sys.stderr); sys.exit(1)
+
+if __name__ == '__main__': main([t for a in sys.argv[1:] for t in a.replace(',', ' ').split()] or ['motogp', 'sbk'])

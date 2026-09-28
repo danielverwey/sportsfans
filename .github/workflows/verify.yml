@@ -7,11 +7,11 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: '3.12' }
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
       - run: python build.py   # docs/data and docs/downloads are not committed
       - run: npm install playwright@1.47 && npx playwright install --with-deps chromium
       - run: node tools/check_site.js
