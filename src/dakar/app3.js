@@ -88,7 +88,7 @@ function drawSources(){const cov=A.coverage||{};
 
 /* ---------- deep links ---------- */
 let routeLock=false;
-function writeRoute(){if(routeLock)return;const q=[];if(state.cat!=='all')q.push('class='+encodeURIComponent(state.cat));if(state.era!=='all')q.push('era='+encodeURIComponent(state.era));if(state.whole)q.push('whole=1');else q.push('season='+state.year);q.push('tab='+state.tab);for(const [k,t] of [['driver','drivers'],['marque','marques'],['cls','classes']]){if(state.tab===t&&state[k])q.push(k+'='+encodeURIComponent(state[k]));}if(state.tab==='duel'&&state.dA&&state.dB)q.push('duel='+encodeURIComponent(state.dA+'|'+state.dB)+'&by='+state.duelBy);const h='#'+q.join('&');if(location.hash!==h){try{history.replaceState(null,'',h);}catch(e){}}}
+function writeRoute(){if(routeLock)return;const q=[];if(state.cat!=='all')q.push('class='+encodeURIComponent(state.cat));if(state.era!=='all')q.push('era='+encodeURIComponent(state.era));if(state.whole)q.push('whole=1');else q.push('season='+state.year);q.push('tab='+state.tab);for(const [k,t] of [['driver','drivers'],['marque','marques'],['cls','classes']]){if(state.tab===t&&state[k])q.push(k+'='+encodeURIComponent(state[k]));}if(state.tab==='duel'&&state.dA&&state.dB)q.push('duel='+encodeURIComponent(state.dA+'|'+state.dB)+'&by='+state.duelBy);const h='#'+q.join('&');if(location.hash!==h){try{history[location.hash?'pushState':'replaceState'](null,'',h);}catch(e){}}}
 function readRoute(){const h=location.hash.replace(/^#\/?/,'');if(!h||/^static-/.test(h))return false;const p={};for(const kv of h.split('&')){const i=kv.indexOf('=');p[i<0?kv:kv.slice(0,i)]=i<0?'1':decodeURIComponent(kv.slice(i+1));}let any=false;
   if(p.class&&(p.class==='all'||CATS.includes(p.class))){state.cat=p.class;any=true;}rebuildSeasons();
   if(p.era&&(p.era==='all'||ERAS.some(e=>e.id===p.era))){state.era=p.era;any=true;}
@@ -101,11 +101,11 @@ function readRoute(){const h=location.hash.replace(/^#\/?/,'');if(!h||/^static-/
   return any;}
 
 /* ---------- render, navigation, events ---------- */
-function render(){stopReplay();drawTabs();if(tour.stopped||!tour.timer)drawEraStrip();const v={season:seasonView,drivers:()=>state.driver?driverView(state.driver):driversView(),marques:()=>state.marque?marqueView(state.marque):marquesView(),classes:()=>state.cls?classView(state.cls):classesView(),records:recordsView,barcode:barcodeView,duel:duelView}[state.tab];try{v();}catch(e){$('#view').innerHTML=`<p class="muted">Something in this view could not be drawn: ${esc(e.message)}</p>`;console.error(e);}writeRoute();}
+function render(){stopReplay();drawTabs();if(tour.stopped||!tour.timer)drawEraStrip();const v={season:seasonView,drivers:()=>state.driver?driverView(state.driver):driversView(),marques:()=>state.marque?marqueView(state.marque):marquesView(),classes:()=>state.cls?classView(state.cls):classesView(),records:recordsView,barcode:barcodeView,duel:duelView}[state.tab];try{v();}catch(e){$('#view').innerHTML=`<p class="muted">Something in this view could not be drawn: ${esc(e.message)}</p>`;console.error(e);}StageNav.draw();writeRoute();}
 function go(tab,scroll=true){state.tab=tab;render();if(scroll)$('#stage').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});}
 function ensureYearInLens(y){if(state.era!=='all'&&!inEraYear(y)){state.era='all';$('#eraSelect').value='all';}}
 function setSeason(y,scroll){state.whole=false;ensureYearInLens(y);state.year=y;fillSeasons();applyTheme();drawRiver();state.tab='season';go(state.tab,scroll);}
-function fillSeasons(){const sel=$('#season');const ss=eraSeasons();if(!ss.length){sel.innerHTML='';return;}const e=state.era==='all'?null:ERAS.find(x=>x.id===state.era);sel.innerHTML=`<option value="era">${e?'Whole era':'All years'} · ${ss[0].year}–${ss[ss.length-1].year}</option>`+ss.slice().reverse().map(s=>`<option value="${s.year}">${s.year}${s.ed.cancelled?' · cancelled':''}</option>`).join('');sel.value=state.whole?'era':state.year;}
+function fillSeasons(){const sel=$('#season');const ss=eraSeasons();if(!ss.length){sel.innerHTML='';return;}const e=state.era==='all'?null:ERAS.find(x=>x.id===state.era);sel.innerHTML=`<option value="era">${e?'Whole era':'All years'} · ${ss[0].year}–${ss[ss.length-1].year}</option>`+'<optgroup label="Newest first">'+ss.slice().reverse().map(s=>`<option value="${s.year}">${s.year}${s.ed.cancelled?' · cancelled':''}</option>`).join('')+'</optgroup>';sel.value=state.whole?'era':state.year;}
 function setEra(id){tourStop();state.era=id;$('#eraSelect').value=id;if(id!=='all'){if(!inEraYear(state.year)){const last=eraSeasons().slice(-1)[0];state.year=last?last.year:state.year;}}fillSeasons();applyTheme();drawRiver();drawGrid();render();}
 function relens(rerender=true){rebuildSeasons();if(!byYear[state.year])state.year=LAST_YEAR;state.driver=null;state.marque=null;state.cls=null;fillSeasons();$('#eraSelect').innerHTML=`<option value="all">All eras · ${FIRST_YEAR}–${LAST_YEAR}</option>`+ERAS.filter(e=>e.to>=FIRST_YEAR).map(e=>`<option value="${e.id}">${esc(ERA_SHORT[e.id]||e.name)} · ${e.from}–${e.to}</option>`).join('');$('#eraSelect').value=state.era;if(rerender){applyTheme();drawRiver();drawGrid();render();}}
 function init(){
@@ -141,4 +141,5 @@ function init(){
     if(a.dataset.cls){state.cls=a.dataset.cls;go('classes',false);return;}});
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel','records','classes'].includes(state.tab))render();},150);});
 }
-document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init();
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons().map(s=>({year:s.year,cancelled:!!(s.ed&&s.ed.cancelled)})),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:null});
+init();

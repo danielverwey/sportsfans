@@ -111,6 +111,7 @@ def standalone(p):
     check_embedded(out, blob, p['marker'], p['static'], p['footer'])
     return out
 
+COMMON_JS = (SRC/'common/stage.js').read_bytes(); COMMON_CSS = (SRC/'common/stage.css').read_bytes()
 LIGHT_KEYS = "['apex-lights','apex-kickoff','apex-toss','apex-serve','apex-tt','apex-ufc','apex-dakar']"
 def production(p, vcss, vjs, vdata):
     """The same shell, but the stylesheet, the application and the archive come from files — small HTML, cached assets."""
@@ -279,7 +280,8 @@ if __name__ == '__main__':
     shutil.rmtree(HELD_DIR, ignore_errors=True)
     for key, fn in PARTS.items():
         if not (DATA/f'{key}.json').exists(): print(f'{key:7s} no data file yet · skipped'); continue
-        p = fn(); single = standalone(p)
+        p = fn(); p['app'] = COMMON_JS + b'\n' + p['app']; p['css'] = p['css'] + b'\n' + COMMON_CSS   # the shared Stage navigation, one copy for every atlas
+        single = standalone(p)
         write(DROP/STANDALONE[key], single)
         if key not in PUBLISH:
             write(HELD_DIR/key/STANDALONE[key], single); print(f'{key:7s} HELD ({HELD.get(key, "not published")}) · offline edition in build/held/'); continue
