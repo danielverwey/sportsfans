@@ -81,6 +81,25 @@ def place_coords(names, log):
     except Exception as e: log.append(f'  - town coordinates not read ({e})')
     return out
 
+def diagnose(page, read, held):
+    """What the reader saw, for the report when the proof fails: each table's two header rows, the category and the
+    place columns it inferred, and what it read for the editions it was checked on."""
+    out = ['', '<details><summary>What the reader saw</summary>', '']
+    for t in page.soup.find_all('table', class_=re.compile('wikitable'))[:20]:
+        m = grid(t)
+        if len(m) < 2: continue
+        h0 = [text(c) for c in m[0]]; h1 = [text(c).lower() for c in m[1]] if len(m) > 2 else []
+        cat = category(' '.join(h0[2:])) if len(h0) > 2 else None
+        places = []; names = []
+        for i in range(2, len(h1)):
+            if MAKE_COL.search(h1[i]): places.append((names, i)); names = []
+            else: names.append(i)
+        out.append(f'- table ({len(m) - 2} rows): {" | ".join(h[:16] for h in h0[:9])}')
+        out.append(f'  - second header: {" | ".join(h[:16] for h in h1[:9])} → category {cat}, places {places[:3]}')
+    for y in held:
+        out.append(f'- {y} as read: ' + '; '.join(f'{c}: {[(r, p[0], mk[:14]) for r, p, mk in pod]}' for c, pod in read.get(y, {}).get('podium', {}).items()) if y in read else f'- {y}: not read from any table')
+    return out + ['', '</details>']
+
 def sweep(log, get_page=None, today=None):
     today = today or datetime.date.today()
     if get_page is None:
@@ -103,6 +122,7 @@ def sweep(log, get_page=None, today=None):
     log.append(f'Check on {", ".join(map(str, held))}: the reader reproduces {have} of the archive\'s {checked} podium places ({have / max(checked, 1):.1%}).')
     if not checked or have / checked < AGREE:
         log += [f'  - {b}' for b in bad[:12]]
+        log += diagnose(page, read, held)
         raise SystemExit('the article did not read back as the archive holds it — the layout may have changed; nothing written')
     # 2. a new edition, or the newest completed
     latest = max(eds)

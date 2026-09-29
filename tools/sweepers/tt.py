@@ -84,6 +84,22 @@ def build(y, races, R, url, new_riders):
         out.append({'id': f'tt-{y}-{slug(r["name"])}', 'y': y, 'name': r['name'], 'family': fam, 'course': 'Mountain Course', 'kind': kind, 'scope': 'tt', 'date': None, 'laps': None, 'results': rows, 'url': url})
     return out
 
+def diagnose(page, races, mine, archive):
+    """What the reader saw, for the report when the proof fails: every results-like table's headers and first row, the
+    reader's first placings per race next to the archive's, and the riders it could not match."""
+    out = ['', '<details><summary>What the reader saw</summary>', '']
+    for t in page.soup.find_all('table', class_=re.compile('wikitable'))[:16]:
+        m = grid(t)
+        if len(m) < 2: continue
+        out.append(f'- table: {" | ".join(text(c)[:18] for c in m[0][:8])}')
+        out.append(f'  - first row: {" | ".join(text(c)[:22] for c in m[1][:8])}')
+    for r in archive[:12]:
+        got = mine.get(r['id'], {}).get('results', [])
+        out.append(f'- {r["id"]}: archive {[(x[1], x[0]) for x in r["results"][:3]]} · read {[(x[1], x[0]) for x in got[:3]] if got else "nothing"}')
+    for r in races[:3]:
+        out.append(f'- raw {r["name"]}: {[(x["pos"], x["names"], x["machine"]) for x in r["rows"][:3]]}')
+    return out + ['', '</details>']
+
 def sweep(log, get_page=None, today=None):
     today = today or datetime.date.today()
     if get_page is None:
@@ -103,6 +119,7 @@ def sweep(log, get_page=None, today=None):
     log.append(f'Check on {y - 1}: the reader reproduces {have} of the archive\'s {checked} placings ({have / max(checked, 1):.1%}).')
     if checked and have / checked < AGREE:
         log += [f'  - {b}' for b in bad[:10]]
+        log += diagnose(page, races, mine, [r for r in A['races'] if r['y'] == y - 1])
         raise SystemExit(f'the {y - 1} article did not read back as the archive holds it — nothing written')
     # 2. this year's article
     new_riders = {}
