@@ -454,3 +454,10 @@ table tr.win td{color:var(--ink)}table tr.win td b{color:var(--accent)}
 /* the way in: a visible button from the opening to the Stage */
 .explore{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 16px;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font:700 11px var(--mono);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;background:color-mix(in srgb,var(--accent) 10%,transparent);transition:background .2s,color .2s}
 .explore:hover,.explore:focus-visible{background:var(--accent);color:var(--on-accent,#07080a)}
+/* the Podium: one class of one edition */
+.podium3{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:end;margin-top:18px}
+.pstep{border:1px solid var(--line);border-radius:12px;padding:16px;background:linear-gradient(180deg,color-mix(in srgb,var(--team) 24%,transparent),var(--panel) 70%);display:flex;flex-direction:column;gap:6px;min-height:0}
+.pstep.p1{min-height:160px}.pstep.p2{min-height:128px}.pstep.p3{min-height:104px}
+.pstep .rk{font:900 italic 36px/1 var(--display);color:var(--team)}
+.pstep b{font-size:16px;overflow-wrap:anywhere}.pstep a{color:inherit;text-decoration:none}
+@media (max-width:720px){.podium3{grid-template-columns:1fr}.pstep,.pstep.p1,.pstep.p2,.pstep.p3{min-height:0}}

@@ -34,7 +34,7 @@ const teamVar=m=>`--team:${color(m)}`;
 const ERA_COL={'Africa':'#f2c654','South America':'#66d3df','Saudi Arabia':'#ff8b37'};
 
 /* ---------- lens: class (the masthead select), then era + season as everywhere ---------- */
-const state={cat:'all',era:'all',year:null,tab:'season',driver:null,marque:null,cls:null,lens:'wins',plens:'wins',heat:'wins',duelBy:'d',dA:null,dB:null,focusTeam:null,whole:false,find2:'',gridFind:'',gridSort:'year'};
+const state={cat:'all',era:'all',year:null,tab:'season',pod:null,driver:null,marque:null,cls:null,lens:'wins',plens:'wins',heat:'wins',duelBy:'d',dA:null,dB:null,focusTeam:null,whole:false,find2:'',gridFind:'',gridSort:'year'};
 const inLens=x=>state.cat==='all'?true:x.cat===state.cat;
 let S=[],byYear={},FIRST_YEAR=0,LAST_YEAR=0;
 function rebuildSeasons(){S=[];for(const e of EDS){const rows=e.results.filter(inLens);if(!rows.length&&!e.cancelled&&state.cat!=='all')continue;S.push({year:e.year,ed:e,rows,wins:rows.filter(x=>x.rank===1)});}byYear=Object.fromEntries(S.map(s=>[s.year,s]));FIRST_YEAR=S[0]?.year||1979;LAST_YEAR=S[S.length-1]?.year||2026;seasonBest={};riverModel=null;aggCache={};if(!byYear[state.year])state.year=LAST_YEAR;}

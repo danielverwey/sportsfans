@@ -43,6 +43,7 @@ Sportsfans/
 │   ├── tennis/   shell.html  style.css  app1–4.js  pako.min.js
 │   ├── tt/       shell.html  style.css  app1–3.js   (the Isle of Man TT: the course is drawn from OpenStreetMap relation 188240)
 │   ├── bikes/    shared shell/style/adapter + config_<sport>.js, app_<sport>.js (generated from src/f1 by tools/patch_bike_app.py), assets_<sport>.json
+│   ├── common/   stage.js + stage.css — the Stage's shared navigation (season timeline, ‹ › stepping, ← → keys, Back button), put into every atlas by build.py
 │   └── hub/      index.html  favicon.svg  favicon-32.png  apple-touch-icon.png
 ├── data/                          the archives; cricket_details/ and tennis_matches/ hold the yearly shards (tools/prepare_cricket.py and tools/prepare_tennis.py split them from the prototype exports)
 ├── audits/                        DATA-AUDIT-<sport>.md, the cross-check reports the audit tools write
@@ -54,6 +55,8 @@ Sportsfans/
 ```
 
 Every atlas exists in two forms from the same sources. The **live page** is a small shell: it loads `assets/<sport>.css`, fetches `data/<sport>.json`, then runs `assets/<sport>.js`, so the browser caches the archive and the app between visits and only the shell changes with the URL. Cricket and tennis keep their scorecards and draws in yearly shards (`data/cricket_details/`, `data/tennis_matches/`) that the page fetches only when a match or a draw is opened. The **offline edition** in `docs/downloads/` is the same page with everything inlined — one file, the archive embedded byte-for-byte (gzipped for the two large ones), working from disk.
+
+Every Stage carries the same navigation (`src/common/stage.js`): a season timeline under the era strip — oldest on the left, newest on the right, spanning the lens — with ‹ › stepping through seasons and through the atlas's unit (race, match, draw, event, podium) that wraps into the neighbouring season, ← → on the keyboard (shift for seasons), and the sticky status line as a jump back to the timeline. Every view change is a browser history entry, so Back retraces your steps. Timelines flow forward; lists and dropdowns start at today and say so. The tabs run in one order everywhere: season · unit · people · teams · venues · records · barcode · duel.
 
 The address bar mirrors the atlas state (`#era=turbo&season=1988&tab=race&race=12`, `#tab=nations&nation=South%20Africa`, `#gender=W&format=T20I&tab=nations&nation=Australia`, `#tour=W&edition=WS:2024-540&tab=draw`), so any view can be shared, and every static page opens the atlas at its own view through that link.
 

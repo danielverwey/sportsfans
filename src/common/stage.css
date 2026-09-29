@@ -1,0 +1,31 @@
+/* Shared Stage navigation (src/common/stage.css, appended to every atlas stylesheet by build.py) */
+.season-nav{margin:16px 0 0}
+.season-strip{display:flex;align-items:center;gap:8px}
+.season-strip .sbtn,.unit-nav .ubtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 10px;font:12px var(--mono);cursor:pointer;min-height:0;line-height:1}
+.season-strip .sbtn:hover:not([disabled]),.unit-nav .ubtn:hover:not([disabled]){border-color:var(--accent);color:var(--accent)}
+.season-strip .sbtn[disabled],.unit-nav .ubtn[disabled]{opacity:.35;cursor:default}
+.season-strip .sbar{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.season-strip .tick{font:10px var(--mono);letter-spacing:.08em;color:var(--dim);flex:none}
+.season-strip .sys{flex:1;display:flex;gap:2px;height:18px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.season-strip .sys::-webkit-scrollbar{display:none}
+.season-strip .sy{flex:1 0 5px;min-width:5px;background:var(--line2);border:0;border-radius:2px;padding:0;min-height:0;cursor:pointer;transition:background .2s,transform .2s;transform-origin:center}
+.season-strip .sy:hover{background:var(--muted);transform:scaleY(1.25)}
+.season-strip .sy.on{background:var(--accent);transform:scaleY(1.45);box-shadow:0 0 10px color-mix(in srgb,var(--accent) 60%,transparent)}
+.season-strip .sy.off{opacity:.35}
+.season-cap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.season-cap b{color:var(--accent);font-weight:700}
+.unit-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.unit-nav .ubtn{max-width:34%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.unit-nav .ucur{text-align:center;min-width:0;display:flex;flex-direction:column;gap:2px}
+.unit-nav .ucur b{font:700 13px var(--mono);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unit-nav .ucur small{font:10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+#stageStatus{cursor:pointer}#stageStatus:hover{color:var(--accent)}
+.season-nav.flash .season-strip .sys{animation:sn-flash 1.2s ease-out}
+@keyframes sn-flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px transparent}}
+@media (max-width:720px){
+  .stagebar .tabs{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:24px}
+  .era-strip{height:22px}
+  .season-strip .sys{height:24px}
+  .season-cap .dim{display:none}
+  .unit-nav .ubtn{max-width:30%}
+}
