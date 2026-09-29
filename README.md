@@ -79,6 +79,10 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 2. `python tools/prepare_dakar.py path/to/paris_dakar_atlas_1979_2026.html` → `data/dakar.json` (editions, podium rows, people, marques, colours, map).
 3. Commit `data/dakar.json` and push — the deploy workflow builds and publishes. Routes are drawn schematically between the named towns; a town missing from the gazetteer is simply not drawn (the build prints any edition with fewer than two drawable stops).
 
+### Search engines
+
+Every page carries a title, description, canonical link, share card (`og:image` from `src/hub/share/`, rendered once by `node tools/share_images.js` after a build) and JSON-LD: breadcrumbs everywhere, a typed entity on career, venue and team pages, one `Dataset` per data file on the licences page. Career pages with fewer than three appearances and nothing of note are built and linked but marked `noindex,follow` and kept out of the sitemap (the threshold lives in each generator's `noindex=` argument in `tools/sitegen.py`). Directory indexes over 1,500 entries split into a page per surname initial. The sitemap index has one file per atlas with `lastmod` taken from the archive's snapshot date.
+
 ### What is committed
 
 `src/`, `data/`, `tools/`, the workflows and the notes. `docs/` is **not** committed: the *Build and deploy* workflow runs `python build.py` on every push to `main` and publishes the result, so the site can never drift from its sources and nobody needs Python or Node on their own machine to release. A local `python build.py` is only for previewing (`node tools/check_site.js`).

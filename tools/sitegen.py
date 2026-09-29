@@ -43,7 +43,7 @@ h2 small{font:11px var(--mono);letter-spacing:.14em;color:var(--muted);text-tran
 .tablewrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px}
 table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--panel)}th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;vertical-align:top}th{position:sticky;top:0;background:var(--panel2);font:10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);z-index:1}tr:hover td{background:var(--panel2)}td.n{text-align:right;font-family:var(--mono);font-size:12.5px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c,#555);vertical-align:-1px;margin-right:7px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:999px;padding:5px 11px;font-size:12.5px;color:inherit;text-decoration:none;background:var(--panel)}.chip:hover{border-color:var(--accent)}.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,#555)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chips.letters{margin:14px 0 22px}.chip.on{border-color:var(--accent);color:var(--accent)}.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);border-radius:999px;padding:5px 11px;font-size:12.5px;color:inherit;text-decoration:none;background:var(--panel)}.chip:hover{border-color:var(--accent)}.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,#555)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media (max-width:900px){.two{grid-template-columns:1fr}}
 .W{color:#3bd36b}.L{color:#c8323e}.D{color:#8b9099}
 .index{columns:3;column-gap:24px;margin-top:14px}@media (max-width:900px){.index{columns:2}}@media (max-width:560px){.index{columns:1}}.index a{display:block;color:inherit;text-decoration:none;padding:4px 0;border-bottom:1px solid var(--line);break-inside:avoid;font-size:13.5px}.index a small{color:var(--muted);font-family:var(--mono);font-size:11px;margin-left:6px}.index a:hover{color:var(--accent)}
@@ -60,8 +60,28 @@ def icon_links(rel):
     """The site mark for the tab and the home screen: the SVG, the .ico fallback, the touch icon — all at the site root."""
     return f'<link rel="icon" href="{rel}favicon.svg" type="image/svg+xml"><link rel="icon" href="{rel}favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">'
 
-def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='', published=None):
+SITE_NAME = 'APEX / Sportsfans'
+ENTITY_TYPES = {'Drivers': 'Person', 'Riders': 'Person', 'Players': 'Person', 'Fighters': 'Person', 'Drivers & riders': 'Person', 'Coaches': 'Person',
+                'Circuits': 'Place', 'Grounds': 'Place', 'Venues': 'Place',
+                'Nations': 'SportsTeam', 'Teams': 'SportsTeam', 'Constructors': 'SportsOrganization', 'Makers': 'Organization', 'Marques': 'Organization'}
+def ld_json(*objs):
+    """Structured data for search engines, one script per page; nothing here is shown to readers."""
+    obj = objs[0] if len(objs) == 1 else {'@context': 'https://schema.org', '@graph': list(objs)}
+    return '<script type="application/ld+json">' + json.dumps(obj, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/') + '</script>'
+def page_ld(site, path, crumbs, title, desc, entity=True):
+    """BreadcrumbList from the crumbs, and a typed entity (Person, Place, team, organisation) when the parent crumb says what the page is about."""
+    import urllib.parse
+    here = f'{site}/{path}'
+    items = [{'@type': 'ListItem', 'position': i + 1, 'name': t, 'item': urllib.parse.urljoin(here, h) if h else here} for i, (t, h) in enumerate(crumbs)]
+    graph = [{'@type': 'BreadcrumbList', 'itemListElement': items}]
+    if entity and len(crumbs) >= 3 and crumbs[-1][1] is None and ENTITY_TYPES.get(crumbs[-2][0]):
+        graph.append({'@type': ENTITY_TYPES[crumbs[-2][0]], 'name': crumbs[-1][0], 'url': here, 'description': desc})
+    return {'@context': 'https://schema.org', '@graph': graph}
+
+def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='', published=None, noindex=False, entity=True):
+    """noindex: the page is built and linked but asks not to be indexed (long-tail careers below the threshold); build.py also leaves it out of the sitemap."""
     rel = '../' * depth
+    share = f'{site}/share/{sport or "apex"}.png'
     published = published if published is not None else PUBLISHED
     shown = [k for k in SPORTS if published is None or k in published]
     nav = ''.join(f'<a href="{rel}{k}/"{" class=on" if k == sport else ""}>{E(SPORTS[k][0])}</a>' for k in shown) + f'<a href="{rel}licences/">Licences</a>'
@@ -73,12 +93,13 @@ def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
-<link rel="canonical" href="{site}/{path}">
+<link rel="canonical" href="{site}/{path}">{'<meta name="robots" content="noindex,follow">' if noindex else ''}
 {icon_links(rel)}
-<meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{site}/{path}"><meta property="og:type" content="article">
+<meta property="og:site_name" content="{SITE_NAME}"><meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{site}/{path}"><meta property="og:type" content="article"><meta property="og:image" content="{share}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
 <link rel="stylesheet" href="{rel}assets/site.css?v={v}">{extra_head}
+{ld_json(page_ld(site, path, crumbs, title, desc, entity))}
 </head>
 <body>
 <div class="wrap">
@@ -99,6 +120,25 @@ def table(cols, rows, num=()):
 def kpis(items): return '<div class="kpis">' + ''.join(f'<div class="kpi"><span>{E(t)}</span><b>{v}</b>{f"<small>{s}</small>" if s else ""}</div>' for t, v, s in items) + '</div>'
 def index_list(items, rel):
     return '<div class="index">' + ''.join(f'<a href="{rel}{h}">{E(t)}{f"<small>{E(s)}</small>" if s else ""}</a>' for t, h, s in items) + '</div>'
+def initial(name):
+    """The letter a name files under: the surname's first letter, accents folded, anything else under '#'."""
+    import unicodedata
+    w = (name or '').split(' ')[-1]; c = unicodedata.normalize('NFKD', w[:1]).encode('ascii', 'ignore').decode('ascii').upper()
+    return c if 'A' <= c <= 'Z' else '#'
+def index_pages(*, site, sport, title, desc, crumbs, intro, items, dir, v, threshold=1500):
+    """A directory index: one page when the list is short; past the threshold, a letter page per surname initial with a letter bar, so no page carries thousands of links."""
+    rel = '../../'
+    if len(items) <= threshold:
+        return [(f'{dir}/index.html', page(site=site, sport=sport, depth=2, title=title, desc=desc, crumbs=crumbs, body=intro + index_list(items, rel), path=f'{dir}/', v=v))]
+    groups = collections.OrderedDict()
+    for it in items: groups.setdefault(initial(it[0]), []).append(it)
+    letters = sorted(groups, key=lambda c: (c == '#', c)); slugof = lambda c: 'other' if c == '#' else c.lower()
+    def bar(r, on=None): return '<div class="chips letters">' + ''.join(f'<a class="chip{" on" if c == on else ""}" href="{r}{dir}/{slugof(c)}/">{E(c)} <span style="color:var(--muted)">{len(groups[c]):,}</span></a>' for c in letters) + '</div>'
+    out = [(f'{dir}/index.html', page(site=site, sport=sport, depth=2, title=title, desc=desc, crumbs=crumbs, body=intro + '<p class="lede">By surname:</p>' + bar(rel), path=f'{dir}/', v=v))]
+    for c in letters:
+        r3 = '../../../'; label = 'Other' if c == '#' else c
+        out.append((f'{dir}/{slugof(c)}/index.html', page(site=site, sport=sport, depth=3, title=f'{label} · {title}', desc=f'{desc} Surnames beginning with {label}.', crumbs=[(t, h.replace(rel, r3, 1) if h else h) for t, h in crumbs[:-1]] + [(crumbs[-1][0], r3 + dir + '/'), (label, None)], body=intro.replace(rel, r3) + bar(r3, c) + index_list(groups[c], r3), path=f'{dir}/{slugof(c)}/', v=v, entity=False)))
+    return out
 
 # ============================================================ F1 ============================================================
 def gen_f1(D, *, site, v):
@@ -170,7 +210,7 @@ def gen_f1(D, *, site, v):
 {kpis([('Titles', len(titles), ''), ('Wins', wins, f'{pct(wins, len(rr))}% of entries'), ('Podiums', pod, ''), ('Grid P1', poles, ''), ('Fastest laps', fl, ''), ('Points', fmt(pts), 'race points as awarded'), ('Grands Prix', len(rr), '')])}
 <h2>Season by season</h2>{table(['Season', 'Pos', 'Points', 'Wins', 'Podiums', 'GPs', 'Constructor'], seas, num=(2, 3, 4, 5))}
 <h2>Every Grand Prix <small>{len(rr)} entries</small></h2>{table(['Season', 'Grand Prix', 'Constructor', 'Grid', 'Result', 'Pts', 'Status'], races, num=(3, 5))}'''
-        out.append((f'f1/drivers/{d}/index.html', page(site=site, sport='f1', depth=3, title=f'{info["name"]} · Formula 1 career, every Grand Prix · APEX', desc=f'{info["name"]}: {len(rr)} Grands Prix, {wins} wins, {pod} podiums, {fmt(pts)} points, {years[0]}–{years[-1]}. Season by season and race by race.', crumbs=[('Sportsfans', rel), ('Formula 1', rel + 'f1/'), ('Drivers', rel + 'f1/drivers/'), (info['name'], None)], body=body, path=f'f1/drivers/{d}/', v=v)))
+        out.append((f'f1/drivers/{d}/index.html', page(site=site, sport='f1', depth=3, title=f'{info["name"]} · Formula 1 career, every Grand Prix · APEX', desc=f'{info["name"]}: {len(rr)} Grands Prix, {wins} wins, {pod} podiums, {fmt(pts)} points, {years[0]}–{years[-1]}. Season by season and race by race.', crumbs=[('Sportsfans', rel), ('Formula 1', rel + 'f1/'), ('Drivers', rel + 'f1/drivers/'), (info['name'], None)], body=body, path=f'f1/drivers/{d}/', v=v, noindex=(len(rr) < 3 and not pod and not pts))))
     # ---- constructors
     for t, info in teams.items():
         rel = '../../../'; rr = by_team.get(t, [])
@@ -281,7 +321,7 @@ def gen_bikes(tag, A, colours, *, site, v):
 {kpis([('Titles', len(titles), ''), ('Wins', wins, f'{pct(wins, len(mains))}% of starts' if mains else ''), ('Podiums', pod, ''), ('Race starts', len(mains), 'sprints excluded'), ('Seasons', len(ys), '')])}
 <h2>Season by season</h2>{table(['Season', 'Pos', 'Points', 'Wins', 'Podiums', 'Starts', 'Maker'], seas, num=(2, 3, 4, 5))}
 {('<h2>Every race <small>' + str(len(rr)) + ' classifications</small></h2>' + table(['Season', 'Race', 'Maker', 'Result', 'Pts', 'Status'], rows, num=(3, 4))) if rr else '<p class="lede">This rider appears in the published standings but no race-by-race classification is held in the archive.</p>'}'''
-        out.append((f'{tag}/riders/{rid_slug[rid]}/index.html', page(site=site, sport=tag, depth=3, title=f'{info["name"]} · {name} career, every race · APEX', desc=f'{info["name"]} in {name}: {len(mains)} starts, {wins} wins, {pod} podiums, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Riders', rel + tag + '/riders/'), (info['name'], None)], body=body, path=f'{tag}/riders/{rid_slug[rid]}/', v=v)))
+        out.append((f'{tag}/riders/{rid_slug[rid]}/index.html', page(site=site, sport=tag, depth=3, title=f'{info["name"]} · {name} career, every race · APEX', desc=f'{info["name"]} in {name}: {len(mains)} starts, {wins} wins, {pod} podiums, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Riders', rel + tag + '/riders/'), (info['name'], None)], body=body, path=f'{tag}/riders/{rid_slug[rid]}/', v=v, noindex=(len(mains) < 3 and not pod))))
     # makers
     for m, rr in by_maker.items():
         if m == '—': continue
@@ -316,7 +356,7 @@ def gen_bikes(tag, A, colours, *, site, v):
         out.append((f'{tag}/circuits/{cslug[cid]}/index.html', page(site=site, sport=tag, depth=3, title=f'{info["name"]} · every {name} race held there · APEX', desc=f'{info["name"]}: {len(rr)} {name} races from {ys[0]} to {ys[-1]}, winners and makers race by race.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Circuits', rel + tag + '/circuits/'), (info['name'], None)], body=body, path=f'{tag}/circuits/{cslug[cid]}/', v=v)))
     rel = '../../'
     out.append((f'{tag}/seasons/index.html', page(site=site, sport=tag, depth=2, title=f'{name} seasons {years[0]}–{years[-1]} · APEX', desc=f'Every {name} season with its champion, on its own page.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Seasons', None)], body=f'<p class="eyebrow">{E(name)}</p><h1>Every <span>season</span></h1><p class="lede">{len(years)} seasons; the rider named heads the published standings.</p>' + index_list([(str(y), f'{tag}/seasons/{y}/', riders.get(champs[y]['rider'], {}).get('name', '') if champs[y] else '') for y in reversed(years)], rel), path=f'{tag}/seasons/', v=v)))
-    out.append((f'{tag}/riders/index.html', page(site=site, sport=tag, depth=2, title=f'{name} riders A–Z · APEX', desc=f'Every rider classified in a {name} race, each with a career page.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Riders', None)], body=f'<p class="eyebrow">{E(name)}</p><h1>Every <span>rider</span></h1><p class="lede">{len([r for r in (set(by_rider) | set(st_years)) if r in riders])} riders.</p>' + index_list(sorted([(riders[r_]['name'], f'{tag}/riders/{rid_slug[r_]}/', (f'{w} wins' if (w := sum(1 for r, x in by_rider.get(r_, []) if ismain(r) and x.get("pos") == 1)) else f'{len(by_rider.get(r_, []))} races')) for r_ in sorted(set(by_rider) | set(st_years)) if r_ in riders], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path=f'{tag}/riders/', v=v)))
+    out += index_pages(site=site, sport=tag, title=f'{name} riders A–Z · APEX', desc=f'Every rider classified in a {name} race, each with a career page.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Riders', None)], intro=f'<p class="eyebrow">{E(name)}</p><h1>Every <span>rider</span></h1><p class="lede">{len([r for r in (set(by_rider) | set(st_years)) if r in riders])} riders.</p>', items=sorted([(riders[r_]['name'], f'{tag}/riders/{rid_slug[r_]}/', (f'{w} wins' if (w := sum(1 for r, x in by_rider.get(r_, []) if ismain(r) and x.get("pos") == 1)) else f'{len(by_rider.get(r_, []))} races')) for r_ in sorted(set(by_rider) | set(st_years)) if r_ in riders], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir=f'{tag}/riders', v=v)
     out.append((f'{tag}/makers/index.html', page(site=site, sport=tag, depth=2, title=f'{name} manufacturers · APEX', desc=f'Every manufacturer classified in {name}.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Makers', None)], body=f'<p class="eyebrow">{E(name)}</p><h1>Every <span>maker</span></h1>' + index_list(sorted([(m, f'{tag}/makers/{slug(m)}/', f'{sum(1 for r, x in rr if ismain(r) and x.get("pos") == 1)} wins') for m, rr in by_maker.items() if m != '—']), rel), path=f'{tag}/makers/', v=v)))
     out.append((f'{tag}/circuits/index.html', page(site=site, sport=tag, depth=2, title=f'{name} circuits · APEX', desc=f'Every circuit that has staged a {name} race.', crumbs=[('Sportsfans', rel), (name, rel + tag + '/'), ('Circuits', None)], body=f'<p class="eyebrow">{E(name)}</p><h1>Every <span>circuit</span></h1>' + index_list(sorted([(circs[c]['name'], f'{tag}/circuits/{cslug[c]}/', f'{len(rr)} races') for c, rr in by_circ.items() if c in circs]), rel), path=f'{tag}/circuits/', v=v)))
     return out
@@ -404,7 +444,7 @@ def gen_rugby(A, *, site, v):
 {kpis([('Caps', fmt(p.get('caps')), 'as published'), ('Tries', fmt(p.get('tries')), ''), ('Points', fmt(p.get('points')), '' if p.get('points') is not None else 'not published'), ('First Test', E(p['first']) if p.get('first') else E(p.get('startYear') or '—'), ''), ('Last Test', E(p['last']) if p.get('last') else E(p.get('endYear') or '—'), '')])}
 {('<h2>Every linked Test <small>' + str(len(games)) + (' · complete history' if p.get('complete') else ' · partial history') + '</small></h2>' + table(['Date', 'Opponent', 'Score', 'Position', 'Scoring', 'Ground'], rows)) if games else '<p class="lede">No match-by-match history is captured for this career; the totals above are the published snapshot.</p>'}
 <p class="lede" style="font-size:12px">{' · '.join(f'<a href="{E(u)}" target="_blank" rel="noopener">{E(u.split("/")[2])} ↗</a>' for u in (p.get('sources') or [])[:3])}</p>'''
-        out.append((f'rugby/players/{p["id"]}/index.html', page(site=site, sport='rugby', depth=3, title=f'{p["name"]} · {p["team"]} Test career · APEX', desc=f'{p["name"]}, {p["team"]}: {fmt(p.get("caps"))} Test caps, {p.get("span") or ""}.', crumbs=[('Sportsfans', rel), ('Rugby union', rel + 'rugby/'), ('Players', rel + 'rugby/players/'), (p['name'], None)], body=body, path=f'rugby/players/{p["id"]}/', v=v)))
+        out.append((f'rugby/players/{p["id"]}/index.html', page(site=site, sport='rugby', depth=3, title=f'{p["name"]} · {p["team"]} Test career · APEX', desc=f'{p["name"]}, {p["team"]}: {fmt(p.get("caps"))} Test caps, {p.get("span") or ""}.', crumbs=[('Sportsfans', rel), ('Rugby union', rel + 'rugby/'), ('Players', rel + 'rugby/players/'), (p['name'], None)], body=body, path=f'rugby/players/{p["id"]}/', v=v, noindex=((p.get('caps') or 0) < 3 and not games))))
     # grounds
     for sid, g in grounds.items():
         rel = '../../../'; ms = [m for m in M if m['stadium'] == sid]; ys = sorted({m['year'] for m in ms}); wins = collections.Counter(winner(m) for m in ms if winner(m))
@@ -447,8 +487,8 @@ def gen_licences(*, site, v, published, held):
     rel = '../'
     def src(title, url, terms, use, tag=''):
         return f'<p><b><a class="q" href="{E(url)}" target="_blank" rel="noopener">{E(title)}</a></b>{f"<span class=tag>{E(tag)}</span>" if tag else ""}<br>{terms}<br><span style="color:var(--dim)">Used for: {use}</span></p>'
-    dakar_lic = ('<h3>Dakar Rally</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/Dakar_Rally', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every edition of the Dakar Rally article at a recorded revision — the route as the article names it, the era, and the first three of every class with the crew and the make. Nothing is taken from the organiser’s own site, results service or artwork.', 'CC BY-SA 4.0') + src('Natural Earth', 'https://www.naturalearthdata.com/about/terms-of-use/', 'Public domain.', 'the 1:110m land silhouette behind every route map; routes are drawn schematically between their named towns, not from any official course.', 'Public domain') + '<p><b>The data file <code>/data/dakar.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No logos, marks or official artwork are included; the rally’s name appears only to identify the event.</p>\n') if 'dakar' in (published or []) else ''
-    ufc_lic = ('<h3>UFC</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every past event in the list of UFC events and each event’s own article — the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus awards. Nothing is taken from the promotion’s own site or its statistics partner.', 'CC BY-SA 4.0') + src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'fighter nationality, date of birth and height, where the fighter has an article.', 'CC0 1.0') + '<p><b>The data file <code>/data/ufc.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike. No logos, marks or official artwork are included; the promotion’s names appear only to identify the events.</p>\n') if 'ufc' in (published or []) else ''
+    dakar_lic = ('<h3 id="dakar">Dakar Rally</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/Dakar_Rally', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every edition of the Dakar Rally article at a recorded revision — the route as the article names it, the era, and the first three of every class with the crew and the make. Nothing is taken from the organiser’s own site, results service or artwork.', 'CC BY-SA 4.0') + src('Natural Earth', 'https://www.naturalearthdata.com/about/terms-of-use/', 'Public domain.', 'the 1:110m land silhouette behind every route map; routes are drawn schematically between their named towns, not from any official course.', 'Public domain') + '<p><b>The data file <code>/data/dakar.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No logos, marks or official artwork are included; the rally’s name appears only to identify the event.</p>\n') if 'dakar' in (published or []) else ''
+    ufc_lic = ('<h3 id="ufc">UFC</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every past event in the list of UFC events and each event’s own article — the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus awards. Nothing is taken from the promotion’s own site or its statistics partner.', 'CC BY-SA 4.0') + src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'fighter nationality, date of birth and height, where the fighter has an article.', 'CC0 1.0') + '<p><b>The data file <code>/data/ufc.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike. No logos, marks or official artwork are included; the promotion’s names appear only to identify the events.</p>\n') if 'ufc' in (published or []) else ''
     body = f'''<p class="eyebrow">Sources and licences</p><h1>Where the numbers <span>come from</span></h1>
 <p class="lede">Every atlas is built from sources that state their terms, or from facts that belong to no one. This page lists each source, the terms it publishes, and the licence that applies to each data file this site serves. The site itself is <b>non-commercial for good</b>: two of its backbone sources permit nothing else, and the rest are honoured in the same spirit. Checked 29 September 2026.</p>
 <div class="lic">
@@ -456,7 +496,7 @@ def gen_licences(*, site, v, published, held):
 <p>{NOTICE}</p>
 <p>The page code is released under the MIT licence (see the repository). Fonts are served from Google Fonts under the SIL Open Font License. No logos are used anywhere; team, national and manufacturer colours are editorial interpretations of racing and playing identities.</p>
 
-<h3>Formula 1</h3>
+<h3 id="f1">Formula 1</h3>
 {src('F1DB', 'https://github.com/f1db/f1db', 'Creative Commons Attribution 4.0 (CC BY 4.0).', 'circuit outlines (the white survey SVGs), track specifications, supplementary fastest laps.', 'CC BY 4.0')}
 {src('Jolpica F1 (Ergast-compatible API)', 'https://github.com/jolpica/jolpica-f1', 'Data under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0); the API is free for non-commercial use.', 'race results, sprint results, championship standings.', 'CC BY-NC-SA 4.0')}
 {src('Wikipedia', 'https://en.wikipedia.org/', 'Text and tables under CC BY-SA 4.0; the facts are free.', 'reference links from each race and circuit.')}
@@ -464,14 +504,14 @@ def gen_licences(*, site, v, published, held):
 <p><b>The data file <code>/data/f1.json</code></b> is therefore offered under <b>CC BY-NC-SA 4.0</b>: attribute F1DB and Jolpica, use it non-commercially, and share any derivative under the same licence.</p>
 
 {dakar_lic}
-<h3>Rugby union</h3>
+<h3 id="rugby">Rugby union</h3>
 {src('Nuck’s Rugby Archive', 'https://rugbyarchive.github.io/about.html', 'An independent hobby archive that states no licence. Match results are facts; the compilation is the author’s work and is used with credit while permission is sought.', 'the ten nations’ international match archive.')}
 {src('Springbok Rugby History (bokhist.com)', 'https://bokhist.com/', 'A private South African archive that states no licence; used with credit while permission is sought.', 'the Springbok match record, player histories and World Cup squads.')}
 {src('Pick & Go', 'https://www.lassen.co.nz/pickandgo.php', 'Public results tables, used only as a cross-check.', 'verification of recent results.')}
 {src('Wikipedia', 'https://en.wikipedia.org/', 'CC BY-SA 4.0.', 'national-team coaching lists.')}
 <p><b>The data file <code>/data/rugby.json</code></b> carries no licence for reuse: the scores are facts anyone may use, but the compilations behind them belong to their authors, who are credited on the atlas.</p>
 
-<h3>MotoGP, World Superbike and the Isle of Man TT</h3>
+<h3 id="motogp">MotoGP, World Superbike and the Isle of Man TT</h3><span id="sbk"></span><span id="tt"></span>
 {src('Wikipedia', 'https://en.wikipedia.org/', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every result, calendar and published standing of the premier-class world championship (1949 on) and the Superbike World Championship (1988 on), transcribed from the English season articles; every Isle of Man TT winner and classification, transcribed from the German list of TT winners and the English race and year articles. Each race links to the article it came from and the data files record every page’s revision, retrieval date and hash. Nothing from the series’ own results services or artwork is carried.', 'CC BY-SA 4.0')}
 {src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'circuit coordinates and countries.', 'CC0 1.0')}
 {src('OpenStreetMap', 'https://www.openstreetmap.org/copyright', '© OpenStreetMap contributors, Open Database License 1.0.', 'circuit outlines (the mapped raceway around each venue) and the Snaefell Mountain Course with its named places (relation 188240).', 'ODbL 1.0')}
@@ -479,13 +519,13 @@ def gen_licences(*, site, v, published, held):
 <p><b>The data files <code>/data/motogp.json</code>, <code>/data/sbk.json</code> and <code>/data/tt.json</code></b> are CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the geometry inside them is ODbL. No logos, marks or official artwork are included.</p>
 
 {ufc_lic}
-<h3>Cricket</h3>
+<h3 id="cricket">Cricket</h3>
 {src('Cricsheet', 'https://cricsheet.org/', 'Open Data Commons Attribution License (ODC-By 1.0): attribution required, which this page and the atlas give.', 'ball-by-ball scorecards of every international it covers (men’s Tests and ODIs from 2001–02, T20Is from 2005, the women’s game from its first recorded matches); every batting, bowling and line-up figure, every innings worm and every player-season total on the atlas is computed from them.', 'ODC-By 1.0')}
 {src('Historical results (Kaggle: “Cricket match dataset, Test nations 1877–2025”, Qammar Shahzad)', 'https://www.kaggle.com/datasets/qammarshahzad/cricket-match-dataset-test-nations-18772025', 'Match results are facts; the compilation is credited here and its own licence is stated on its Kaggle page.', 'dates, sides, results and margins of internationals before the Cricsheet era.')}
 {src('International Cricket Council', 'https://www.icc-cricket.com/', 'Published results of ICC events, used as facts.', 'World Cup, T20 World Cup, Champions Trophy and World Test Championship winners, runners-up and finals.')}
 <p><b>The data files <code>/data/cricket.json</code> and <code>/data/cricket_details/</code></b>: the scorecard-derived parts are ODC-By 1.0 (attribute Cricsheet); the historical results are facts compiled from the sources above. No logos or marks are included.</p>
 
-<h3>Tennis</h3>
+<h3 id="tennis">Tennis</h3>
 {src('Jeff Sackmann / Tennis Abstract', 'https://github.com/JeffSackmann', 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0: attribution, no commercial use, share alike. This site is non-commercial and shares its data files under the same terms.', 'every tour-level match of the ATP and WTA from 1968 — results, seedings, rankings, durations and serve statistics — from the tennis_atp and tennis_wta repositories.', 'CC BY-NC-SA 4.0')}
 {src('The Wimbledon Compendium', 'https://www.wimbledon.com/', 'The club’s published roll of honour, used as facts.', 'champions and finalists at Wimbledon before 1968.')}
 <p><b>The data files <code>/data/tennis.json</code> and <code>/data/tennis_matches/</code></b> are CC BY-NC-SA 4.0: attribute Jeff Sackmann / Tennis Abstract, no commercial use, share alike. No logos or marks are included; tournament names appear only to identify the events.</p>
@@ -494,12 +534,38 @@ def gen_licences(*, site, v, published, held):
 {src('FiveThirtyEight', 'https://github.com/fivethirtyeight/data', 'CC BY 4.0.', 'historical NBA/BAA game results and Elo (basketball).', 'CC BY 4.0')}
 <p>Basketball box scores are facts recorded from public sources; the atlas will name its sources and their terms here when it is published.</p>
 
+<h3>The data files</h3>
+<p>Each atlas serves its archive as one JSON file, under the licence stated above: {' · '.join(f'<a class="q" href="{rel}data/{k}.json">{k}.json</a>' for k in SPORTS if k in (published or []))}. The offline editions on the <a class="q" href="{rel}downloads/">downloads page</a> carry the same data embedded.</p>
+
 <h3>Trademarks</h3>
 <p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Dakar, Dakar Rally, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
 </div>'''
     return sitegen_page(site=site, v=v, body=body, published=published)
+DATASETS = {
+    'cricket': ('Cricket internationals 1877–2026', 'Every men’s and women’s international with its result, plus ball-by-ball scorecard figures where Cricsheet records them.', 'https://opendatacommons.org/licenses/by/1-0/', '1877/2026', ['Cricsheet', 'Qammar Shahzad (Kaggle)']),
+    'dakar': ('Dakar Rally editions and class podiums 1979–2026', 'Every edition’s route, era and the first three of every class, transcribed from Wikipedia; Natural Earth land silhouette for the route maps.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1979/2026', ['Wikipedia contributors', 'Natural Earth']),
+    'f1': ('Formula 1 results and standings 1950–2026', 'Every Grand Prix and sprint result, championship standings, circuit outlines and specifications.', 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '1950/2026', ['Jolpica F1', 'F1DB']),
+    'motogp': ('MotoGP premier-class results 1949–2026', 'Every premier-class race result, calendar and published standing, transcribed from Wikipedia; circuit outlines from OpenStreetMap.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1949/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
+    'rugby': ('Rugby union Test matches of ten nations 1871–2026', 'Every Test match of the ten nations with scores, grounds, published careers and coaching records.', None, '1871/2026', ['Nuck’s Rugby Archive', 'Springbok Rugby History']),
+    'sbk': ('World Superbike results 1988–2026', 'Every Superbike World Championship race result and standing, transcribed from Wikipedia; circuit outlines from OpenStreetMap.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1988/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
+    'tennis': ('Tennis titles and tour-level matches 1877–2026', 'Every tour-level ATP and WTA match from 1968 and every major and tour title from 1877.', 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '1877/2026', ['Jeff Sackmann / Tennis Abstract']),
+    'tt': ('Isle of Man TT winners and classifications 1907–2026', 'Every TT race with its winner, machine, course and race average, and the classifications where the sources hold them.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1907/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
+    'ufc': ('UFC bouts and events 1993–2026', 'Every UFC event and bout with result, method, round, time, venue and bonus awards, transcribed from Wikipedia.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1993/2026', ['Wikipedia contributors', 'Wikidata']),
+}
+def datasets_ld(site, published):
+    """One schema.org Dataset per published data file, so the archives are findable in Google Dataset Search; the licences page is the landing page."""
+    out = []
+    for k in SPORTS:
+        if k not in published or k not in DATASETS: continue
+        name, desc, lic, span, creators = DATASETS[k]
+        d = {'@type': 'Dataset', 'name': name, 'description': desc, 'url': f'{site}/licences/#{k}', 'sameAs': f'{site}/{k}/', 'temporalCoverage': span, 'isAccessibleForFree': True, 'creator': [{'@type': 'Organization', 'name': c} for c in creators], 'publisher': {'@type': 'Organization', 'name': SITE_NAME, 'url': f'{site}/'},
+             'distribution': [{'@type': 'DataDownload', 'encodingFormat': 'application/json', 'contentUrl': f'{site}/data/{k}.json'}]}
+        if lic: d['license'] = lic
+        out.append(d)
+    return out
+
 def sitegen_page(*, site, v, body, published):
-    return page(site=site, sport=None, depth=1, title='Sources and licences · APEX sports atlases', desc='Every source behind the atlases at sportsfans.co.za, the terms it publishes, and the licence that applies to each data file.', crumbs=[('Sportsfans', '../'), ('Sources and licences', None)], body=body, path='licences/', v=v, published=published)
+    return page(site=site, sport=None, depth=1, title='Sources and licences · APEX sports atlases', desc='Every source behind the atlases at sportsfans.co.za, the terms it publishes, and the licence that applies to each data file.', crumbs=[('Sportsfans', '../'), ('Sources and licences', None)], body=body, path='licences/', v=v, published=published, extra_head='\n' + ld_json(*datasets_ld(site, published or [])))
 
 # ============================================================ Cricket ============================================================
 def gen_cricket(A, *, site, v):
@@ -574,7 +640,7 @@ def gen_cricket(A, *, site, v):
 {kpis([('Matches', gm, 'with recorded figures'), ('Runs', fmt(runs), f'avg {round(runs / outs, 2) if outs else "—"}'), ('Highest', f'{hs["hs"]}{"*" if hs["hsno"] else ""}', f'{sum(r["hundreds"] for r in rows)} hundreds · {sum(r["fifties"] for r in rows)} fifties'), ('Wickets', wk, f'avg {round(conc / wk, 2) if wk else "—"}'), ('Catches', sum(r['catches'] for r in rows), f'{sum(r["stumps"] for r in rows)} stumpings')])}
 <h2>Season by season</h2>{table(['Year', 'Format', 'Team', 'M', 'Inns', 'Runs', 'Avg', 'HS', '100/50', 'Wkts', 'Avg', 'BB', 'Ct'], [[f'<a class="q" href="{rel}cricket/seasons/{r["y"]}/">{r["y"]}</a>', r['f'] + (' (W)' if r['g'] == 'W' else ''), nl(r['t'], rel), r['games'], r['inns'], r['runs'], round(r['runs'] / r['outs'], 1) if r['outs'] else '—', f'{r["hs"]}{"*" if r["hsno"] else ""}', f'{r["hundreds"]}/{r["fifties"]}', r['wickets'], round(r['conceded'] / r['wickets'], 1) if r['wickets'] else '—', f'{r["bbw"]}/{r["bbr"]}' if r['bbw'] else '—', r['catches']] for r in reversed(rows)], num=(3, 4, 5, 6, 9, 10, 12))}
 {f'<p class="lede" style="font-size:12px"><a href="https://www.espncricinfo.com/cricketers/{E(info["espn"])}" target="_blank" rel="noopener">Cricinfo profile ↗</a></p>' if info.get('espn') else ''}'''
-        out.append((f'cricket/players/{pid}/index.html', page(site=site, sport='cricket', depth=3, title=f'{info.get("n", pid)} · recorded international figures · APEX', desc=f'{info.get("n", pid)} ({team}): {fmt(runs)} runs and {wk} wickets in {gm} recorded internationals, season by season.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', rel + 'cricket/players/'), (info.get('n', pid), None)], body=body, path=f'cricket/players/{pid}/', v=v)))
+        out.append((f'cricket/players/{pid}/index.html', page(site=site, sport='cricket', depth=3, title=f'{info.get("n", pid)} · recorded international figures · APEX', desc=f'{info.get("n", pid)} ({team}): {fmt(runs)} runs and {wk} wickets in {gm} recorded internationals, season by season.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', rel + 'cricket/players/'), (info.get('n', pid), None)], body=body, path=f'cricket/players/{pid}/', v=v, noindex=(gm < 3))))
     # grounds
     by_v = collections.defaultdict(list)
     for g in games:
@@ -591,7 +657,7 @@ def gen_cricket(A, *, site, v):
     rel = '../../'
     out.append(('cricket/seasons/index.html', page(site=site, sport='cricket', depth=2, title='International cricket, year by year, 1877–2026 · APEX', desc='Every year of international cricket on its own page.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Seasons', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>year</span></h1><p class="lede">{len(years)} years with internationals.</p>' + index_list([(str(y), f'cricket/seasons/{y}/', f'{len(by_year[y])} matches') for y in reversed(years)], rel), path='cricket/seasons/', v=v)))
     out.append(('cricket/teams/index.html', page(site=site, sport='cricket', depth=2, title='Cricket teams · APEX', desc='Every side in the international archive.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Teams', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>side</span></h1>' + index_list(sorted([(t, f'cricket/teams/{slug(t)}/', f'{sum(1 for g in games if t in g["teams"])} matches') for t in sides]), rel), path='cricket/teams/', v=v)))
-    out.append(('cricket/players/index.html', page(site=site, sport='cricket', depth=2, title='Cricket players · APEX', desc='Every player with recorded international figures.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>player</span></h1><p class="lede">{len(by_p):,} players with recorded figures from scorecards (2000s onward).</p>' + index_list(sorted([(P.get(pid, {}).get('n', pid), f'cricket/players/{pid}/', f'{sum(r["runs"] for r in rows)} runs · {sum(r["wickets"] for r in rows)} wkts') for pid, rows in by_p.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='cricket/players/', v=v)))
+    out += index_pages(site=site, sport='cricket', title='Cricket players · APEX', desc='Every player with recorded international figures.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', None)], intro=f'<p class="eyebrow">Cricket</p><h1>Every <span>player</span></h1><p class="lede">{len(by_p):,} players with recorded figures from scorecards (2000s onward).</p>', items=sorted([(P.get(pid, {}).get('n', pid), f'cricket/players/{pid}/', f'{sum(r["runs"] for r in rows)} runs · {sum(r["wickets"] for r in rows)} wkts') for pid, rows in by_p.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='cricket/players', v=v)
     out.append(('cricket/grounds/index.html', page(site=site, sport='cricket', depth=2, title='Cricket grounds · APEX', desc='Every recorded international ground.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Grounds', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>ground</span></h1><p class="lede">{len(by_v)} recorded grounds and cities.</p>' + index_list(sorted([(V[vid]['n'], f'cricket/grounds/{vid}/', f'{len(ms)} matches') for vid, ms in by_v.items()], key=lambda t: (t[0], t[1])), rel), path='cricket/grounds/', v=v)))
     return out
 
@@ -695,7 +761,7 @@ def gen_tennis(A, *, site, v):
         out.append((f'tennis/nations/{slug(code or "unlisted")}/index.html', page(site=site, sport='tennis', depth=3, title=f'{natn(code)} in tennis · every title · APEX', desc=f'{natn(code)}: {len(cs)} tour-level titles by {len(wins)} players, {len(mj)} majors.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Nations', rel + 'tennis/nations/'), (natn(code), None)], body=body, path=f'tennis/nations/{slug(code or "unlisted")}/', v=v)))
     rel = '../../'
     out.append(('tennis/seasons/index.html', page(site=site, sport='tennis', depth=2, title='Tennis, year by year, 1877–2026 · APEX', desc='Every season of tennis on its own page.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Seasons', None)], body=f'<p class="eyebrow">Tennis</p><h1>Every <span>season</span></h1><p class="lede">{len(years)} years with a title on record.</p>' + index_list([(str(y), f'tennis/seasons/{y}/', f'{len(by_year[y])} titles') for y in reversed(years)], rel), path='tennis/seasons/', v=v)))
-    out.append(('tennis/players/index.html', page(site=site, sport='tennis', depth=2, title='Tennis players · APEX', desc='Every title winner and every player with fifty recorded matches.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Players', None)], body=f'<p class="eyebrow">Tennis</p><h1>Every <span>player</span></h1><p class="lede">{len(pids):,} players: every title winner, and everyone with fifty or more recorded matches.</p>' + index_list(sorted([(pn(pid), f'tennis/players/{pid}/', f'{len(titles_of.get(pid, []))} titles · {pagg[pid]["w"] if pid in pagg else 0}–{pagg[pid]["l"] if pid in pagg else 0}') for pid in pids], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='tennis/players/', v=v)))
+    out += index_pages(site=site, sport='tennis', title='Tennis players · APEX', desc='Every title winner and every player with fifty recorded matches.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Players', None)], intro=f'<p class="eyebrow">Tennis</p><h1>Every <span>player</span></h1><p class="lede">{len(pids):,} players: every title winner, and everyone with fifty or more recorded matches.</p>', items=sorted([(pn(pid), f'tennis/players/{pid}/', f'{len(titles_of.get(pid, []))} titles · {pagg[pid]["w"] if pid in pagg else 0}–{pagg[pid]["l"] if pid in pagg else 0}') for pid in pids], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='tennis/players', v=v)
     out.append(('tennis/tournaments/index.html', page(site=site, sport='tennis', depth=2, title='Tennis tournaments · APEX', desc='Every tournament with a title on record.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Tournaments', None)], body=f'<p class="eyebrow">Tennis</p><h1>Every <span>tournament</span></h1><p class="lede">{len(by_t):,} tournaments with a title on record.</p>' + index_list(sorted([(T.get(tid, {}).get('n', tid), f'tennis/tournaments/{slug(tid)}/', f'{len(cs)} titles') for tid, cs in by_t.items()], key=lambda t: (t[0], t[1])), rel), path='tennis/tournaments/', v=v)))
     out.append(('tennis/nations/index.html', page(site=site, sport='tennis', depth=2, title='Tennis nations · APEX', desc='Every nation with a title on record.', crumbs=[('Sportsfans', rel), ('Tennis', rel + 'tennis/'), ('Nations', None)], body=f'<p class="eyebrow">Tennis</p><h1>Every <span>nation</span></h1><p class="lede">{len(by_n)} nations with a title on record.</p>' + index_list(sorted([(natn(code), f'tennis/nations/{slug(code or "unlisted")}/', f'{len(cs)} titles') for code, cs in by_n.items()], key=lambda t: (t[0], t[1])), rel), path='tennis/nations/', v=v)))
     return out
@@ -751,7 +817,7 @@ def gen_tt(A, *, site, v):
 {kpis([('Wins', len(wins), ''), ('Podiums', pod, ''), ('Recorded starts', len(rr), ''), ('Fastest average', f'{best} mph' if best else '—', '')])}
 {('<h2>Machines</h2><div class="chips">' + ''.join(f'<a class="chip" href="{rel}tt/marques/{slug(m)}/"><i style="--c:{col(m)}"></i>{E(m)} <span style="color:var(--muted)">{n}</span></a>' if m != 'Unrecorded' else f'<span class="chip"><i style="--c:{col(m)}"></i>{E(m)} <span style="color:var(--muted)">{n}</span></span>' for m, n in mqs.most_common()) + '</div>') if mqs else ''}
 <h2>Every recorded result</h2>{table(['Year', 'Race', 'Pos', 'Status', 'Machine', 'Marque', 'mph', 'Time'], [[f'<a class="q" href="{rel}tt/seasons/{r["y"]}/">{r["y"]}</a>', racelink(r, rel), x['pos'] or '—', E(x['status']), E(x['machine'] or ''), ml(x['marque'], rel), f'{x["mph"]:.2f}' if x['mph'] else '', E(x['time'] or '')] for r, x in sorted(rr, key=lambda t: (-t[0]['y'], t[0]['name']))], num=(2, 6))}'''
-        out.append((f'tt/riders/{slug(rid)}/index.html', page(site=site, sport='tt', depth=3, title=f'{pn(rid)} · Isle of Man TT record · APEX', desc=f'{pn(rid)} at the TT: {len(wins)} wins, {pod} podiums, {len(rr)} recorded starts, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', rel + 'tt/riders/'), (pn(rid), None)], body=body, path=f'tt/riders/{slug(rid)}/', v=v)))
+        out.append((f'tt/riders/{slug(rid)}/index.html', page(site=site, sport='tt', depth=3, title=f'{pn(rid)} · Isle of Man TT record · APEX', desc=f'{pn(rid)} at the TT: {len(wins)} wins, {pod} podiums, {len(rr)} recorded starts, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', rel + 'tt/riders/'), (pn(rid), None)], body=body, path=f'tt/riders/{slug(rid)}/', v=v, noindex=(len(rr) < 3 and not pod))))
     # marques
     by_m = collections.defaultdict(list)
     for r in races:
@@ -768,7 +834,7 @@ def gen_tt(A, *, site, v):
         out.append((f'tt/marques/{slug(m)}/index.html', page(site=site, sport='tt', depth=3, title=f'{m} at the Isle of Man TT · every win · APEX', desc=f'{m} at the TT: {len(wins)} wins from {len(rr)} recorded starts, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Marques', rel + 'tt/marques/'), (m, None)], body=body, path=f'tt/marques/{slug(m)}/', v=v)))
     rel = '../../'
     out.append(('tt/seasons/index.html', page(site=site, sport='tt', depth=2, title='The Isle of Man TT, year by year, 1907–2026 · APEX', desc='Every TT week on its own page.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Years', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>TT week</span></h1><p class="lede">{len(years)} years with a TT.</p>' + index_list([(str(y), f'tt/seasons/{y}/', f'{len(by_year[y])} races') for y in reversed(years)], rel), path='tt/seasons/', v=v)))
-    out.append(('tt/riders/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT riders · APEX', desc='Every rider with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>rider</span></h1><p class="lede">{len(by_r):,} riders with a recorded result.</p>' + index_list(sorted([(pn(i), f'tt/riders/{slug(i)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for i, rr in by_r.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='tt/riders/', v=v)))
+    out += index_pages(site=site, sport='tt', title='Isle of Man TT riders · APEX', desc='Every rider with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', None)], intro=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>rider</span></h1><p class="lede">{len(by_r):,} riders with a recorded result.</p>', items=sorted([(pn(i), f'tt/riders/{slug(i)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for i, rr in by_r.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='tt/riders', v=v)
     out.append(('tt/marques/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT marques · APEX', desc='Every marque with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Marques', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>marque</span></h1>' + index_list(sorted([(m, f'tt/marques/{slug(m)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for m, rr in by_m.items() if m != 'Unrecorded'], key=lambda t: (t[0], t[1])), rel), path='tt/marques/', v=v)))
     return out
 
@@ -906,7 +972,7 @@ def gen_ufc(A, *, site, v):
 <a class="open" href="{rel}ufc/#tab=fighters&fighter={fid}">Open in the atlas →</a>{f'<a class="also" href="{E(f["url"])}" target="_blank" rel="noopener">Wikipedia ↗</a>' if f.get('url') else ''}
 {kpis([('Wins', rec[0], ''), ('Losses', rec[1], ''), ('Finishes', len(fins), f'{sum(1 for b in fins if b["mk"] == "KO")} KO/TKO · {sum(1 for b in fins if b["mk"] == "SUB")} submissions'), ('Title bouts', len(titles), f'{sum(1 for b in titles if b["w"] == fid)} won')])}
 <h2>Every bout</h2>{table(['Date', 'Event', 'Division', 'Result', 'Method', 'R', 'Time'], [brow(b, rel) for b in sorted(bb, key=lambda b: b['date'], reverse=True)], num=(5,))}'''
-        out.append((f'ufc/fighters/{slug(fid)}/index.html', page(site=site, sport='ufc', depth=3, title=f'{f["name"]} · UFC record · APEX', desc=f'{f["name"]} in the UFC: {rec[0]}–{rec[1]}{"–" + str(rec[2]) if rec[2] else ""} over {len(bb)} bouts, {ys[0]}–{ys[-1]}, with every result.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', rel + 'ufc/fighters/'), (f['name'], None)], body=body, path=f'ufc/fighters/{slug(fid)}/', v=v)))
+        out.append((f'ufc/fighters/{slug(fid)}/index.html', page(site=site, sport='ufc', depth=3, title=f'{f["name"]} · UFC record · APEX', desc=f'{f["name"]} in the UFC: {rec[0]}–{rec[1]}{"–" + str(rec[2]) if rec[2] else ""} over {len(bb)} bouts, {ys[0]}–{ys[-1]}, with every result.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', rel + 'ufc/fighters/'), (f['name'], None)], body=body, path=f'ufc/fighters/{slug(fid)}/', v=v, noindex=(len(bb) < 3 and not titles))))
     # divisions
     by_d = collections.defaultdict(list)
     for b in bouts: by_d[b['div']].append(b)
@@ -931,7 +997,7 @@ def gen_ufc(A, *, site, v):
     rel = '../../'
     out.append(('ufc/seasons/index.html', page(site=site, sport='ufc', depth=2, title='UFC year by year, 1993–2026 · APEX', desc='Every year of UFC bouts on its own page.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Years', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>year</span></h1><p class="lede">{len(years)} years with a card.</p>' + index_list([(str(y), f'ufc/seasons/{y}/', f'{len(by_year[y])} events · {sum(len(by_e[e["id"]]) for e in by_year[y])} bouts') for y in reversed(years)], rel), path='ufc/seasons/', v=v)))
     out.append(('ufc/events/index.html', page(site=site, sport='ufc', depth=2, title='Every UFC event · APEX', desc='Every UFC event on its own page, with every bout.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Events', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>event</span></h1><p class="lede">{len(A["events"])} events.</p>' + index_list([(e['name'], f'ufc/events/{e["id"]}/', f'{e["date"]} · {len(by_e[e["id"]])} bouts') for e in reversed(A['events'])], rel), path='ufc/events/', v=v)))
-    out.append(('ufc/fighters/index.html', page(site=site, sport='ufc', depth=2, title='UFC fighters · APEX', desc='Every fighter with a bout in the archive.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>fighter</span></h1><p class="lede">{len(by_f):,} fighters with a bout.</p>' + index_list(sorted([(pn(i), f'ufc/fighters/{slug(i)}/', f'{sum(1 for b in bb if b["w"] == i)}–{sum(1 for b in bb if b["res"] == "W" and b["w"] != i)} · {len(bb)} bouts') for i, bb in by_f.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='ufc/fighters/', v=v)))
+    out += index_pages(site=site, sport='ufc', title='UFC fighters · APEX', desc='Every fighter with a bout in the archive.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Fighters', None)], intro=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>fighter</span></h1><p class="lede">{len(by_f):,} fighters with a bout.</p>', items=sorted([(pn(i), f'ufc/fighters/{slug(i)}/', f'{sum(1 for b in bb if b["w"] == i)}–{sum(1 for b in bb if b["res"] == "W" and b["w"] != i)} · {len(bb)} bouts') for i, bb in by_f.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='ufc/fighters', v=v)
     out.append(('ufc/divisions/index.html', page(site=site, sport='ufc', depth=2, title='UFC divisions · APEX', desc='Every division with a bout in the archive.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Divisions', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>division</span></h1>' + index_list([(dlab(d['key']), f'ufc/divisions/{d["key"]}/', f'{len(by_d[d["key"]]):,} bouts') for d in A['divisions'] if by_d[d['key']]], rel), path='ufc/divisions/', v=v)))
     out.append(('ufc/venues/index.html', page(site=site, sport='ufc', depth=2, title='UFC venues · APEX', desc='Every venue that has staged a UFC event, listed.', crumbs=[('Sportsfans', rel), ('UFC bouts', rel + 'ufc/'), ('Venues', None)], body=f'<p class="eyebrow">UFC bouts</p><h1>Every <span>venue</span></h1><p class="lede">{len(V)} venues, listed as the sources name them.</p>' + index_list(sorted([(vv['name'], f'ufc/venues/{vid}/', f'{vv["n"]} events · {", ".join(x for x in (vv["city"], vv["country"]) if x and x != vv["name"])}') for vid, vv in V.items()], key=lambda t: (-int(t[2].split(' ')[0]), t[0])), rel), path='ufc/venues/', v=v)))
     return out

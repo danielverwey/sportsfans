@@ -9,6 +9,7 @@ tools/shots/
 *.png
 !docs/**/*.png
 !src/hub/*.png
+!src/hub/share/*.png
 __pycache__/
 node_modules/
 .DS_Store

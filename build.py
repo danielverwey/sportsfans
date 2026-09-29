@@ -10,7 +10,7 @@ Run:  python build.py                       (sportsfans.co.za: CNAME, canonical 
       python build.py --site URL --no-cname (a preview on GitHub's own address)
       python build.py --no-pages            (skip the static entity pages)
 """
-import subprocess, argparse, hashlib, json, pathlib, re, shutil, sys, datetime, colorsys, base64, gzip
+import subprocess, argparse, hashlib, json, pathlib, re, shutil, sys, datetime, colorsys, base64, gzip, html
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC, DATA, DOCS, DROP = ROOT/'src', ROOT/'data', ROOT/'docs', ROOT/'HTML FILEs'
 sys.path.insert(0, str(ROOT/'tools')); import sitegen, reading
@@ -117,7 +117,11 @@ def production(p, vcss, vjs, vdata):
     key = p['key']; s = p['shell']
     assert s.count('__ICON__') == 1; s = s.replace('__ICON__', sitegen.icon_links('../'), 1)
     assert s.count('<style>\n__CSS__\n</style>') == 1 and s.count(p['script_block']) == 1 and s.count('__STATIC__') == 1 and s.count('__FOOTER__') == 1
-    s = s.replace('<style>\n__CSS__\n</style>', f'<link rel="stylesheet" href="../assets/{key}.css?v={vcss}">\n<style>{HOME_CSS}</style>\n<link rel="canonical" href="{SITE}/{key}/">\n<meta property="og:url" content="{SITE}/{key}/">')
+    title = re.search(r'<title>(.*?)</title>', s).group(1); desc = re.search(r'<meta name="description" content="([^"]*)"', s).group(1); name = sitegen.SPORTS[key][1]
+    cards = (f'<meta property="og:site_name" content="{sitegen.SITE_NAME}"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="{SITE}/{key}/"><meta property="og:type" content="website">'
+             f'<meta property="og:image" content="{SITE}/share/{key}.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">')
+    ld = sitegen.ld_json({'@context': 'https://schema.org', '@graph': [{'@type': 'BreadcrumbList', 'itemListElement': [{'@type': 'ListItem', 'position': 1, 'name': 'Sportsfans', 'item': f'{SITE}/'}, {'@type': 'ListItem', 'position': 2, 'name': name, 'item': f'{SITE}/{key}/'}]}, {'@type': 'WebPage', 'name': html.unescape(title), 'description': html.unescape(desc), 'url': f'{SITE}/{key}/', 'isPartOf': {'@type': 'WebSite', 'name': sitegen.SITE_NAME, 'url': f'{SITE}/'}}]})
+    s = s.replace('<style>\n__CSS__\n</style>', f'<link rel="stylesheet" href="../assets/{key}.css?v={vcss}">\n<style>{HOME_CSS}</style>\n<link rel="canonical" href="{SITE}/{key}/">\n{cards}\n{ld}\n<link rel="preload" href="../data/{key}.json?v={vdata}" as="fetch" crossorigin>\n<link rel="preload" href="../assets/{key}.js?v={vjs}" as="script">')
     # the way back: the brand is a link to the landing page, the strap line names it, the footer repeats it
     assert s.count('<div class="brand">APEX <i>/</i> <small>') == 1, key
     s = s.replace('<div class="brand">APEX <i>/</i> <small>', '<div class="brand"><a class="home" href="../" title="sportsfans.co.za · all atlases">APEX <i>/</i></a> <small>')
@@ -141,9 +145,9 @@ def reading_page(p, vsite):
     """The carried reading edition, verbatim, on its own page in the site chrome."""
     key = p['key']; name = sitegen.SPORTS[key][1]
     body = f'<p class="eyebrow">{name} · Reading edition</p><h1>The <span>reading</span> edition</h1><p class="lede">The whole archive as plain HTML, exactly as carried in the self-contained atlas — every table it holds, no scripts. <a class="q" href="../">Back to the atlas</a>.</p>\n__CARRIED__'
-    html = sitegen.page(site=SITE, sport=key, depth=2, title=f'{name} · reading edition · APEX', desc=f'The complete {name} archive of the atlas as plain reading matter — every season and every table, no scripts needed.', crumbs=[('Sportsfans', '../../'), (name, '../'), ('Reading edition', None)], body=body, path=f'{key}/reading/', v=vsite, extra_head=f'\n<link rel="stylesheet" href="../../assets/{key}.css?v={vsite}">', published=PUBLISH)
+    doc = sitegen.page(site=SITE, sport=key, depth=2, title=f'{name} · reading edition · APEX', desc=f'The complete {name} archive of the atlas as plain reading matter — every season and every table, no scripts needed.', crumbs=[('Sportsfans', '../../'), (name, '../'), ('Reading edition', None)], body=body, path=f'{key}/reading/', v=vsite, extra_head=f'\n<link rel="stylesheet" href="../../assets/{key}.css?v={vsite}">', published=PUBLISH)
     # the carried HTML is inserted as bytes so it stays byte-identical
-    a, b = html.encode('utf-8').split(b'__CARRIED__')
+    a, b = doc.encode('utf-8').split(b'__CARRIED__')
     return a + p['static'] + b'\n' + p['footer'] + b
 
 import colorsys
@@ -295,12 +299,18 @@ if __name__ == '__main__':
             elif key == 'ufc': pages = sitegen.gen_ufc(json.loads(p['data'].decode('utf-8')), site=SITE, v=vsite)
             elif key == 'dakar': pages = sitegen.gen_dakar(json.loads(p['data'].decode('utf-8')), site=SITE, v=vsite)
             else: pages = sitegen.gen_bikes(key, json.loads(p['data'].decode('utf-8')), maker_colours(key), site=SITE, v=vsite)
-            for path, html in pages: write(DOCS/path, html); urls.append(f'{SITE}/{path[:-len("index.html")]}'); n += 1
+            thin = 0
+            for path, doc in pages:
+                write(DOCS/path, doc); n += 1
+                if '<meta name="robots" content="noindex' in doc: thin += 1  # built and linked, but neither indexed nor in the sitemap
+                else: urls.append(f'{SITE}/{path[:-len("index.html")]}')
+            if thin: print(f'{key:7s} {thin:,} long-tail pages marked noindex,follow and left out of the sitemap')
         pages_n += n
         print(f'{key:7s} standalone {len(single):>11,} B · shell {(DOCS/key/"index.html").stat().st_size:>7,} B · data {len(p["data"]):>10,} B · {n:,} static pages  {p["title"]}')
     # hub, downloads index, plumbing
     hub = (SRC/'hub/index.html').read_text(encoding='utf-8').replace('__SITE__', SITE)
     assert hub.count('__ICON__') == 1; hub = hub.replace('__ICON__', sitegen.icon_links(''), 1)
+    for png in sorted((SRC/'hub/share').glob('*.png')): write(DOCS/'share'/png.name, png.read_bytes())  # share cards (og:image), rendered once by tools/share_images.js
     write(DOCS/'favicon.svg', ICON_SVG); write(DOCS/'apple-touch-icon.png', (SRC/'hub/apple-touch-icon.png').read_bytes()); write(DOCS/'favicon.ico', ico_from_png((SRC/'hub/favicon-32.png').read_bytes(), 32))
     for key in PARTS:
         hub = hub.replace(f'__PREVIEW_{key.upper()}__', preview(key) if key in PUBLISH else '')
@@ -323,12 +333,23 @@ if __name__ == '__main__':
     (DOCS/'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /data/\nSitemap: {SITE}/sitemap.xml\n')
     # sitemap index → one sitemap per atlas (Search Console then reports coverage per sport; each file stays far below the 50,000-url limit)
     pri = lambda u: '1.0' if u == f'{SITE}/' else '0.9' if u.count('/') == 4 else '0.6'
+    def snapshot(key):
+        """The date the atlas's archive was taken, so lastmod moves only when the data does."""
+        try: A = json.loads((DATA/f'{key}.json').read_text(encoding='utf-8'))
+        except Exception: return today
+        for k in ('snapshot', 'asof', 'retrieved'):
+            if isinstance(A.get(k), str) and re.match(r'\d{4}-\d{2}-\d{2}', A[k]): return A[k][:10]
+        if isinstance(A.get('cutoff'), str):
+            try: return datetime.datetime.strptime(A['cutoff'], '%d %B %Y').date().isoformat()
+            except ValueError: pass
+        return today
+    lastmod = {k: snapshot(k) for k in PUBLISH}; lastmod['site'] = max(lastmod.values()) if lastmod else today
     groups = {}
     for u in urls:
         seg = u[len(SITE) + 1:].split('/')[0]; groups.setdefault(seg if seg in PUBLISH else 'site', []).append(u)
     for g in [f.name for f in DOCS.glob('sitemap-*.xml')]: (DOCS/g).unlink()
     for g, us in groups.items():
-        (DOCS/f'sitemap-{g}.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>{u}</loc><priority>{pri(u)}</priority></url>\n' for u in us) + '</urlset>\n')
+        (DOCS/f'sitemap-{g}.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>{u}</loc><lastmod>{lastmod[g]}</lastmod><priority>{pri(u)}</priority></url>\n' for u in us) + '</urlset>\n')
     (DOCS/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<sitemap><loc>{SITE}/sitemap-{g}.xml</loc></sitemap>\n' for g in ['site'] + [k for k in PUBLISH if k in groups]) + '</sitemapindex>\n')
     (DOCS/'404.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APEX / Not found</title>' + sitegen.icon_links('/') + '<style>body{margin:0;background:#07080a;color:#f4f4f2;font:16px/1.5 Barlow,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center}h1{font:900 italic 72px/1 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:-.03em;margin:0 0 12px}a{color:#FF8000}</style></head><body><div><h1>Off the racing line</h1><p>That page is not in the atlas. <a href="/">Back to the atlases</a></p></div></body></html>')
     if not args.no_cname and '.github.io' not in SITE: (DOCS/'CNAME').write_text(SITE.replace('https://', '').replace('http://', '').split('/')[0] + '\n')
