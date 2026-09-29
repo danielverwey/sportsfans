@@ -76,7 +76,10 @@ def recs_ufc(A, shard):
     F = A['boutFields']; i, iy = F.index('id'), F.index('y')
     return _keyed([(('event', e['id']), e['y'], e) for e in A['events']] + [(('bout', b[i]), b[iy], b) for b in A['bouts']])
 def recs_cricket(A, shard):
-    return _keyed([(('match', g['id']), g['y'], g) for g in A['games']])
+    out = [(('match', g['id']), g['y'], g) for g in A['games']]
+    for y in A.get('detailYears', []):   # the scorecards live in the yearly shards; a re-read that rewrites one must show here
+        for gid, card in (shard(f'data/cricket_details/{y}.json') or {}).items(): out.append((('scorecard', gid), y, card))
+    return _keyed(out)
 def recs_tennis(A, shard):
     ey = A['eFields'].index('y'); C = A['cFields']; ci, cc, cy = C.index('id'), C.index('c'), C.index('y')
     out = [(('edition', k), r[ey], r) for k, r in A['editions'].items()] + [(('title', r[ci], r[cc]), r[cy], r) for r in A['champions']]
