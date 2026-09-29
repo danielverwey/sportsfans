@@ -141,10 +141,20 @@ def infobox(soup):
         if th and td: out[clean(th).lower().rstrip(':')] = clean(td)
     return out
 
+def footnotes(soup):
+    """{cite_note id: text} for the page's explanatory footnotes (the {{efn}} notes a results table's Notes column points
+    to); source citations are left out."""
+    out = {}
+    for li in soup.find_all('li', id=re.compile(r'^cite_note')):
+        body = li.find(class_='reference-text') or li
+        t = re.sub(r'\s+', ' ', body.get_text(' ', strip=True)).strip()
+        if t and not re.search(r'\bRetrieved\b|https?://|\bArchived\b', t): out[li['id']] = t
+    return out
+
 def bouts_of(soup, log, ename):
     """Every bout row of the article's results tables, in page order (the main event first), with its card heading."""
     bouts = []; cards = []; card = None; ncards = 0; last_was_bout = False
-    seen_rows = []   # diagnostic: the shape of every row that is not a bout, for the report
+    notes_of = footnotes(soup)
     for t in soup.find_all('table'):
         cls = ' '.join(t.get('class', []))
         if 'infobox' in cls or 'navbox' in cls or 'sidebar' in cls: continue
@@ -153,8 +163,8 @@ def bouts_of(soup, log, ename):
         for tr in t.find_all('tr'):
             cells = tr.find_all(['th', 'td'], recursive=False)
             if not cells: continue
+            refs = [[a['href'][1:] for a in c.find_all('a', href=True) if a['href'].startswith('#cite_note')] for c in cells]   # before clean() drops the markers
             texts = [clean(c) for c in cells]
-            if len(seen_rows) < 14 and (len(cells) != 7 or not any(x.lower().rstrip('.') + '.' in SEP for x in texts)): seen_rows.append(f'{len(cells)} cells {[c.name + ("@" + str(c.get("colspan")) if c.get("colspan") else "") for c in cells]} {" | ".join(t[:30] for t in texts if t)[:90]}')
             if len(cells) == 1 or (len([x for x in texts if x]) == 1 and cells[0].get('colspan')):
                 head = next((x for x in texts if x), '')
                 # a bout's notes ("For the UFC Flyweight Championship.", "Catchweight bout.") are a full-width row under the bout:
@@ -174,6 +184,8 @@ def bouts_of(soup, log, ename):
             rnd = texts[sep_i + 3] if len(texts) > sep_i + 3 else ''
             tm = texts[sep_i + 4] if len(texts) > sep_i + 4 else ''
             notes = ' '.join(x for x in texts[sep_i + 5:] if x) if len(texts) > sep_i + 5 else ''
+            foot = [notes_of[r] for rs in refs[sep_i + 5:] for r in rs if r in notes_of]   # a note given as a footnote marker in the Notes column
+            notes = ' '.join(dict.fromkeys(x for x in [notes] + foot if x))
             def fighter(cell, txt):
                 champ = bool(re.search(r'\((?:c|ic)\)', txt))
                 name = re.sub(r'\s*\((?:c|ic)\)', '', txt).strip()
@@ -182,7 +194,6 @@ def bouts_of(soup, log, ename):
                           'method': method, 'round': int(rnd) if rnd.isdigit() else None, 'time': tm if re.fullmatch(r'\d{1,2}:\d{2}', tm) else (tm or None), 'notes': notes})
             last_was_bout = True
     if not bouts: log.append(f'- {ename}: no results table read')
-    log += [f'    - row: {r}' for r in seen_rows]
     return bouts
 
 BONUS = ('Fight of the Night', 'Performance of the Night', 'Knockout of the Night', 'Submission of the Night')
