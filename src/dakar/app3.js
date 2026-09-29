@@ -88,7 +88,7 @@ function drawSources(){const cov=A.coverage||{};
 
 /* ---------- deep links ---------- */
 let routeLock=false;
-function writeRoute(){if(routeLock)return;const q=[];if(state.cat!=='all')q.push('class='+encodeURIComponent(state.cat));if(state.era!=='all')q.push('era='+encodeURIComponent(state.era));if(state.whole)q.push('whole=1');else q.push('season='+state.year);q.push('tab='+state.tab);for(const [k,t] of [['driver','drivers'],['marque','marques'],['cls','classes']]){if(state.tab===t&&state[k])q.push(k+'='+encodeURIComponent(state[k]));}if(state.tab==='duel'&&state.dA&&state.dB)q.push('duel='+encodeURIComponent(state.dA+'|'+state.dB)+'&by='+state.duelBy);const h='#'+q.join('&');if(location.hash!==h){try{history[location.hash?'pushState':'replaceState'](null,'',h);}catch(e){}}}
+function writeRoute(){if(routeLock)return;const q=[];if(state.cat!=='all')q.push('class='+encodeURIComponent(state.cat));if(state.era!=='all')q.push('era='+encodeURIComponent(state.era));if(state.whole)q.push('whole=1');else q.push('season='+state.year);q.push('tab='+state.tab);for(const [k,t] of [['driver','drivers'],['marque','marques'],['cls','classes']]){if(state.tab===t&&state[k])q.push(k+'='+encodeURIComponent(state[k]));}if(state.tab==='podium'&&!state.whole&&state.pod)q.push('pod='+encodeURIComponent(state.pod));if(state.tab==='duel'&&state.dA&&state.dB)q.push('duel='+encodeURIComponent(state.dA+'|'+state.dB)+'&by='+state.duelBy);const h='#'+q.join('&');if(location.hash!==h){try{history[location.hash?'pushState':'replaceState'](null,'',h);}catch(e){}}}
 function readRoute(){const h=location.hash.replace(/^#\/?/,'');if(!h||/^static-/.test(h))return false;const p={};for(const kv of h.split('&')){const i=kv.indexOf('=');p[i<0?kv:kv.slice(0,i)]=i<0?'1':decodeURIComponent(kv.slice(i+1));}let any=false;
   if(p.class&&(p.class==='all'||CATS.includes(p.class))){state.cat=p.class;any=true;}rebuildSeasons();
   if(p.era&&(p.era==='all'||ERAS.some(e=>e.id===p.era))){state.era=p.era;any=true;}
@@ -96,15 +96,33 @@ function readRoute(){const h=location.hash.replace(/^#\/?/,'');if(!h||/^static-/
   if(state.era!=='all'&&!inEraYear(state.year)){if(p.season)state.era='all';else state.year=eraSeasons().slice(-1)[0]?.year||state.year;}
   state.whole=p.whole==='1';if(state.whole)any=true;
   if(p.tab&&TABS.some(t=>t[0]===p.tab)){state.tab=p.tab;any=true;}
-  state.driver=p.driver&&PEOPLE[p.driver]?p.driver:null;state.marque=p.marque||null;state.cls=p.cls&&CATS.includes(p.cls)?p.cls:null;
+  state.pod=p.pod&&CATS.includes(p.pod)?p.pod:state.pod;state.driver=p.driver&&PEOPLE[p.driver]?p.driver:null;state.marque=p.marque||null;state.cls=p.cls&&CATS.includes(p.cls)?p.cls:null;
   if(p.duel){const [a,b]=p.duel.split('|');state.duelBy=p.by==='m'?'m':'d';state.dA=a;state.dB=b;any=true;}
   return any;}
 
+/* ---------- Podium: one class of one edition — the atlas's unit, as a race is to a season ---------- */
+const ordinal=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:Math.min(n%10,4)%4]||'th');
+function podCats(s){return CATS.filter(k=>s.ed.cats.includes(k)&&(state.cat==='all'||k===state.cat));}
+function podiumView(){if(state.whole)return eraPodiumsView();const s=byYear[state.year];if(!s){$('#view').innerHTML='<p class="muted">No editions in this lens.</p>';return;}const e=s.ed;const cats=podCats(s);
+  if(!cats.length){$('#view').innerHTML=`<p class="muted" style="margin-top:20px">${e.cancelled?`The ${s.year} rally was called off before the start and has no podiums.`:'No such class this year.'}</p>`;return;}
+  if(!cats.includes(state.pod))state.pod=cats[0];const k=state.pod;
+  const nav=`<div class="chiplist" style="margin-top:20px">${cats.map(c=>{const w=e.winners[c];return `<button type="button" class="chip${c===k?' on':''}" data-pod="${esc(c)}" style="${c===k?'border-color:var(--accent);color:var(--accent)':''}"><i style="--c:${w?color(w.make):'#444'}"></i>${esc(c)}</button>`;}).join('')}</div>`;
+  const rows=s.rows.filter(x=>x.cat===k).sort((a,b)=>a.rank-b.rank);const w=rows[0];const acc=w?color(w.make):ERA_COL[e.era];
+  const hist=S.filter(t=>t.ed.cats.includes(k)&&!t.ed.cancelled).map(t=>({y:t.year,w:t.ed.winners[k]||null}));const i=hist.findIndex(h=>h.y===s.year);
+  let streak=0;if(w){for(let j=i;j>=0&&hist[j].w&&hist[j].w.driver===w.driver;j--)streak++;}
+  const winsSoFar=w?hist.slice(0,i+1).filter(h=>h.w&&h.w.driver===w.driver).length:0;const makeSoFar=w?hist.slice(0,i+1).filter(h=>h.w&&h.w.make===w.make).length:0;
+  const hero=`<div class="panel" style="margin-top:18px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;--team:${acc}"><div><p class="eyebrow">${s.year} · ${esc(e.era)} · ${esc(e.route)}${CAT_NOTE[k]?' · '+esc(CAT_NOTE[k]):''}</p><h2 style="margin:6px 0 0">${esc(k)} <span class="muted" style="font-size:.6em;font-weight:600;font-style:normal">${s.year}</span></h2></div>${w?`<div class="champline" style="--team:${acc}"><span class="eyebrow">Winner${streak>1?' · '+streak+' in a row':''}</span><b>${crewLinks(w.crew)}</b><span class="small muted">${ml(w.make)} · ${ordinal(winsSoFar)} win in ${esc(k)}${makeSoFar>1?' · '+esc(w.make)+'’s '+ordinal(makeSoFar):''}</span></div>`:'<div class="champline"><span class="eyebrow">Winner</span><b class="muted">not recorded</b></div>'}</div>`;
+  const podium=`<div class="podium3">${[2,1,3].map(r=>{const x=rows.find(z=>z.rank===r);return `<div class="pstep p${r}" style="${x?teamVar(x.make):'--team:#5b616b'}"><span class="rk">${r}</span>${x?`<b>${crewLinks(x.crew)}</b><span class="small muted">${ml(x.make)}</span>`:'<span class="muted">not listed</span>'}</div>`;}).join('')}</div>`;
+  const table=`<div class="panel" style="margin-top:22px"><div class="h3"><span>${esc(k)}, edition by edition</span><small>${hist.length} editions in the lens · newest first · click a year to open its podium</small></div><div class="tablewrap" style="max-height:520px"><table><tr><th>Year</th><th>Route</th><th>Winner</th><th>Marque</th></tr>${[...hist].reverse().map(h=>{const t=byYear[h.y];return `<tr${h.y===s.year?' style="color:var(--accent)"':''}><td><a href="#" data-year="${h.y}" data-pod="${esc(k)}" style="color:inherit">${h.y}</a></td><td class="dim">${esc(t?t.ed.route:'')}</td><td>${h.w?crewLinks(h.w.crew):'—'}</td><td>${h.w?ml(h.w.make):'—'}</td></tr>`;}).join('')}</table></div></div>`;
+  $('#view').innerHTML=nav+hero+podium+table;}
+function eraPodiumsView(){const list=[];for(const s of eraSeasons()){for(const k of podCats(s)){list.push({y:s.year,k,rows:s.rows.filter(x=>x.cat===k)});}}
+  $('#view').innerHTML=`<div class="h3" style="margin-top:22px"><span>Every podium · ${esc(eraLabel())}</span><small>${list.length} class podiums · newest first · click one to open it</small></div><div class="tablewrap"><table><tr><th>Year</th><th>Class</th><th>1st</th><th>2nd</th><th>3rd</th></tr>${list.reverse().map(p=>{const at=r=>{const x=p.rows.find(z=>z.rank===r);return x?`${esc(crewName(x.crew))} <span class="dim">${esc(x.make)}</span>`:'—';};return `<tr><td><a href="#" data-year="${p.y}" data-pod="${esc(p.k)}" style="color:inherit">${p.y}</a></td><td><a href="#" data-year="${p.y}" data-pod="${esc(p.k)}" style="color:inherit">${esc(p.k)}</a></td><td>${at(1)}</td><td>${at(2)}</td><td>${at(3)}</td></tr>`;}).join('')}</table></div>`;}
+
 /* ---------- render, navigation, events ---------- */
-function render(){stopReplay();drawTabs();if(tour.stopped||!tour.timer)drawEraStrip();const v={season:seasonView,drivers:()=>state.driver?driverView(state.driver):driversView(),marques:()=>state.marque?marqueView(state.marque):marquesView(),classes:()=>state.cls?classView(state.cls):classesView(),records:recordsView,barcode:barcodeView,duel:duelView}[state.tab];try{v();}catch(e){$('#view').innerHTML=`<p class="muted">Something in this view could not be drawn: ${esc(e.message)}</p>`;console.error(e);}StageNav.draw();writeRoute();}
+function render(){stopReplay();drawTabs();if(tour.stopped||!tour.timer)drawEraStrip();const v={season:seasonView,podium:podiumView,drivers:()=>state.driver?driverView(state.driver):driversView(),marques:()=>state.marque?marqueView(state.marque):marquesView(),classes:()=>state.cls?classView(state.cls):classesView(),records:recordsView,barcode:barcodeView,duel:duelView}[state.tab];try{v();}catch(e){$('#view').innerHTML=`<p class="muted">Something in this view could not be drawn: ${esc(e.message)}</p>`;console.error(e);}StageNav.draw();writeRoute();}
 function go(tab,scroll=true){state.tab=tab;render();if(scroll)$('#stage').scrollIntoView({behavior:RM?'auto':'smooth',block:'start'});}
 function ensureYearInLens(y){if(state.era!=='all'&&!inEraYear(y)){state.era='all';$('#eraSelect').value='all';}}
-function setSeason(y,scroll){state.whole=false;ensureYearInLens(y);state.year=y;fillSeasons();applyTheme();drawRiver();state.tab='season';go(state.tab,scroll);}
+function setSeason(y,scroll){state.whole=false;ensureYearInLens(y);state.year=y;fillSeasons();applyTheme();drawRiver();if(state.tab!=='podium')state.tab='season';go(state.tab,scroll);}
 function fillSeasons(){const sel=$('#season');const ss=eraSeasons();if(!ss.length){sel.innerHTML='';return;}const e=state.era==='all'?null:ERAS.find(x=>x.id===state.era);sel.innerHTML=`<option value="era">${e?'Whole era':'All years'} · ${ss[0].year}–${ss[ss.length-1].year}</option>`+'<optgroup label="Newest first">'+ss.slice().reverse().map(s=>`<option value="${s.year}">${s.year}${s.ed.cancelled?' · cancelled':''}</option>`).join('')+'</optgroup>';sel.value=state.whole?'era':state.year;}
 function setEra(id){tourStop();state.era=id;$('#eraSelect').value=id;if(id!=='all'){if(!inEraYear(state.year)){const last=eraSeasons().slice(-1)[0];state.year=last?last.year:state.year;}}fillSeasons();applyTheme();drawRiver();drawGrid();render();}
 function relens(rerender=true){rebuildSeasons();if(!byYear[state.year])state.year=LAST_YEAR;state.driver=null;state.marque=null;state.cls=null;fillSeasons();$('#eraSelect').innerHTML=`<option value="all">All eras · ${FIRST_YEAR}–${LAST_YEAR}</option>`+ERAS.filter(e=>e.to>=FIRST_YEAR).map(e=>`<option value="${e.id}">${esc(ERA_SHORT[e.id]||e.name)} · ${e.from}–${e.to}</option>`).join('');$('#eraSelect').value=state.era;if(rerender){applyTheme();drawRiver();drawGrid();render();}}
@@ -123,7 +141,7 @@ function init(){
   addEventListener('hashchange',()=>{if(/^#static-/.test(location.hash)){$('#reading').open=true;return;}routeLock=true;try{if(readRoute()){tourStop();$('#family').value=state.cat;$('#eraSelect').value=state.era;fillSeasons();applyTheme();drawRiver();drawGrid();render();}}finally{routeLock=false;}});
   $('#eraSelect').addEventListener('change',e=>setEra(e.target.value));
   $('#family').addEventListener('change',e=>{state.cat=e.target.value;relens();});
-  $('#season').addEventListener('change',e=>{if(e.target.value==='era'){state.whole=true;applyTheme();drawRiver();state.tab='season';go(state.tab,false);}else setSeason(+e.target.value,false);});
+  $('#season').addEventListener('change',e=>{if(e.target.value==='era'){state.whole=true;applyTheme();drawRiver();if(state.tab!=='podium')state.tab='season';go(state.tab,false);}else setSeason(+e.target.value,false);});
   $('#theme').addEventListener('change',applyTheme);
   $('#eraStrip').addEventListener('click',e=>{const s=e.target.closest('[data-era]');if(s)setEra(state.era===s.dataset.era?'all':s.dataset.era);});
   $('#eraStrip').addEventListener('pointerenter',()=>{tourPause();},{passive:true});$('#eraStrip').addEventListener('pointerleave',()=>{if(!tour.stopped)tourStart();},{passive:true});
@@ -133,7 +151,8 @@ function init(){
   $('#circuits').addEventListener('click',e=>{const b=e.target.closest('[data-year]');if(b)setSeason(+b.dataset.year,true);});
   const clear=t=>{if(t==='drivers')state.driver=null;if(t==='marques')state.marque=null;if(t==='classes')state.cls=null;};
   $('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;clear(b.dataset.tab);go(b.dataset.tab,false);});
-  $('#view').addEventListener('click',e=>{const a=e.target.closest('[data-driver],[data-marque],[data-cls],[data-year],[data-tab]');if(!a)return;if(a.tagName==='A')e.preventDefault();
+  $('#view').addEventListener('click',e=>{const a=e.target.closest('[data-pod],[data-driver],[data-marque],[data-cls],[data-year],[data-tab]');if(!a)return;if(a.tagName==='A')e.preventDefault();
+    if(a.dataset.pod){if(a.dataset.year){const y=+a.dataset.year;if(!byYear[y])return;state.whole=false;ensureYearInLens(y);state.year=y;fillSeasons();applyTheme();drawRiver();}state.pod=a.dataset.pod;go('podium',false);return;}
     if(a.dataset.tab){clear(a.dataset.tab);go(a.dataset.tab,false);return;}
     if(a.dataset.year){const y=+a.dataset.year;if(!byYear[y])return;setSeason(y,false);return;}
     if(a.dataset.driver){state.driver=a.dataset.driver;go('drivers',false);return;}
@@ -141,5 +160,5 @@ function init(){
     if(a.dataset.cls){state.cls=a.dataset.cls;go('classes',false);return;}});
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel','records','classes'].includes(state.tab))render();},150);});
 }
-document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons().map(s=>({year:s.year,cancelled:!!(s.ed&&s.ed.cancelled)})),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:null});
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons().map(s=>({year:s.year,cancelled:!!(s.ed&&s.ed.cancelled)})),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'podium',unitName:'Podium',units:s=>{const t=byYear[s.year];return t?podCats(t).map(c=>({key:c,label:c})):[];},unit:()=>state.pod,setUnit:k=>{state.pod=k;go('podium',false);}});
 init();

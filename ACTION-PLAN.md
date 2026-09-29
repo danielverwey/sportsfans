@@ -136,4 +136,4 @@ Nothing is updated by hand any more. Each atlas has a *Sweep · <atlas>* workflo
 - [x] The rule stated: timelines flow forward, lists start at today — the season dropdown says "Newest first", the era-wide race table too
 - [x] One tab order everywhere: season · unit · people · teams · venues · records · barcode · duel (rugby, cricket and UFC moved a tab)
 - [x] Phone: the tab row fades at its edge to show it scrolls; the era strip and the season strip are taller
-- [ ] Dakar has no unit tab, so its timeline steps editions only; a per-edition stage view would give it the same two levels as the others
+- [x] Dakar's unit is the Podium: one class of one edition (the three places, the winner's run in that class, the class edition by edition), the second tab as everywhere; the timeline steps podiums and wraps into the next edition, and the whole-lens view lists every class podium newest first

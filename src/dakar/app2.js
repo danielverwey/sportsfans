@@ -23,9 +23,9 @@ function drawGrid(){const list=routeModel();const q=state.gridFind.trim().toLowe
   $('#circuits').innerHTML=shown.map(c=>`<button type="button" class="circ route${c.ed.cancelled?' off':''}" data-year="${c.year}" style="${c.top?teamVar(c.top):'--team:#5b616b'}" title="${c.year} · ${esc(c.ed.route)} · ${esc(c.ed.era)}${c.lead?' · '+esc(pname(c.lead.driver))+' · '+esc(c.lead.make):c.ed.cancelled?' · cancelled':''}"><span class="ct">${esc(ERA_CARD[c.ed.era]||c.ed.era)}</span><span class="n">${c.year}</span>${routeSvg(c.ed,{fit:true,minW:48,k:2.4})}<span class="nm">${esc(c.ed.route)}</span></button>`).join('')||`<p class="muted">No route matches.</p>`;}
 
 /* ---------- Stage: tabs, era strip, era context ---------- */
-const TABS=[['season','Edition'],['drivers','Drivers'],['marques','Marques'],['classes','Classes'],['records','Records'],['barcode','Barcode'],['duel','Duel']];
+const TABS=[['season','Edition'],['podium','Podium'],['drivers','Drivers'],['marques','Marques'],['classes','Classes'],['records','Records'],['barcode','Barcode'],['duel','Duel']];
 function drawTabs(){$('#tabs').innerHTML=TABS.map(([id,l])=>`<button type="button" role="tab" data-tab="${id}" aria-pressed="${state.tab===id}">${l}</button>`).join('');
-  $('#stageStatus').textContent=state.tab==='season'&&!state.whole?`${state.year} · ${eraOf(state.year)?.name||''} · ${lensLabel()}`:eraLabel();}
+  $('#stageStatus').textContent=(state.tab==='season'||state.tab==='podium')&&!state.whole?`${state.year} · ${eraOf(state.year)?.name||''} · ${lensLabel()}`:eraLabel();}
 function drawEraStrip(preview){const strip=$('#eraStrip');if(!strip.children.length)strip.innerHTML=ERAS.map(e=>`<button type="button" style="--w:${e.to-e.from+1}" data-era="${e.id}" title="${esc(e.name)} · ${e.from}–${e.to}" aria-label="${esc(e.name)} ${e.from}–${e.to}"></button>`).join('');
   for(const b of strip.children){b.classList.toggle('on',state.era===b.dataset.era);b.classList.toggle('demo',preview===b.dataset.era);}
   const e=preview?ERAS.find(x=>x.id===preview):state.era==='all'?eraOf(state.year):ERAS.find(x=>x.id===state.era);
