@@ -36,3 +36,10 @@ Trademarks: every championship, team, event, venue and manufacturer name is the 
 - Nothing is taken from the promotion's own site or its statistics partner; the earlier UFCStats-based prototype is retired and its data is not carried. Per-fight strike and grappling counts are therefore absent.
 - Derived in `tools/prepare_ufc.py` from the transcribed rows alone: the division key from the weight-class label, the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21, July 1999), each fighter's record from the bouts in the archive.
 - The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike. No logos, marks or official artwork; the promotion's names identify the events and nothing on the site is affiliated with it.
+
+## Dakar Rally (`data/dakar.json`)
+
+- **Wikipedia** — the "Dakar Rally" article at revision 1377153751 (retrieved 29 September 2026): every edition's route as the article names it, its era, and the first three of every class with the crew and the make. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Transcribed by Daniel's prototype page; `tools/prepare_dakar.py` reads it.
+- **Natural Earth** — the 1:110m land silhouette behind every route map (public domain), projected and rounded by the prototype. Routes are drawn schematically between their named towns, not from any official course; the stage-by-stage route is not carried.
+- Nothing is taken from the organiser's own site, results service or artwork. The 2008 edition, cancelled before the start, is listed with no results.
+- The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No logos, marks or official artwork; the rally's name identifies the event and nothing on the site is affiliated with the Amaury Sport Organisation.

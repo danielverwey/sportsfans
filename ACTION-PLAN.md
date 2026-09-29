@@ -93,3 +93,11 @@ Go-live for the domain does not wait for phases 1–4: the site is publishable w
 - [x] UFC archive harvested by Daniel's own Wikipedia reader (791 events, 8,917 bouts, 2,786 fighters, 787 article revisions with hashes); `tools/prepare_ufc.py` reads it, `tools/audit_ufc.py` is clean apart from two genuine oddities (a 51-person Apex attendance as recorded; Sakuraba–Silveira refought the same night in 1997); `ufc` published
 - [ ] Per-fight strike and grappling statistics are not carried (they only exist in the promotion's own statistics service); the atlas reads results, methods, rounds, times, titles and bonus awards instead
 - [ ] NBA: the same route — a Wikipedia harvest of every season's game log is impractical; decide between Basketball-Reference terms (no bulk redistribution) and holding the atlas off the site
+
+## 9. The Dakar Rally, alphabetical order, the favicon (29 September 2026)
+
+- [x] Daniel's changes adopted: atlases, switchers and downloads listed alphabetically; a favicon (`src/hub/favicon.svg` → `favicon.ico`, `apple-touch-icon.png`); hub cards open the atlas in a new tab; every atlas reads River → Stage → venues
+- [x] Dakar Rally atlas (`src/dakar/`, `tools/prepare_dakar.py`, `data/dakar.json`): 48 editions 1979–2026 (2008 cancelled), 534 podium places across 8 classes, 430 people, 56 marques; the river of class wins by marque, every route drawn between its named towns over the Natural Earth land, the caravan replayed symbolically, podiums of every class, drivers, marques, classes, records, barcode, duel; static pages for every edition, driver, marque and class; reading edition; licences entry
+- [x] The e-mail address no longer printed anywhere: every notice reads "contribute" as the link
+- [ ] Wikidata nationality and date of birth for the Dakar people (the prototype carries names only)
+- [ ] SEO pass across the site

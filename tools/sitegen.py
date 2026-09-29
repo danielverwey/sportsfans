@@ -51,10 +51,10 @@ footer{padding:30px 0 60px;color:var(--muted);font:11px var(--mono);letter-spaci
 .lic h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:22px;text-transform:uppercase;margin:28px 0 8px}.lic p{color:var(--muted);max-width:900px;margin:6px 0}.lic p b{color:var(--ink);font-weight:600}.lic .tag{display:inline-block;font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);border-radius:4px;padding:2px 7px;margin-left:8px;color:var(--accent)}
 '''
 
-SPORTS = {'cricket': ('Cricket', 'Cricket'), 'f1': ('F1', 'Formula 1'), 'motogp': ('MotoGP', 'MotoGP'), 'rugby': ('Rugby', 'Rugby union'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'ufc': ('UFC', 'UFC bouts'), 'sbk': ('WorldSBK', 'World Superbike')}  # alphabetical by the label shown in the navigation
+SPORTS = {'cricket': ('Cricket', 'Cricket'), 'dakar': ('Dakar', 'Dakar Rally'), 'f1': ('F1', 'Formula 1'), 'motogp': ('MotoGP', 'MotoGP'), 'rugby': ('Rugby', 'Rugby union'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'ufc': ('UFC', 'UFC bouts'), 'sbk': ('WorldSBK', 'World Superbike')}  # alphabetical by the label shown in the navigation
 
 CONTACT = 'sportsfans.co.za@gmail.com'
-NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. Contribute — a correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.'
+NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. A correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '?subject=sportsfans.co.za">contribute</a>.'
 PUBLISHED = None
 def icon_links(rel):
     """The site mark for the tab and the home screen: the SVG, the .ico fallback, the touch icon — all at the site root."""
@@ -443,13 +443,14 @@ def gen_rugby(A, *, site, v):
 
 # ============================================================ Licences page ============================================================
 def gen_licences(*, site, v, published, held):
-    """Every source, the terms it states, and what that means for each data file. Checked 28 September 2026."""
+    """Every source, the terms it states, and what that means for each data file. Checked 29 September 2026."""
     rel = '../'
     def src(title, url, terms, use, tag=''):
         return f'<p><b><a class="q" href="{E(url)}" target="_blank" rel="noopener">{E(title)}</a></b>{f"<span class=tag>{E(tag)}</span>" if tag else ""}<br>{terms}<br><span style="color:var(--dim)">Used for: {use}</span></p>'
+    dakar_lic = ('<h3>Dakar Rally</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/Dakar_Rally', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every edition of the Dakar Rally article at a recorded revision — the route as the article names it, the era, and the first three of every class with the crew and the make. Nothing is taken from the organiser’s own site, results service or artwork.', 'CC BY-SA 4.0') + src('Natural Earth', 'https://www.naturalearthdata.com/about/terms-of-use/', 'Public domain.', 'the 1:110m land silhouette behind every route map; routes are drawn schematically between their named towns, not from any official course.', 'Public domain') + '<p><b>The data file <code>/data/dakar.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No logos, marks or official artwork are included; the rally’s name appears only to identify the event.</p>\n') if 'dakar' in (published or []) else ''
     ufc_lic = ('<h3>UFC</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every past event in the list of UFC events and each event’s own article — the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus awards. Nothing is taken from the promotion’s own site or its statistics partner.', 'CC BY-SA 4.0') + src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'fighter nationality, date of birth and height, where the fighter has an article.', 'CC0 1.0') + '<p><b>The data file <code>/data/ufc.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike. No logos, marks or official artwork are included; the promotion’s names appear only to identify the events.</p>\n') if 'ufc' in (published or []) else ''
     body = f'''<p class="eyebrow">Sources and licences</p><h1>Where the numbers <span>come from</span></h1>
-<p class="lede">Every atlas is built from sources that state their terms, or from facts that belong to no one. This page lists each source, the terms it publishes, and the licence that applies to each data file this site serves. The site itself is <b>non-commercial for good</b>: two of its backbone sources permit nothing else, and the rest are honoured in the same spirit. Checked 28 September 2026.</p>
+<p class="lede">Every atlas is built from sources that state their terms, or from facts that belong to no one. This page lists each source, the terms it publishes, and the licence that applies to each data file this site serves. The site itself is <b>non-commercial for good</b>: two of its backbone sources permit nothing else, and the rest are honoured in the same spirit. Checked 29 September 2026.</p>
 <div class="lic">
 <h3>The site’s own commitments</h3>
 <p>{NOTICE}</p>
@@ -462,6 +463,7 @@ def gen_licences(*, site, v, published, held):
 {src('Formula1.com', 'https://www.formula1.com/', 'Reference only; nothing is reproduced.', 'links for historical cross-checks and era notes.')}
 <p><b>The data file <code>/data/f1.json</code></b> is therefore offered under <b>CC BY-NC-SA 4.0</b>: attribute F1DB and Jolpica, use it non-commercially, and share any derivative under the same licence.</p>
 
+{dakar_lic}
 <h3>Rugby union</h3>
 {src('Nuck’s Rugby Archive', 'https://rugbyarchive.github.io/about.html', 'An independent hobby archive that states no licence. Match results are facts; the compilation is the author’s work and is used with credit while permission is sought.', 'the ten nations’ international match archive.')}
 {src('Springbok Rugby History (bokhist.com)', 'https://bokhist.com/', 'A private South African archive that states no licence; used with credit while permission is sought.', 'the Springbok match record, player histories and World Cup squads.')}
@@ -490,10 +492,10 @@ def gen_licences(*, site, v, published, held):
 
 <h3>In preparation</h3>
 {src('FiveThirtyEight', 'https://github.com/fivethirtyeight/data', 'CC BY 4.0.', 'historical NBA/BAA game results and Elo (basketball).', 'CC BY 4.0')}
-<p>Basketball box scores and mixed-martial-arts fight records are facts recorded from public sources; each atlas will name its sources and their terms here when it is published.</p>
+<p>Basketball box scores are facts recorded from public sources; the atlas will name its sources and their terms here when it is published.</p>
 
 <h3>Trademarks</h3>
-<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
+<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Dakar, Dakar Rally, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
 </div>'''
     return sitegen_page(site=site, v=v, body=body, published=published)
 def sitegen_page(*, site, v, body, published):
@@ -768,6 +770,87 @@ def gen_tt(A, *, site, v):
     out.append(('tt/seasons/index.html', page(site=site, sport='tt', depth=2, title='The Isle of Man TT, year by year, 1907–2026 · APEX', desc='Every TT week on its own page.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Years', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>TT week</span></h1><p class="lede">{len(years)} years with a TT.</p>' + index_list([(str(y), f'tt/seasons/{y}/', f'{len(by_year[y])} races') for y in reversed(years)], rel), path='tt/seasons/', v=v)))
     out.append(('tt/riders/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT riders · APEX', desc='Every rider with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Riders', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>rider</span></h1><p class="lede">{len(by_r):,} riders with a recorded result.</p>' + index_list(sorted([(pn(i), f'tt/riders/{slug(i)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for i, rr in by_r.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='tt/riders/', v=v)))
     out.append(('tt/marques/index.html', page(site=site, sport='tt', depth=2, title='Isle of Man TT marques · APEX', desc='Every marque with a recorded TT result.', crumbs=[('Sportsfans', rel), ('Isle of Man TT', rel + 'tt/'), ('Marques', None)], body=f'<p class="eyebrow">Isle of Man TT</p><h1>Every <span>marque</span></h1>' + index_list(sorted([(m, f'tt/marques/{slug(m)}/', f'{sum(1 for r, x in rr if x["pos"] == 1)} wins · {len(rr)} starts') for m, rr in by_m.items() if m != 'Unrecorded'], key=lambda t: (t[0], t[1])), rel), path='tt/marques/', v=v)))
+    return out
+
+# ============================================================ Dakar Rally (the desert edition) ============================================================
+def gen_dakar(A, *, site, v):
+    """Static pages for the Dakar atlas: every edition, every driver or rider on a podium, every marque, every class."""
+    out = []; RF = A['resultFields']; P = A['people']; eds = A['editions']; COLS = A.get('colours', {})
+    def hue(t):
+        h = 0
+        for ch in str(t or '?'): h = (h * 31 + ord(ch)) & 0xffffffff
+        import colorsys; r, g, b = colorsys.hls_to_rgb((h % 360) / 360, .62, .42); return '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
+    col = lambda m: COLS.get(m) or hue(m)
+    pn = lambda i: P.get(i, {}).get('name', i)
+    rows_of = lambda e: [dict(zip(RF, x)) for x in e['results']]
+    dl = lambda i, rel: f'<a class="q" href="{rel}dakar/drivers/{slug(i)}/">{E(pn(i))}</a>'
+    crew = lambda r, rel: ' / '.join(dl(i, rel) for i in r['crew'] if i != r['driver'])
+    ml = lambda m, rel: f'<i class="dot" style="--c:{col(m)}"></i><a class="q" href="{rel}dakar/marques/{slug(m)}/">{E(m)}</a>'
+    cl = lambda c, rel: f'<a class="q" href="{rel}dakar/classes/{slug(c)}/">{E(c)}</a>'
+    yl = lambda y, rel: f'<a class="q" href="{rel}dakar/editions/{y}/">{y}</a>'
+    held = [e for e in eds if not e['cancelled']]; years = [e['y'] for e in eds]
+    RH = ['Year', 'Class', 'Place', 'Driver / rider', 'Crew', 'Make', 'Route']
+    rrow = lambda e, r, rel: [yl(e['y'], rel), cl(r['cat'], rel), r['rank'], dl(r['driver'], rel), crew(r, rel), ml(r['make'], rel), E(e['route'])]
+    # editions
+    for e in eds:
+        y = e['y']; rel = '../../../'; rows = rows_of(e); prev = next((x for x in reversed(years) if x < y), None); nxt = next((x for x in years if x > y), None)
+        wins = [r for r in rows if r['rank'] == 1]; mq = collections.Counter(r['make'] for r in rows); car = next((r for r in wins if r['cat'] == 'Cars'), None); bike = next((r for r in wins if r['cat'] == 'Bikes'), None)
+        lede = 'The rally was cancelled before the start and has no results.' if e['cancelled'] else f'{len(e["cats"])} class{"" if len(e["cats"]) == 1 else "es"}, {len(rows)} podium places, {len(mq)} marques on the podium.' + (f' Cars: <b>{E(pn(car["driver"]))}</b> ({E(car["make"])}).' if car else '') + (f' Bikes: <b>{E(pn(bike["driver"]))}</b> ({E(bike["make"])}).' if bike else '')
+        body = f"""<p class="eyebrow">Dakar Rally · {E(e['era'])}</p><h1>{y} <span>Dakar</span></h1>
+<p class="lede">{E(e['route'])}. {lede}</p>
+<a class="open" href="{rel}dakar/#season={y}&tab=season">Open {y} in the atlas →</a>{f'<a class="also" href="{rel}dakar/editions/{prev}/">← {prev}</a>' if prev else ''}{f'<a class="also" href="{rel}dakar/editions/{nxt}/">{nxt} →</a>' if nxt else ''}
+{kpis([('Classes', len(e['cats']), ''), ('Podium places', len(rows), ''), ('Marques on the podium', len(mq), ''), ('Named towns', len(e['stops']), E(' · '.join(e['stops'])) if e['stops'] else '')])}
+{('<h2>The podium of every class</h2>' + table(['Class', 'Place', 'Driver / rider', 'Crew', 'Make'], [[cl(r['cat'], rel), r['rank'], dl(r['driver'], rel), crew(r, rel), ml(r['make'], rel)] for r in rows], num=(1,))) if rows else ''}
+{('<h2>Marques on the podium</h2>' + table(['Marque', 'Places', 'Wins'], [[ml(m, rel), n, sum(1 for r in wins if r['make'] == m)] for m, n in mq.most_common()], num=(1, 2))) if mq else ''}"""
+        out.append((f'dakar/editions/{y}/index.html', page(site=site, sport='dakar', depth=3, title=f'{y} Dakar Rally · route and every class podium · APEX', desc=f'The {y} Dakar Rally: {e["route"]}. ' + ('Cancelled before the start.' if e['cancelled'] else f'{len(e["cats"])} classes, {len(rows)} podium places.'), crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Editions', rel + 'dakar/editions/'), (str(y), None)], body=body, path=f'dakar/editions/{y}/', v=v)))
+    # drivers and riders (every crew member credited)
+    by_d = collections.defaultdict(list)
+    for e in held:
+        for r in rows_of(e):
+            for i in r['crew']: by_d[i].append((e, r))
+    for d, rr in by_d.items():
+        rel = '../../../'; wins = [(e, r) for e, r in rr if r['rank'] == 1]; lead = sum(1 for e, r in rr if r['driver'] == d); ys = sorted({e['y'] for e, _ in rr}); cats = collections.Counter(r['cat'] for e, r in wins); mqs = collections.Counter(r['make'] for e, r in rr)
+        body = f"""<p class="eyebrow">Dakar Rally · {'Driver / rider' if lead else 'Crew'} · {ys[0]}{'–' + str(ys[-1]) if ys[-1] != ys[0] else ''}</p><h1>{E(pn(d))}</h1>
+<p class="lede">{len(wins)} class win{'' if len(wins) == 1 else 's'} and {len(rr)} podium place{'' if len(rr) == 1 else 's'} over {len(ys)} edition{'' if len(ys) == 1 else 's'}{f', {lead} as the lead name and {len(rr) - lead} in the crew' if 0 < lead < len(rr) else ' as a crew member' if not lead else ''}.{f' Wins by class: {", ".join(f"{E(c)} {n}" for c, n in cats.most_common())}.' if cats else ''} Podium places are what the archive holds; starts and retirements are not carried.</p>
+<a class="open" href="{rel}dakar/#tab=drivers&driver={E(d)}">Open in the atlas →</a>
+{kpis([('Class wins', len(wins), ''), ('Podium places', len(rr), ''), ('Editions', len(ys), f'{ys[0]}–{ys[-1]}'), ('Marques', len(mqs), '')])}
+{('<h2>Marques</h2><div class="chips">' + ''.join(f'<a class="chip" href="{rel}dakar/marques/{slug(m)}/"><i style="--c:{col(m)}"></i>{E(m)} <span style="color:var(--muted)">{n}</span></a>' for m, n in mqs.most_common()) + '</div>') if mqs else ''}
+<h2>Every podium place</h2>{table(RH, [rrow(e, r, rel) for e, r in sorted(rr, key=lambda t: (-t[0]['y'], t[1]['cat']))], num=(2,))}"""
+        out.append((f'dakar/drivers/{slug(d)}/index.html', page(site=site, sport='dakar', depth=3, title=f'{pn(d)} · Dakar Rally record · APEX', desc=f'{pn(d)} at the Dakar: {len(wins)} class wins, {len(rr)} podium places, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Drivers & riders', rel + 'dakar/drivers/'), (pn(d), None)], body=body, path=f'dakar/drivers/{slug(d)}/', v=v)))
+    # marques
+    by_m = collections.defaultdict(list)
+    for e in held:
+        for r in rows_of(e): by_m[r['make']].append((e, r))
+    for m, rr in by_m.items():
+        rel = '../../../'; wins = sorted([(e, r) for e, r in rr if r['rank'] == 1], key=lambda t: -t[0]['y']); ys = sorted({e['y'] for e, _ in rr}); people = collections.Counter(i for e, r in wins for i in r['crew']); cats = collections.Counter(r['cat'] for e, r in wins)
+        body = f"""<p class="eyebrow">Dakar Rally · Marque · {ys[0]}–{ys[-1]}</p><h1><i class="dot" style="--c:{col(m)};width:.5em;height:.5em;border-radius:6px;vertical-align:.15em"></i>{E(m)}</h1>
+<p class="lede">{len(wins)} class win{'' if len(wins) == 1 else 's'} from {len(rr)} podium place{'' if len(rr) == 1 else 's'}, {ys[0]}–{ys[-1]}{f'; wins by class: {", ".join(f"{E(c)} {n}" for c, n in cats.most_common())}' if cats else ''}{f'; most wins on the marque: <b>{E(pn(people.most_common(1)[0][0]))}</b> ({people.most_common(1)[0][1]})' if people else ''}.</p>
+<a class="open" href="{rel}dakar/#tab=marques&marque={E(m)}">Open in the atlas →</a>
+{kpis([('Class wins', len(wins), ''), ('Podium places', len(rr), ''), ('Different winners', len(people), ''), ('Editions', len(ys), f'{ys[0]}–{ys[-1]}')])}
+{('<h2>Winners on the marque</h2>' + table(['Driver / rider', 'Wins', 'Years'], [[dl(i, rel), n, ', '.join(str(e['y']) for e, r in sorted(wins, key=lambda t: t[0]['y']) if i in r['crew'])] for i, n in people.most_common(20)], num=(1,))) if people else ''}
+{('<h2>Every win</h2>' + table(RH, [rrow(e, r, rel) for e, r in wins], num=(2,))) if wins else '<p class="lede">No class wins on record; podium places only.</p>'}
+<h2>Every podium place</h2>{table(RH, [rrow(e, r, rel) for e, r in sorted(rr, key=lambda t: (-t[0]['y'], t[1]['cat'], t[1]['rank']))], num=(2,))}"""
+        out.append((f'dakar/marques/{slug(m)}/index.html', page(site=site, sport='dakar', depth=3, title=f'{m} at the Dakar Rally · every podium · APEX', desc=f'{m} at the Dakar: {len(wins)} class wins from {len(rr)} podium places, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Marques', rel + 'dakar/marques/'), (m, None)], body=body, path=f'dakar/marques/{slug(m)}/', v=v)))
+    # classes
+    NOTE = {c['key']: c.get('note', '') for c in A.get('categories', [])}
+    by_c = collections.defaultdict(list)
+    for e in held:
+        for r in rows_of(e): by_c[r['cat']].append((e, r))
+    for c, rr in by_c.items():
+        rel = '../../../'; wins = sorted([(e, r) for e, r in rr if r['rank'] == 1], key=lambda t: -t[0]['y']); ys = sorted({e['y'] for e, _ in rr}); people = collections.Counter(i for e, r in wins for i in r['crew']); mqs = collections.Counter(r['make'] for e, r in wins)
+        body = f"""<p class="eyebrow">Dakar Rally · Class · {ys[0]}–{ys[-1]}</p><h1>{E(c)}</h1>
+<p class="lede">{E(NOTE.get(c, ''))} {len(wins)} edition{'' if len(wins) == 1 else 's'} won, {ys[0]}–{ys[-1]}{f'; most wins: <b>{E(pn(people.most_common(1)[0][0]))}</b> ({people.most_common(1)[0][1]})' if people else ''}{f'; most successful marque: <b>{E(mqs.most_common(1)[0][0])}</b> ({mqs.most_common(1)[0][1]})' if mqs else ''}.</p>
+<a class="open" href="{rel}dakar/#class={E(c)}&tab=classes&cls={E(c)}">Open in the atlas →</a>
+{kpis([('Editions', len(ys), f'{ys[0]}–{ys[-1]}'), ('Podium places', len(rr), ''), ('Different winners', len(people), ''), ('Winning marques', len(mqs), '')])}
+{('<h2>Most wins</h2>' + table(['Driver / rider', 'Wins', 'Years'], [[dl(i, rel), n, ', '.join(str(e['y']) for e, r in sorted(wins, key=lambda t: t[0]['y']) if i in r['crew'])] for i, n in people.most_common(15)], num=(1,))) if people else ''}
+{('<h2>Winning marques</h2>' + table(['Marque', 'Wins', 'Years'], [[ml(m, rel), n, ', '.join(str(e['y']) for e, r in sorted(wins, key=lambda t: t[0]['y']) if r['make'] == m)] for m, n in mqs.most_common()], num=(1,))) if mqs else ''}
+<h2>Every winner</h2>{table(RH, [rrow(e, r, rel) for e, r in wins], num=(2,))}"""
+        out.append((f'dakar/classes/{slug(c)}/index.html', page(site=site, sport='dakar', depth=3, title=f'{c} at the Dakar Rally · every winner · APEX', desc=f'The {c} class of the Dakar Rally: every winner and podium, {ys[0]}–{ys[-1]}.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Classes', rel + 'dakar/classes/'), (c, None)], body=body, path=f'dakar/classes/{slug(c)}/', v=v)))
+    rel = '../../'
+    out.append(('dakar/editions/index.html', page(site=site, sport='dakar', depth=2, title=f'The Dakar Rally, edition by edition, {years[0]}–{years[-1]} · APEX', desc='Every Dakar Rally on its own page: route, era and the podium of every class.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Editions', None)], body=f'<p class="eyebrow">Dakar Rally</p><h1>Every <span>edition</span></h1><p class="lede">{len(held)} editions run and {len(eds) - len(held)} cancelled, {years[0]}–{years[-1]}.</p>' + index_list([(str(e['y']), f'dakar/editions/{e["y"]}/', 'cancelled' if e['cancelled'] else f'{E(e["route"])} · {len(e["cats"])} classes') for e in reversed(eds)], rel), path='dakar/editions/', v=v)))
+    out.append(('dakar/drivers/index.html', page(site=site, sport='dakar', depth=2, title='Dakar Rally drivers and riders · APEX', desc='Everyone with a Dakar Rally podium place, in any class, as driver, rider or crew.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Drivers & riders', None)], body=f'<p class="eyebrow">Dakar Rally</p><h1>Every <span>name on a podium</span></h1><p class="lede">{len(by_d):,} drivers, riders and crew with a podium place.</p>' + index_list(sorted([(pn(i), f'dakar/drivers/{slug(i)}/', f'{sum(1 for e, r in rr if r["rank"] == 1)} wins · {len(rr)} podiums') for i, rr in by_d.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), rel), path='dakar/drivers/', v=v)))
+    out.append(('dakar/marques/index.html', page(site=site, sport='dakar', depth=2, title='Dakar Rally marques · APEX', desc='Every marque with a Dakar Rally podium place.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Marques', None)], body=f'<p class="eyebrow">Dakar Rally</p><h1>Every <span>marque</span></h1>' + index_list(sorted([(m, f'dakar/marques/{slug(m)}/', f'{sum(1 for e, r in rr if r["rank"] == 1)} wins · {len(rr)} podiums') for m, rr in by_m.items()], key=lambda t: (t[0], t[1])), rel), path='dakar/marques/', v=v)))
+    out.append(('dakar/classes/index.html', page(site=site, sport='dakar', depth=2, title='Dakar Rally classes · APEX', desc='Every class the Dakar Rally has crowned, with its winners.', crumbs=[('Sportsfans', rel), ('Dakar Rally', rel + 'dakar/'), ('Classes', None)], body=f'<p class="eyebrow">Dakar Rally</p><h1>Every <span>class</span></h1>' + index_list([(c, f'dakar/classes/{slug(c)}/', f'{sum(1 for e, r in rr if r["rank"] == 1)} editions · {min(e["y"] for e, _ in rr)}–{max(e["y"] for e, _ in rr)}') for c, rr in sorted(by_c.items(), key=lambda t: -len(t[1]))], rel), path='dakar/classes/', v=v)))
     return out
 
 # ============================================================ UFC (the cage edition) ============================================================

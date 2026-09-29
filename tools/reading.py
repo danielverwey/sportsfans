@@ -222,3 +222,25 @@ def reading_ufc(core):
 
 def footer_ufc(core):
     return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / UFC BOUTS · THE CAGE EDITION</div><p>An independent, fan-made record of every UFC bout since the first tournament of 1993. Results, methods, rounds, times, venues and bonus awards transcribed from Wikipedia’s event articles (CC BY-SA 4.0); fighter nationality, birth date and height from Wikidata (CC0); nothing from the promotion’s own site, its statistics partner or its artwork is carried. Latest included event: {E(longdate(core.get("lastDate", "")))}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · No affiliation with the UFC, Zuffa or TKO Group Holdings is implied; their names are used only to identify the events</span><span><a href="https://en.wikipedia.org/wiki/List_of_UFC_events" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.wikidata.org/" target="_blank" rel="noopener">Wikidata</a> (CC0) · <a href="#top">Back to top ↑</a></span></div></footer>'
+
+# ------------------------------------------------------------ Dakar Rally (the desert edition)
+def reading_dakar(core):
+    """Every edition, newest first: route, era, and the first three of every class."""
+    RF = core['resultFields']; P = core['people']; pn = lambda i: P.get(i, {}).get('name', i)
+    eds = sorted(core['editions'], key=lambda e: -e['y']); c = core['coverage']
+    out = ['<div id="staticArchive"><nav class="staticnav" aria-label="Year archive">' + ''.join(f'<a href="#static-{e["y"]}">{e["y"]}</a>' for e in eds) + '</nav>']
+    out.append(f'<section class="panel"><p class="eyebrow">Dakar Rally · {eds[-1]["y"]}–{eds[0]["y"]}</p><h2>Every edition, on the page</h2><p>{c["held"]} editions run and one cancelled, {c["podiums"]} podium places across {c["categories"]} classes, each edition with its route as the source names it, its era, and the first three of every class — the lead driver or rider, the crew, and the make. Africa from 1979, South America from 2009, Saudi Arabia from 2020.</p></section>')
+    for e in eds:
+        rows = [dict(zip(RF, x)) for x in e['results']]
+        tail = ' · cancelled' if e['cancelled'] else f' · {len(e["cats"])} classes'
+        out.append(f'<section class="panel" id="static-{e["y"]}"><p class="eyebrow">{e["y"]} · {E(e["era"])}{tail}</p><h2>{e["y"]}</h2><p class="small muted">{E(e["route"])}</p>')
+        if e['cancelled']: out.append('<p>The rally was cancelled before the start and has no results.</p></section>'); continue
+        out.append('<div class="tablewrap"><table><thead><tr><th>Class</th><th>Place</th><th>Driver / rider</th><th>Crew</th><th>Make</th></tr></thead><tbody>')
+        for r in rows:
+            crew = ' / '.join(pn(i) for i in r['crew'] if i != r['driver'])
+            out.append(f'<tr class="{"win" if r["rank"] == 1 else ""}"><td>{E(r["cat"])}</td><td>{r["rank"]}</td><td><b>{E(pn(r["driver"]))}</b></td><td>{E(crew)}</td><td>{E(r["make"])}</td></tr>')
+        out.append('</tbody></table></div></section>')
+    out.append('</div>'); return '\n'.join(out)
+
+def footer_dakar(core):
+    return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / DAKAR RALLY · THE DESERT EDITION</div><p>An independent, fan-made record of the Dakar Rally from the first Paris–Dakar of 1979. Routes, eras and the podium of every class transcribed from Wikipedia’s Dakar Rally article (CC BY-SA 4.0) at a recorded revision; the land silhouette from Natural Earth (public domain). Routes are drawn schematically between their named towns, not stage by stage. Latest included edition: {core.get("lastYear", "")}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · No affiliation with the Amaury Sport Organisation or the Dakar Rally is implied; the name identifies the event</span><span><a href="https://en.wikipedia.org/wiki/Dakar_Rally" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain) · <a href="#top">Back to top ↑</a></span></div></footer>'

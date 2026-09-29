@@ -1,15 +1,17 @@
 # APEX / Sports atlases · sportsfans.co.za
 
-Seven sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course) — and a landing page that opens onto all of them:
+Nine sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
 
 | Atlas | Span | Live path | Offline edition |
 |---|---|---|---|
 | Cricket · every international | 1877–2026 · 13,823 matches · 9,835 scorecards | `/cricket/` | `/downloads/apex_cricket_ode_1877_2026.html` |
+| Dakar Rally | 1979–2026 · 47 editions · 534 podium places in 8 classes | `/dakar/` | `/downloads/apex_dakar_ode_1979_2026.html` |
 | Formula 1 | 1950–2026 · 1,163 Grands Prix · 26,181 results | `/f1/` | `/downloads/apex_f1_ode_1950_2026.html` |
 | Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` | `/downloads/apex_isle_of_man_tt_ode_1907_2026.html` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` | `/downloads/apex_motogp_ode_1949_2026.html` |
 | Rugby union · ten nations | 1871–2026 · 3,960 Test matches | `/rugby/` | `/downloads/apex_rugby_ode_1871_2026.html` |
 | Tennis · the tour | 1877–2026 · 11,043 titles · 388,665 matches | `/tennis/` | `/downloads/apex_tennis_ode_1877_2026.html` |
+| UFC bouts | 1993–2026 · 791 events · 8,917 bouts | `/ufc/` | `/downloads/apex_ufc_ode_1993_2026.html` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` | `/downloads/apex_worldsbk_ode_1988_2026.html` |
 
 Every page is a single HTML file with its archive embedded: no server, no build step at view time, no external requests other than Google Fonts. Each carries an opening in the sport's own idiom (lights out; kick-off; the toss; the serve; the ten-second start), the River of its entire history at once, the Stage of seasons, races or matches, replays, careers, records, barcodes and duels under one era lens, every circuit to its own outline and every ground or tournament listed — never drawn — in the colours of the side that has won there most or of its surface, and a plain reading edition that works with scripts off. The landing page (`docs/index.html`) carries a miniature of each River, drawn from the data at build time.
@@ -20,7 +22,7 @@ Every page is a single HTML file with its archive embedded: no server, no build 
 Sportsfans/
 ├── docs/                          ← the published site (GitHub Pages root, sportsfans.co.za)
 │   ├── index.html                 landing page, with a miniature of each River drawn at build time
-│   ├── f1/  rugby/  cricket/  tennis/  tt/  motogp/  sbk/
+│   ├── cricket/  dakar/  f1/  motogp/  rugby/  sbk/  tennis/  tt/  ufc/
 │   │   ├── index.html             the atlas: a 7–13 KB shell that loads its stylesheet, app and archive
 │   │   ├── reading/index.html     the reading edition, generated from the archive (plain tables, no scripts)
 │   │   ├── seasons/<year>/        one static page per season
@@ -70,6 +72,12 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 1. Either Actions → *Harvest · UFC from Wikipedia* → Run workflow (about 20 minutes; `limit` = 30 for a quick test) and download the `ufc-harvest` artifact, or use a prototype page with the archive embedded in `<script id="archive-data">`.
 2. `python tools/prepare_ufc.py path/to/ufc.json` (or the `.html`) → `data/ufc.json`; `python tools/audit_ufc.py` → `audits/DATA-AUDIT-ufc.md`.
 3. Commit `data/ufc.json` and push — the deploy workflow builds and publishes.
+
+### Dakar Rally (prototype → prepare → publish)
+
+1. The archive is the prototype page `paris_dakar_atlas_1979_2026.html` — every edition's route, era and class podiums transcribed from Wikipedia's Dakar Rally article at a recorded revision, plus the Natural Earth land silhouette and the gazetteer of route towns. Keep a copy at `build/harvest/paris_dakar_atlas_1979_2026.html`.
+2. `python tools/prepare_dakar.py path/to/paris_dakar_atlas_1979_2026.html` → `data/dakar.json` (editions, podium rows, people, marques, colours, map).
+3. Commit `data/dakar.json` and push — the deploy workflow builds and publishes. Routes are drawn schematically between the named towns; a town missing from the gazetteer is simply not drawn (the build prints any edition with fewer than two drawable stops).
 
 ### What is committed
 
