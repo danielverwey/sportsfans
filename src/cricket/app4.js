@@ -129,4 +129,10 @@ function init(){
   let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{drawRiver();if(state.tab==='season')render();},150);});
 }
 StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'match',unitName:'Match',units:s=>s.matches.filter(inLens).map(m=>({key:m.id,label:dm(m.date)+' '+code(m.home)+'–'+code(m.away)})),unit:()=>state.match,setUnit:k=>{state.match=k;go('match',false);}});
+StageSearch.mount({placeholder:'Find a team, player, ground, season or match',groups:[
+  {kind:'Teams',items:()=>{const c={};for(const m of MATCHES)for(const t of m.teams)c[t]=(c[t]||0)+1;return Object.keys(TEAMS).map(n=>({label:n,rank:c[n]||0,open:()=>{state.nation=n;go('nations',false);}}));}},
+  {kind:'Players',items:()=>{const g={};for(const r of A.ps)g[r[4]]=(g[r[4]]||0)+(r[5]||0);return Object.entries(PLAYERS).map(([id,p])=>({label:p.n,rank:g[id]||0,sub:(p.teams||[]).join(', '),open:()=>{state.player=id;go('players',false);}}));}},
+  {kind:'Grounds',items:()=>{const c={};for(const m of MATCHES)if(m.v)c[m.v]=(c[m.v]||0)+1;return Object.entries(VENUES).map(([id,v])=>({label:v.n,rank:c[id]||0,sub:v.city||'',open:()=>{state.ground=id;go('grounds',false);}}));}},
+  {kind:'Seasons',items:()=>eraSeasons().map(s=>({label:String(s.year),sub:`${s.matches.length} matches`,keys:['season'],open:()=>setSeason(s.year,false)}))},
+  {kind:'Matches',items:()=>MATCHES.map(m=>({label:`${m.teams[0]} v ${m.teams[1]}`,sub:`${dm(m.date)} ${m.y} · ${m.g==='W'?'Women’s ':''}${m.f}${m.event?' · '+m.event:''}`,keys:[String(m.y)],open:()=>openMatch(m.id,false)}))}]});
 init();

@@ -111,7 +111,7 @@ def standalone(p):
     check_embedded(out, blob, p['marker'], p['static'], p['footer'])
     return out
 
-COMMON_JS = (SRC/'common/stage.js').read_bytes(); COMMON_CSS = (SRC/'common/stage.css').read_bytes()
+COMMON_JS = (SRC/'common/stage.js').read_bytes() + b'\n' + (SRC/'common/search.js').read_bytes(); COMMON_CSS = (SRC/'common/stage.css').read_bytes()
 LIGHT_KEYS = "['apex-lights','apex-kickoff','apex-toss','apex-serve','apex-tt','apex-ufc','apex-dakar']"
 def production(p, vcss, vjs, vdata):
     """The same shell, but the stylesheet, the application and the archive come from files — small HTML, cached assets."""

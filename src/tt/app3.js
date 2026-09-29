@@ -153,4 +153,10 @@ function init(){
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel','records','classes'].includes(state.tab))render();},150);});
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'race',unitName:'Race',units:s=>s.races.filter(inLens).map(r=>({key:r.id,label:r.name})),unit:()=>state.race,setUnit:k=>{state.race=k;go('race',false);}});
+StageSearch.mount({placeholder:'Find a rider, marque, class, year or race',groups:[
+  {kind:'Riders',items:()=>{const n={};for(const r of RACES)for(const x of r.results)for(const c of (x.crew||[]))n[c]=(n[c]||0)+1;return Object.entries(RIDERS).map(([id,r])=>({label:r.name,rank:n[id]||0,open:()=>{state.rider=id;go('riders',false);}}));}},
+  {kind:'Marques',items:()=>{const n={};for(const r of RACES)for(const x of r.results)n[x.marque]=(n[x.marque]||0)+1;return Object.keys(n).filter(m=>m&&m!=='Unrecorded').map(m=>({label:m,rank:n[m],open:()=>{state.marque=m;go('marques',false);}}));}},
+  {kind:'Classes',items:()=>FAMILIES.map(c=>({label:c,open:()=>{state.cls=c;go('classes',false);}}))},
+  {kind:'Years',items:()=>eraSeasons().map(s=>({label:String(s.year),sub:`${s.races.length} races`,keys:['season','year'],open:()=>setSeason(s.year,false)}))},
+  {kind:'Races',items:()=>RACES.map(r=>({label:`${r.year} ${r.name}`,sub:`${r.family}${r.winner?' · won by '+crewName(r.winner.crew):''}`,open:()=>openRace(r.id,false)}))}]});
 init();

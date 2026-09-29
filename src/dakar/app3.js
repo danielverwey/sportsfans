@@ -161,4 +161,9 @@ function init(){
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel','records','classes'].includes(state.tab))render();},150);});
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons().map(s=>({year:s.year,cancelled:!!(s.ed&&s.ed.cancelled)})),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'podium',unitName:'Podium',units:s=>{const t=byYear[s.year];return t?podCats(t).map(c=>({key:c,label:c})):[];},unit:()=>state.pod,setUnit:k=>{state.pod=k;go('podium',false);}});
+StageSearch.mount({placeholder:'Find a driver, rider, marque, class or edition',groups:[
+  {kind:'People',items:()=>{const n={};for(const e of EDS)for(const x of e.results)for(const c of (x.crew||[]))n[c]=(n[c]||0)+(x.rank===1?3:1);return Object.entries(PEOPLE).map(([id,p])=>({label:p.name,rank:n[id]||0,open:()=>{state.driver=id;go('drivers',false);}}));}},
+  {kind:'Marques',items:()=>{const n={};for(const e of EDS)for(const x of e.results)n[x.make]=(n[x.make]||0)+1;return A.marques.map(m=>({label:m,rank:n[m]||0,open:()=>{state.marque=m;go('marques',false);}}));}},
+  {kind:'Classes',items:()=>CATS.map(c=>({label:c,open:()=>{state.cls=c;go('classes',false);}}))},
+  {kind:'Editions',items:()=>EDS.map(e=>({label:`${e.year} ${e.route}`,sub:e.cancelled?'cancelled':e.era,keys:['edition',String(e.year)],open:()=>setSeason(e.year,false)}))}]});
 init();

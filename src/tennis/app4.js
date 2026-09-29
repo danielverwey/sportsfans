@@ -154,4 +154,10 @@ function init(){
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel'].includes(state.tab))render();},150);});
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'draw',unitName:'Draw',units:s=>s.editions.filter(e=>!e.team&&e.level!=='D'&&inLens(e.c)).map(e=>({key:e.id,label:dm(e.date)+' '+edName(e)})),unit:()=>state.edition,setUnit:k=>{state.edition=k;go('draw',false);}});
+StageSearch.mount({placeholder:'Find a player, nation, tournament, season or draw',groups:[
+  {kind:'Players',items:()=>{const w={};for(const r of A.ps)w[r[0]]=(w[r[0]]||0)+(r[3]||0);return Object.entries(PLAYERS).map(([id,p])=>({label:p.n,rank:w[id]||0,sub:`${p.g==='W'?'WTA':'ATP'}${p.ioc?' · '+natName(p.ioc):''}`,open:()=>{state.player=id;go('players',false);}}));}},
+  {kind:'Nations',items:()=>[...new Set(Object.values(PLAYERS).map(p=>p.ioc).filter(Boolean))].map(c=>({label:natName(c),sub:c,open:()=>{state.nation=c;go('nations',false);}}))},
+  {kind:'Tournaments',items:()=>Object.values(TOURN).map(t=>({label:t.n,rank:t.eds||0,sub:[t.surface,t.city].filter(Boolean).join(' · '),open:()=>{state.tourn=t.id;go('tournaments',false);}}))},
+  {kind:'Seasons',items:()=>eraSeasons().map(s=>({label:String(s.year),keys:['season'],open:()=>setSeason(s.year,false)}))},
+  {kind:'Draws',items:()=>Object.values(EDS).filter(e=>!e.team&&e.level!=='D').map(e=>({label:`${e.y} ${e.name}`,sub:`${e.c} · ${e.surface||''}${e.date?' · '+dm(e.date):''}`,open:()=>openEdition(e.id,false)}))}]});
 init();
