@@ -310,7 +310,13 @@ if __name__ == '__main__':
     # hub, downloads index, plumbing
     hub = (SRC/'hub/index.html').read_text(encoding='utf-8').replace('__SITE__', SITE)
     assert hub.count('__ICON__') == 1; hub = hub.replace('__ICON__', sitegen.icon_links(''), 1)
+<<<<<<< HEAD
     for png in sorted((SRC/'hub/share').glob('*.png')): write(DOCS/'share'/png.name, png.read_bytes())  # share cards (og:image), rendered once by tools/share_images.js
+=======
+    # the header nav comes from the one list of sports (sitegen.SPORTS, alphabetical), so a new atlas cannot be left out of it
+    assert hub.count('__NAV__') == 1
+    hub = hub.replace('__NAV__', ''.join(f'<a href="{k}/" style="color:var(--muted);text-decoration:none;padding:6px 8px">{sitegen.SPORTS[k][0]}</a>' if k in PUBLISH else f'<span style="color:var(--dim);padding:6px 8px" title="{HELD[k]}">{sitegen.SPORTS[k][0]}</span>' for k in sitegen.SPORTS if k in PUBLISH or k in HELD), 1)
+>>>>>>> e0bfe5bfd92d057c9f4fac8955ca4f54650fbc65
     write(DOCS/'favicon.svg', ICON_SVG); write(DOCS/'apple-touch-icon.png', (SRC/'hub/apple-touch-icon.png').read_bytes()); write(DOCS/'favicon.ico', ico_from_png((SRC/'hub/favicon-32.png').read_bytes(), 32))
     for key in PARTS:
         hub = hub.replace(f'__PREVIEW_{key.upper()}__', preview(key) if key in PUBLISH else '')
@@ -321,7 +327,6 @@ if __name__ == '__main__':
         U = json.loads((DATA/'ufc.json').read_text(encoding='utf-8')); hub = hub.replace('__UFC_EVENTS__', f'{len(U["events"]):,}').replace('__UFC_BOUTS__', f'{len(U["bouts"]):,}').replace('__UFC_FIGHTERS__', f'{len(U["fighters"]):,}')
     for key, why in HELD.items():  # a held card is not a link and says why
         hub = re.sub(r'<a class="sport" href="' + key + r'/"(.*?)<span class="go">Enter →</span></a>', lambda m: '<div class="sport held"' + m.group(1).replace('<span class="tag">', '<span class="tag">held · ') + f'<span class="go">{why} →</span></div>', hub, flags=re.S)
-        hub = hub.replace(f'<a href="{key}/" style="color:var(--muted);text-decoration:none;padding:6px 8px">', f'<span style="color:var(--dim);padding:6px 8px" title="{why}">').replace(f'</a><a href="', '</a><a href="')
     hub = hub.replace('<footer><span>sportsfans.co.za · APEX sports atlases · independent, fan-made, self-contained pages · each carries its own sources and coverage notes</span><span>Data credits inside each atlas</span></footer>', '<footer><span>sportsfans.co.za · APEX sports atlases · independent, fan-made, self-contained pages · each carries its own sources and coverage notes</span><span><a href="licences/" style="color:var(--muted)">Sources and licences</a> · <a href="downloads/" style="color:var(--muted)">Offline editions</a> · <a href="mailto:sportsfans.co.za@gmail.com?subject=sportsfans.co.za" style="color:var(--muted)">Contribute</a></span><span style="flex-basis:100%;font:12.5px/1.5 var(--body);letter-spacing:0;color:var(--dim);max-width:900px">' + sitegen.NOTICE + '</span></footer>')
     write(DOCS/'index.html', hub)
     write(DOCS/'licences/index.html', sitegen.gen_licences(site=SITE, v=vsite, published=PUBLISH, held=HELD)); urls.append(f'{SITE}/licences/')
