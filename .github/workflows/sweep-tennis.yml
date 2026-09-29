@@ -8,7 +8,7 @@ on:
     inputs:
       dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
 permissions: { contents: write, pages: write, id-token: write }
-concurrency: { group: sweep, cancel-in-progress: false }
+concurrency: { group: sweep-tennis, cancel-in-progress: false }   # one group per atlas: GitHub keeps only one pending run per group, so a shared group would cancel sweeps that overlap
 jobs:
   sweep:
     uses: ./.github/workflows/sweep-run.yml

@@ -15,7 +15,7 @@ except Exception: pass
 
 if __name__ == '__main__':
     if len(sys.argv) < 2 or sys.argv[1] not in SPORTS: sys.exit(__doc__)
-    sport = sys.argv[1]; log = [f'# {sport} sweep · {datetime.datetime.utcnow():%Y-%m-%d %H:%M} UTC', '']
+    sport = sys.argv[1]; log = [f'# {sport} sweep · {datetime.datetime.now(datetime.timezone.utc):%Y-%m-%d %H:%M} UTC', '']
     code = 0
     try:
         mod = importlib.import_module(f'sweepers.{"bikes" if sport in ("motogp", "sbk") else sport}')
