@@ -147,7 +147,8 @@ def footnotes(soup):
     out = {}
     for li in soup.find_all('li', id=re.compile(r'^cite_note')):
         body = li.find(class_='reference-text') or li
-        t = re.sub(r'\s+', ' ', body.get_text(' ', strip=True)).strip()
+        for x in body.find_all(['sup', 'style', 'script']): x.decompose()   # a citation inside the note is not part of it
+        t = re.sub(r'\s+([.,;:)])', r'\1', re.sub(r'\s+', ' ', body.get_text(' ', strip=True))).strip()   # 'Championship .' → 'Championship.'
         if t and not re.search(r'\bRetrieved\b|https?://|\bArchived\b', t): out[li['id']] = t
     return out
 
