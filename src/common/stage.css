@@ -29,3 +29,25 @@
   .season-cap .dim{display:none}
   .unit-nav .ubtn{max-width:30%}
 }
+/* Find anything (src/common/search.js) */
+.stagebar .ss{position:relative;flex:0 1 300px;min-width:150px;margin-left:8px}
+.stagebar .ss input{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:999px;color:var(--ink);font:12.5px var(--mono);padding:7px 30px 7px 12px;min-height:0;outline:none}
+.stagebar .ss input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.stagebar .ss input::placeholder{color:var(--dim)}
+.stagebar .ss .ss-key{position:absolute;right:9px;top:50%;transform:translateY(-50%);font:10px var(--mono);color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:1px 5px;pointer-events:none}
+.stagebar .ss input:focus~.ss-key{display:none}
+.ss-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:320px;max-height:min(60vh,520px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.55);z-index:40;padding:6px}
+.ss-group{font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px}
+.ss-item{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 10px;color:var(--ink);cursor:pointer;min-height:0}
+.ss-item b{font:600 13.5px var(--body,inherit)}
+.ss-item small{font:11px var(--mono);color:var(--muted)}
+.ss-item mark{background:none;color:var(--accent);font-weight:700}
+.ss-item:hover,.ss-item.on{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.ss-none,.ss-hint{font:11px var(--mono);color:var(--dim);padding:8px 10px}
+.ss-hint{border-top:1px solid var(--line);margin-top:4px}
+@media (max-width:720px){
+  .stagebar{flex-wrap:wrap}
+  .stagebar .ss{flex:1 1 100%;order:3;margin:6px 0 0}
+  .stagebar .ss .ss-key{display:none}
+  .ss-pop{position:fixed;left:8px;right:8px;top:auto;min-width:0;max-height:55vh}
+}

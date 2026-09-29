@@ -144,4 +144,10 @@ function init(){
   addEventListener('resize',()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{drawRiver();if(['season','duel','records','divisions'].includes(state.tab))render();},150);});
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'event',unitName:'Event',units:s=>s.events.map(e=>({key:e.id,label:e.short+(e.sub?' · '+e.sub:'')})),unit:()=>state.event,setUnit:k=>{state.event=k;go('event',false);}});
+StageSearch.mount({placeholder:'Find a fighter, division, venue, year or event',groups:[
+  {kind:'Fighters',items:()=>Object.entries(FIGHTERS).map(([id,f])=>({label:f.name,rank:(f.rec||[]).reduce((a,b)=>a+b,0),sub:`${divLabel(f.div)}${f.rec?' · '+f.rec.slice(0,3).join('–'):''}`,open:()=>{state.fighter=id;go('fighters',false);}}))},
+  {kind:'Divisions',items:()=>DIVS.map(d=>({label:d.label,sub:d.sex==='W'?'women':'men',open:()=>{state.dv=d.key;go('divisions',false);}}))},
+  {kind:'Venues',items:()=>Object.entries(VENUES).map(([id,v])=>({label:v.name,rank:v.n||0,sub:[v.city,v.country].filter(Boolean).join(' · '),open:()=>{state.venue=id;go('venues',false);}}))},
+  {kind:'Years',items:()=>eraSeasons().map(s=>({label:String(s.year),sub:`${s.events.length} events`,keys:['season','year'],open:()=>setSeason(s.year,false)}))},
+  {kind:'Events',items:()=>EVENTS.map(e=>({label:e.name,sub:`${dm(e.date)} ${e.y}${e.city?' · '+e.city:''}`,keys:[String(e.y)],open:()=>openEvent(e.id,false)}))}]});
 init();

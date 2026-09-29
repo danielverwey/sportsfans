@@ -103,4 +103,10 @@ function init(){
   addEventListener('hashchange',()=>{if(/^#static-/.test(location.hash)){$('#reading').open=true;return;}routeLock=true;try{if(readRoute()){tourStop();$('#eraSelect').value=state.era;fillSeasons();applyTheme();drawRiver();drawGrid();render();}}finally{routeLock=false;}});if(/^#static-/.test(location.hash))$('#reading').open=true;
 }
 StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'race',unitName:'Race',units:s=>s.races.filter(r=>r.rows.length).map(r=>({key:r.round,label:'R'+r.round+' '+r.name.replace(' Grand Prix',' GP')})),unit:()=>state.race,setUnit:k=>{state.race=+k;go('race',false);}});
+StageSearch.mount({placeholder:'Find a driver, constructor, circuit, season or race',groups:[
+  {kind:'Drivers',items:()=>{const n={};for(const s of S)for(const r of s.races)for(const x of r.rows)n[x.d]=(n[x.d]||0)+1;return Object.entries(D).map(([id,d])=>({label:d.name,sub:d.nationality||'',rank:n[id]||0,open:()=>{state.driver=id;go('drivers',false);}}));}},
+  {kind:'Constructors',items:()=>{const n={};for(const s of S)for(const r of s.races)for(const x of r.rows)n[x.t]=(n[x.t]||0)+1;return Object.entries(T).map(([id,t])=>({label:t.name,rank:n[id]||0,open:()=>{state.team=id;go('teams',false);}}));}},
+  {kind:'Circuits',items:()=>{const n={};for(const s of S)for(const r of s.races)n[r.cid]=(n[r.cid]||0)+1;return Object.entries(CIRC).map(([id,c])=>({label:c.name,sub:[c.place,c.country].filter(Boolean).join(' · '),rank:n[id]||0,open:()=>{state.circuit=id;go('circuits',false);}}));}},
+  {kind:'Seasons',items:()=>S.map(s=>({label:String(s.year),sub:`${s.races.filter(r=>r.rows.length).length} rounds`,keys:['season',String(s.year)],open:()=>setSeason(s.year,false)}))},
+  {kind:'Races',items:()=>S.flatMap(s=>s.races.filter(r=>r.rows.length).map(r=>({label:`${s.year} ${r.name}`,sub:`R${r.round} · ${r.circuit||''}`,open:()=>{setSeason(s.year,false);state.race=r.round;go('race',false);}})))}]});
 init();

@@ -125,4 +125,11 @@ function init(){
   let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{drawRiver();if(state.tab==='season')render();},150);});
 }
 StageNav.mount({seasons:()=>eraSeasons(),year:()=>state.year,whole:()=>state.whole,tab:()=>state.tab,setYear:y=>setSeason(y,false),unitTab:'match',unitName:'Test',units:s=>s.matches.map(m=>({key:m.id,label:dm(m.date)+' '+code(m.home)+'–'+code(m.away)})),unit:()=>state.match,setUnit:k=>{state.match=k;go('match',false);}});
+StageSearch.mount({placeholder:'Find a nation, player, ground, coach, season or Test',groups:[
+  {kind:'Nations',items:()=>TEN_NAMES.map(n=>({label:n,sub:teamBy[n]?.nickname||'',rank:MATCHES.filter(m=>m.home===n||m.away===n).length,open:()=>{state.nation=n;go('nations',false);}}))},
+  {kind:'Players',items:()=>PLAYERS.map(p=>({label:p.name,rank:p.caps||0,sub:`${p.team||''}${p.caps?' · '+p.caps+' caps':''}`,open:()=>{state.player=p.id;go('players',false);}}))},
+  {kind:'Grounds',items:()=>{const n={};for(const m of MATCHES)if(m.stadium)n[m.stadium]=(n[m.stadium]||0)+1;return Object.values(GROUNDS).map(g=>({label:groundName(g.id),rank:n[g.id]||0,sub:[g.city,g.country].filter(Boolean).join(' · '),open:()=>{state.ground=g.id;go('grounds',false);}}));}},
+  {kind:'Coaches',items:()=>COACHES.map(c=>({label:c.name,rank:(c.matches||[]).length,sub:`${c.team} · ${(c.spells||[]).join(', ')}`,open:()=>{state.coach=c.id;go('coaches',false);}}))},
+  {kind:'Seasons',items:()=>S.map(s=>({label:String(s.year),sub:`${s.matches.length} Tests`,keys:['season'],open:()=>setSeason(s.year,false)}))},
+  {kind:'Tests',items:()=>MATCHES.map(m=>({label:`${m.home} v ${m.away}`,sub:`${dm(m.date)} ${m.date.slice(0,4)} · ${m.hs}–${m.as_}${m.venue?' · '+m.venue:''}`,keys:[m.date.slice(0,4)],open:()=>openMatch(m.id,false)}))}]});
 init();
