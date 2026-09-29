@@ -144,6 +144,7 @@ def infobox(soup):
 def bouts_of(soup, log, ename):
     """Every bout row of the article's results tables, in page order (the main event first), with its card heading."""
     bouts = []; cards = []; card = None; ncards = 0; last_was_bout = False
+    seen_rows = []   # diagnostic: the shape of every row that is not a bout, for the report
     for t in soup.find_all('table'):
         cls = ' '.join(t.get('class', []))
         if 'infobox' in cls or 'navbox' in cls or 'sidebar' in cls: continue
@@ -153,6 +154,7 @@ def bouts_of(soup, log, ename):
             cells = tr.find_all(['th', 'td'], recursive=False)
             if not cells: continue
             texts = [clean(c) for c in cells]
+            if len(seen_rows) < 14 and (len(cells) != 7 or not any(x.lower().rstrip('.') + '.' in SEP for x in texts)): seen_rows.append(f'{len(cells)} cells {[c.name + ("@" + str(c.get("colspan")) if c.get("colspan") else "") for c in cells]} {" | ".join(t[:30] for t in texts if t)[:90]}')
             if len(cells) == 1 or (len([x for x in texts if x]) == 1 and cells[0].get('colspan')):
                 head = next((x for x in texts if x), '')
                 # a bout's notes ("For the UFC Flyweight Championship.", "Catchweight bout.") are a full-width row under the bout:
@@ -180,6 +182,7 @@ def bouts_of(soup, log, ename):
                           'method': method, 'round': int(rnd) if rnd.isdigit() else None, 'time': tm if re.fullmatch(r'\d{1,2}:\d{2}', tm) else (tm or None), 'notes': notes})
             last_was_bout = True
     if not bouts: log.append(f'- {ename}: no results table read')
+    log += [f'    - row: {r}' for r in seen_rows]
     return bouts
 
 BONUS = ('Fight of the Night', 'Performance of the Night', 'Knockout of the Night', 'Submission of the Night')
