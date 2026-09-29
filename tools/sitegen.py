@@ -56,6 +56,10 @@ SPORTS = {'f1': ('F1', 'Formula 1'), 'rugby': ('Rugby', 'Rugby union'), 'cricket
 CONTACT = 'sportsfans.co.za@gmail.com'
 NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. Contribute — a correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.'
 PUBLISHED = None
+def icon_links(rel):
+    """The site mark for the tab and the home screen: the SVG, the .ico fallback, the touch icon — all at the site root."""
+    return f'<link rel="icon" href="{rel}favicon.svg" type="image/svg+xml"><link rel="icon" href="{rel}favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">'
+
 def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='', published=None):
     rel = '../' * depth
     published = published if published is not None else PUBLISHED
@@ -70,6 +74,7 @@ def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='
 <title>{E(title)}</title>
 <meta name="description" content="{E(desc)}">
 <link rel="canonical" href="{site}/{path}">
+{icon_links(rel)}
 <meta property="og:title" content="{E(title)}"><meta property="og:description" content="{E(desc)}"><meta property="og:url" content="{site}/{path}"><meta property="og:type" content="article">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
