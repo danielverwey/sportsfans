@@ -26,7 +26,7 @@ dates=[(r['date'],r.get('order',0)) for r in R]
 # standings
 main=lambda r: r['type'] in ('RAC','R1','R2') or (tag=='sbk')
 for y,st in d['standings'].items():
-    ps=[x['pos'] for x in st['rows']]
+    ps=[x['pos'] for x in st['rows'] if x.get('pos') is not None]  # unranked rows (no published position) are listed after the ranked ones
     if ps!=sorted(ps): n('standings out of order',y)
     if ps and ps[0]!=1: n('standings without P1',y)
     for x in st['rows']:
@@ -56,7 +56,9 @@ cov_bad=[y for y,c in d['coverage'].items() if c['gp']!=sum(1 for r in R if r['y
 champs={int(y):d['riders'][st['rows'][0]['rider']]['name'] for y,st in d['standings'].items() if st['rows']}
 REF={'motogp':{1949:'Leslie Graham',1957:'Libero Liberati',1966:'Giacomo Agostini',1975:'Giacomo Agostini',1983:'Freddie Spencer',1993:'Kevin Schwantz',2001:'Valentino Rossi',2007:'Casey Stoner',2013:'Marc Marquez',2019:'Marc Marquez',2020:'Joan Mir',2022:'Francesco Bagnaia',2023:'Francesco Bagnaia',2024:'Jorge Martin'},
      'sbk':{1988:'Fred Merkel',1990:'Raymond Roche',1994:'Carl Fogarty',1999:'Carl Fogarty',2002:'Colin Edwards',2006:'Troy Bayliss',2009:'Ben Spies',2013:'Tom Sykes',2015:'Jonathan Rea',2020:'Jonathan Rea',2021:'Toprak Razgatlioglu',2022:'Alvaro Bautista',2023:'Alvaro Bautista',2024:'Toprak Razgatlioglu'}}[tag]
-refs=[(y,who,champs.get(y),(champs.get(y) or '').lower().replace('á','a').replace('ı','i')==who.lower().replace('á','a').replace('ı','i')) for y,who in REF.items()]
+import unicodedata
+fold=lambda t:unicodedata.normalize('NFKD',(t or '').replace('ı','i')).encode('ascii','ignore').decode('ascii').lower()  # Martín = Martin, Razgatlıoğlu = Razgatlioglu
+refs=[(y,who,champs.get(y),fold(champs.get(y))==fold(who)) for y,who in REF.items()]
 def wins(name):
     return sum(1 for r in R if r['type'] in ('RAC','R1','R2','SPR') and (tag=='sbk' or r['type']=='RAC') for x in r['results'] if x['pos']==1 and d['riders'][x['rider']]['name']==name)
 W={'motogp':[('Giacomo Agostini',68),('Valentino Rossi',89),('Marc Marquez',None)],'sbk':[('Jonathan Rea',119),('Carl Fogarty',59),('Troy Bayliss',52)]}[tag]

@@ -10,7 +10,7 @@ marque named in its machine description, marked as derived. Nothing else is alte
 """
 import json, re, sys, pathlib, math
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '/root/.claude/uploads/2262494c-9f9b-56f3-9e1e-9ea59da7ec22/84f371c5-isle_of_man_tt_atlas_1907_2026.html')
+src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ROOT/'build'/'harvest'/'isle_of_man_tt_atlas_1907_2026.html')
 html = src.read_text(encoding='utf-8')
 def block(sid):
     m = re.search(r'<script id="%s" type="[^"]*">(.*?)</script>' % sid, html, flags=re.S); return json.loads(m.group(1)) if m else None
@@ -48,17 +48,8 @@ if start:
 course = {'name': 'Snaefell Mountain Course', 'd': course_d, 'closed': loop[0] == loop[-1], 'startT': start['t'] if start else 0, 'landmarks': landmarks, 'km': 60.72, 'miles': 37.73, 'source': M.get('source'), 'sourceVersion': M.get('sourceVersion'), 'sourceTimestamp': M.get('sourceTimestamp'), 'retrieved': M.get('retrieved'), 'licence': M.get('licence'), 'attribution': M.get('attribution'), 'changes': M.get('changes')}
 COURSES = {'Mountain Course': {'from': 1911, 'km': 60.72, 'note': 'The Snaefell Mountain Course, 37.73 miles from the Grandstand over the mountain and back, used from 1911 for every TT race that was not run on a short course.'}, 'St. John’s Short Course': {'from': 1907, 'to': 1910, 'km': 25.44, 'note': 'The first course, 15.8 miles through St John’s, Ballacraine, Kirk Michael and Peel, used for the four TTs of 1907–1910.'}, 'Clypse Course': {'from': 1954, 'to': 1959, 'km': 17.36, 'note': 'A 10.79-mile course from the Grandstand through Onchan and Creg-ny-Baa, used for the Lightweight, Ultra-Lightweight and Sidecar races of 1954–1959.'}, 'Billown Circuit': {'km': 6.85, 'note': 'The 4.25-mile Castletown course of the Southern 100 and the Pre-TT Classic, used for support races.'}}
 # ---- races: results packed, sidecar marques derived from the machine where blank
-MARQUES = ['Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'BMW', 'Triumph', 'Norton', 'Ducati', 'MV Agusta', 'Moto Guzzi', 'BSA', 'Velocette', 'Paton', 'AJS', 'Mugen', 'Rudge', 'New Imperial', 'Excelsior', 'Sunbeam', 'Vincent', 'MotoCzysz', 'Matchless', 'Rex-Acme', 'Benelli', 'Mondial', 'Gilera', 'EMC', 'Douglas', 'Scott', 'Indian', 'Aprilia', 'LCR', 'Windle', 'Ireson', 'Baker', 'Shelbourne', 'DMR', 'Derbyshire', 'Bimota', 'Rotax', 'Konig', 'König', 'Weslake', 'Imp', 'Fath', 'URS', 'Cotton', 'Levis', 'HRD', 'Royal Enfield', 'Ariel', 'Guzzi', 'NSU', 'DKW', 'Jawa', 'CZ', 'MZ', 'Bultaco', 'Ossa', 'Montesa', 'Morini', 'Chevallier', 'Ryan', 'Harley-Davidson', 'Kreidler', 'Cagiva', 'Petronas', 'Sarolea', 'Motosacoche', 'Husqvarna', 'Puch', 'Zundapp', 'Zündapp', 'Terrot', 'Peugeot', 'Alcyon', 'Humber', 'Rover', 'Rex', 'Ivy', 'OK-Supreme', 'OK Supreme', 'Cotton', 'AJW', 'Dunelt', 'James', 'Francis-Barnett', 'Coventry-Eagle', 'Grindlay-Peerless', 'Zenith', 'Chater-Lea', 'Ner-a-Car', 'ABC', 'Sun', 'Diamond', 'Blackburne', 'Calthorpe', 'P&M', 'Panther', 'Brough Superior', 'Vincent-HRD', 'Greeves', 'Cotton', 'Villiers', 'Seeley', 'Yamsel', 'Rickman', 'Metisse', 'Padgett', 'Spondon', 'Maxton', 'Harris', 'Bakker', 'Britten', 'Buell', 'Aermacchi', 'Bianchi', 'Parilla', 'Ducson', 'Itom', 'Motobi', 'Derbi', 'Tomos', 'Garelli', 'Minarelli', 'Malanca', 'Piovaticci', 'Van Veen', 'Morbidelli', 'Sanvenero', 'Cimatti', 'Motom', 'Laverda', 'Bimota', 'Yamaha', 'Kawasaki']
-# the sources spell a few marques two ways; the archive keeps one. 'Unknown' in a source is a blank, not a marque.
-MARQUE_ALIAS = {'A.J.S.': 'AJS', 'M.Z.': 'MZ', 'Rex Acme': 'Rex-Acme', 'OK Supreme': 'OK-Supreme', 'B.S.A.': 'BSA', 'N.S.U.': 'NSU', 'H.R.D.': 'HRD', 'M.V. Agusta': 'MV Agusta', 'MV': 'MV Agusta', 'Unknown': '', 'unknown': '', '?': '', '—': '', '-': ''}
-def derive(machine):
-    m = machine or ''
-    for q in sorted(set(MARQUES), key=len, reverse=True):
-        if re.search(r'(?<![A-Za-z])' + re.escape(q) + r'(?![A-Za-z])', m, flags=re.I): return q
-    return None
+from tt_rules import MARQUES, MARQUE_ALIAS, CHASSIS, derive, ceiling   # shared with the TT sweeper
 RF = ['crew', 'pos', 'status', 'machine', 'marque', 'mph', 'time', 'mq']  # mq: 'src' = marque as transcribed, 'machine' = derived here, '' = none
-# plausible ceilings for a race average, by year: a table that exceeds them was transcribed in km/h (1951's Clubman's races), a value under 20 is unreadable
-def ceiling(y): return 55 if y < 1914 else 72 if y < 1931 else 95 if y < 1950 else 105 if y < 1960 else 112 if y < 1976 else 122 if y < 1991 else 130 if y < 2006 else 137
 speed_fixes = []
 races = []; derived = 0
 for r in D['races']:

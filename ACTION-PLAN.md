@@ -52,7 +52,7 @@ Each conversion follows the rugby recipe exactly: adapter over the prototype's a
 | **3 — NBA** | Logos out of the prototype immediately (five-minute fix, do it in Phase 0); conversion later | Rights are workable but need the fix first; box-score sharding is the same job as cricket's |
 | **4 — UFC** | Rename, de-brand, conversion | Smallest job; the naming decision matters more than the code |
 | **5 — Close** | Hub with eight cards, sitemap, full `check_site.js` and `check_links.py` run, offline editions for all eight, release | |
-| **Sweepers (0.5)** | F1 sweeper live in `.github/workflows/sweep-f1.yml`; the reading editions and dated footers are now generated from the data so a sweep never leaves them stale; the gate (`tools/gate.py`) refuses changes to history. Rugby, cricket, tennis and the bikes get theirs as their sources clear | |
+| **Sweepers (0.5)** ✅ | Every atlas sweeps itself on its own schedule (`.github/workflows/sweep-<atlas>.yml` → `sweep-run.yml`); the reading editions and dated footers are generated from the data so a sweep never leaves them stale; the gate (`tools/gate.py`) refuses changes to history. Rugby's schedule waits for `RUGBY_APPROVED` | |
 
 Go-live for the domain does not wait for phases 1–4: the site is publishable with four atlases after Phase 0, and each later sport is a normal update (RELEASE.md).
 
@@ -74,7 +74,7 @@ Go-live for the domain does not wait for phases 1–4: the site is publishable w
 - [x] Tennis: `tools/prepare_tennis.py` (core + 59 shards), `src/tennis/`, `tools/audit_tennis.py` (facts hold: Djokovic–Nadal 31–29, Isner–Mahut 665 minutes, Nadal 14 Roland-Garros; source quirks noted), static pages, hub card, licences entry
 - [x] Venues listed, not drawn, on rugby, cricket and tennis (NBA will follow the same rule)
 - [x] `docs/data/` and `docs/downloads/` left out of git (rebuilt by the deploy workflow); offline editions reproducible byte for byte
-- [ ] Sweepers for cricket (Cricsheet, daily) and tennis (Sackmann, irregular): re-run the prepare scripts from the sources in a workflow, gate, rebuild, commit
+- [x] Sweepers for cricket (Cricsheet, daily) and tennis (Sackmann, twice a week): see section 10
 
 ## 7. The bikes rebuilt, and the Isle of Man TT (28 September 2026)
 
@@ -101,5 +101,30 @@ Go-live for the domain does not wait for phases 1–4: the site is publishable w
 - [x] The e-mail address no longer printed anywhere: every notice reads "contribute" as the link
 - [ ] Wikidata nationality and date of birth for the Dakar people (the prototype carries names only)
 - [x] SEO pass (29 September 2026): JSON-LD on every page (BreadcrumbList everywhere; Person / Place / SportsTeam / Organization on entity pages; WebSite + Organization on the hub; WebPage on each atlas; one Dataset per data file on the licences page, for Google Dataset Search); share cards (`src/hub/share/<key>.png`, rendered once by `tools/share_images.js`) with og:image / og:site_name / twitter:card on every page; sitemap `lastmod` from each archive's snapshot date; long-tail careers (fewer than three appearances and no result of note — 5,163 pages) marked noindex,follow and left out of the sitemap; the five biggest directory indexes split into a page per surname initial; preload hints for each atlas's data and app
+- [x] Sweeping made one command per atlas (29 September 2026): `tools/sweep.py` (prepare → audit → gate), the gate extended from F1 to every atlas (nothing may disappear; past changes listed for review; `--accept` after review), cricket and tennis prepare scripts read the prototype page directly (`tools/archive_in.py`); two faults found by the first dry run and fixed — `prepare_bikes.py` would have replaced the 53 MotoGP / 47 SBK OpenStreetMap outlines with the prototype's 30 / 28 (now it keeps them), and the TT sidecar marque was chosen by a tie-break Python randomises per run (now the engine maker, deterministically: 84 derived sidecar rows moved from chassis names such as Shelbourne, Ireson, Windle to Honda / Yamaha, one win among them)
 - [ ] Search Console: watch the Pages report once it fills (indexed vs discovered-not-indexed), then tune the thin-page threshold; add the property to Bing Webmaster Tools (import from Search Console)
 - [ ] Optional: self-host the three fonts (removes the Google Fonts round trip on every page)
+
+## 10. Every atlas sweeps itself (29 September 2026)
+
+Nothing is updated by hand any more. Each atlas has a *Sweep · <atlas>* workflow on its own schedule: read the source → merge into `data/` → gate → rebuild → check every link → commit → deploy. A failed step commits nothing, shows red in Actions and GitHub e-mails you.
+
+| Atlas | Reads | When (UTC) | Proves itself on |
+|---|---|---|---|
+| Formula 1 | Jolpica, current season | Mon + Wed 06:17, Mar–Dec | the gate's F1 facts (strict) |
+| MotoGP | Wikipedia season article | Mon + Wed 07:27, Feb–Nov | last season's rounds and this season's held rounds (≥ 90%) |
+| WorldSBK | Wikipedia season article | Mon + Wed 07:47, Feb–Oct | as MotoGP |
+| UFC | Wikipedia event articles, last 21 days | Sun + Tue 13:13 | exact round trip of the archive through `prepare_ufc.py` |
+| Cricket | Cricsheet, internationals added in the last 7 days (30 on the first run) | daily 04:23 | exact round trip through `prepare_cricket.py` |
+| Tennis | Jeff Sackmann's CSVs, current season (and the last in Jan–Feb) | Mon + Thu 09:33 | round trip through `prepare_tennis.py` |
+| Rugby union | Nuck's Rugby Archive data file | Mon + Thu 08:43 — **held** | the last two years of Tests (≥ 90%) |
+| Isle of Man TT | Wikipedia "<year> Isle of Man TT" | daily 09:53, 25 May–20 June | last year's races (≥ 90%) |
+| Dakar Rally | Wikipedia "Dakar Rally" | daily 10:03, 3–31 January | the last two editions (≥ 90%) |
+| (browser check) | the whole site in headless Chromium | Mon 12:37 | — |
+
+- [x] `tools/sweepers/` (one reader per atlas + `run.py`), `tools/harvest/wiki.py` (shared Wikipedia reading), `sweep-run.yml` + nine `sweep-<atlas>.yml`; the deploy workflow now checks out the branch tip so a sweep's new commit is what gets published
+- [x] The gate's shape check: every new record must carry the archive's own fields and types; F1 allows current-season corrections and says so
+- [x] Every reader tested offline against the real archive: remove the newest rounds / races / editions / Tests, sweep them back from a copy of the source in its published format, compare — identical (tennis: identical apart from the order of tied rivalries); a changed layout stops the reader with nothing written
+- [ ] **Rugby:** when Nuck's Rugby Archive agrees, set the repository variable `RUGBY_APPROVED` = `yes` (Settings → Secrets and variables → Actions → Variables). Until then the schedule is off and a hand-started run is a dry run. The reader was tested against the file's published field list; its first dry run on GitHub is the first read of the live file — check its report
+- [ ] First run of each: Actions → *Sweep · <atlas>* → Run workflow with *dry run* ticked, read the summary, then leave the schedules to it
+- [ ] Not swept: ICC event titles (cricket), player and coach snapshots (rugby; they stay dated), Wikidata nationality/date of birth (UFC, Dakar)

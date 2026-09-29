@@ -1,0 +1,55 @@
+name: Sweep (runner)
+# Called by every Sweep · <atlas> workflow: read the source → merge into data/ → gate → rebuild → check links → commit.
+# Nothing is committed unless every step passes; a dry run stops after the report.
+on:
+  workflow_call:
+    inputs:
+      sport: { type: string, required: true }
+      dry_run: { type: boolean, default: false }
+    outputs:
+      changed: { description: 'true when new data was committed', value: '${{ jobs.sweep.outputs.changed }}' }
+permissions: { contents: write }
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - run: pip install --quiet beautifulsoup4 lxml
+      - name: Read the source and merge
+        run: python tools/sweepers/run.py ${{ inputs.sport }}
+      - name: Anything new?
+        id: diff
+        run: |
+          if [ -z "$(git status --porcelain -- data src/bikes)" ]; then echo "changed=false" >> "$GITHUB_OUTPUT"; echo "no new data"; else echo "changed=true" >> "$GITHUB_OUTPUT"; git status --short -- data src/bikes | head -20; fi
+      - name: Gate (nothing may disappear; new records must look like the archive's)
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -o pipefail
+          { echo; echo '## Gate'; echo; } >> build/harvest/${{ inputs.sport }}.md
+          python tools/gate.py ${{ inputs.sport }} | tee -a build/harvest/${{ inputs.sport }}.md
+      - name: Rebuild the site and check every link
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          python build.py
+          python tools/check_links.py
+      - name: Report
+        if: always()
+        run: cat build/harvest/${{ inputs.sport }}.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with: { name: '${{ inputs.sport }}-sweep-report', path: 'build/harvest/${{ inputs.sport }}.md', if-no-files-found: ignore }
+      - name: Commit
+        id: commit
+        if: steps.diff.outputs.changed == 'true' && !inputs.dry_run
+        run: |
+          git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
+          git add data src/bikes
+          git add -f build/harvest/${{ inputs.sport }}.md
+          git commit -q -m "data: ${{ inputs.sport }} sweep $(date -u +%Y-%m-%d)" -m "$(head -c 6000 build/harvest/${{ inputs.sport }}.md)"
+          for i in 1 2 3 4; do git pull -q --rebase && git push -q && break; echo "push retry $i"; sleep 15; done
+          echo "changed=true" >> "$GITHUB_OUTPUT"

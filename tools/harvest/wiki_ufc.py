@@ -25,10 +25,12 @@ API = 'https://en.wikipedia.org/w/api.php'
 WD = 'https://www.wikidata.org/w/api.php'
 LIST = 'List of UFC events'
 
+SHA = {}   # article title → sha256 of the HTML read, for the archive's page list
 def parse_page(title):
     """The rendered article as soup, with its revision id, or (None, None)."""
     j = get_json(API + '?' + urllib.parse.urlencode({'action': 'parse', 'prop': 'text|revid', 'format': 'json', 'formatversion': 2, 'redirects': 1, 'disabletoc': 1, 'page': title}), pause=1.0)
     if 'error' in j or 'parse' not in j: return None, None
+    SHA[title] = __import__('hashlib').sha256(j['parse']['text'].encode('utf-8')).hexdigest()
     return BeautifulSoup(j['parse']['text'], 'lxml'), j['parse'].get('revid')
 
 def grid_rows(table):
@@ -80,6 +82,20 @@ def number(txt):
 def money(txt):
     m = re.search(r'\$\s?([\d,]+)', txt or '')
     return int(m.group(1).replace(',', '')) if m else None
+
+def canonical_titles(titles, log=None):
+    """Article titles through Wikipedia's redirects: an event card often links a fighter by a redirect ('Dooho Choi'),
+    the fighter's article has one canonical title. {asked: canonical}."""
+    out = {}; titles = sorted({t for t in titles if t})
+    for i in range(0, len(titles), 50):
+        chunk = titles[i:i + 50]
+        try: j = get_json(API + '?' + urllib.parse.urlencode({'action': 'query', 'titles': '|'.join(chunk), 'redirects': 1, 'format': 'json', 'formatversion': 2}), pause=0.8)
+        except Exception as e:
+            if log is not None: log.append(f'- redirects batch {i // 50}: {e}')
+            continue
+        q = j.get('query', {}); norm_ = {n['from']: n['to'] for n in q.get('normalized', [])}; red = {r['from']: r['to'] for r in q.get('redirects', [])}
+        for t in chunk: t2 = norm_.get(t, t); out[t] = red.get(t2, t2)
+    return out
 
 # ---------- the list of events
 def event_list(log):
@@ -231,14 +247,16 @@ def wikidata(titles, log):
     log.append(f'- wikidata: {len(out)} fighters matched of {len(titles)} with an article; {sum(1 for r in out.values() if r.get("nat"))} with nationality, {sum(1 for r in out.values() if r.get("dob"))} with a date of birth')
     return out
 
-# ---------- main
-def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--from', dest='y0', type=int, default=1993); ap.add_argument('--to', dest='y1', type=int, default=datetime.date.today().year)
-    ap.add_argument('--out', default='build/harvest'); ap.add_argument('--no-wikidata', action='store_true'); ap.add_argument('--limit', type=int, default=0)
-    a = ap.parse_args(); log = [f'# UFC harvest · {datetime.date.today().isoformat()}', '']
+# ---------- the harvest (the whole archive, or a window for the sweeper)
+def harvest(y0=1993, y1=None, since=None, before_today=False, no_wikidata=False, limit=0, log=None):
+    """Every past event from y0 to y1 (or from the ISO date `since`) in the harvest shape. before_today leaves out
+    today's card, which may still be in progress."""
+    log = log if log is not None else []; today = datetime.date.today().isoformat(); y1 = y1 or datetime.date.today().year
     rows, list_rev = event_list(log)
-    rows = [r for r in rows if a.y0 <= int(r['date'][:4]) <= a.y1 and r['date'] <= datetime.date.today().isoformat()]
-    if a.limit: rows = rows[-a.limit:]
+    rows = [r for r in rows if y0 <= int(r['date'][:4]) <= y1 and (r['date'] < today if before_today else r['date'] <= today) and (since is None or r['date'] >= since)]
+    if limit: rows = rows[-limit:]
+    class A: pass
+    a = A(); a.no_wikidata = no_wikidata
     events = []; issues = []
     for i, r in enumerate(rows):
         ev = harvest_event(r, log)
@@ -284,6 +302,14 @@ def main():
            'licence': 'CC BY-SA 4.0', 'licenceUrl': 'https://creativecommons.org/licenses/by-sa/4.0/', 'snapshot': datetime.date.today().isoformat(),
            'coverage': {'events': len(events), 'bouts': len(bouts), 'fighters': len(fighters), 'fightersWithArticle': len(by_title), 'eventsWithoutResults': len(issues), 'boutsWithoutRound': sum(1 for b in bouts if b['round'] is None), 'boutsWithoutTime': sum(1 for b in bouts if not b['time'])},
            'method': 'Each past event in the list of UFC events is read from its own article: the results table gives the weight class, the two fighters, the result, the method, the round, the time and the notes; the infobox gives the date, venue, city and attendance; the bonus-award list is read where present. Fighters are identified by their article where they have one and by name otherwise. Nationality, date of birth and height are taken from Wikidata.'}
+    for ev in events: ev['sha256'] = SHA.get(ev['title'])
+    return out, events, bouts, fighters, issues, by_title
+
+def main():
+    ap = argparse.ArgumentParser(); ap.add_argument('--from', dest='y0', type=int, default=1993); ap.add_argument('--to', dest='y1', type=int, default=datetime.date.today().year)
+    ap.add_argument('--out', default='build/harvest'); ap.add_argument('--no-wikidata', action='store_true'); ap.add_argument('--limit', type=int, default=0); ap.add_argument('--since', default=None, help='only events on or after this ISO date')
+    a = ap.parse_args(); log = [f'# UFC harvest · {datetime.date.today().isoformat()}', '']
+    out, events, bouts, fighters, issues, by_title = harvest(a.y0, a.y1, since=a.since, no_wikidata=a.no_wikidata, limit=a.limit, log=log)
     outdir = ROOT/a.out; outdir.mkdir(parents=True, exist_ok=True)
     (outdir/'ufc.json').write_text(json.dumps(out, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     log += ['', f'## Coverage', '', f'- {len(events)} events · {len(bouts)} bouts · {len(fighters)} fighters ({len(by_title)} with an article)', f'- events without a readable results table: {len(issues)}'] + [f'  - {i["event"]} ({i["date"]})' for i in issues[:60]]

@@ -1,9 +1,10 @@
-name: Sweep · Formula 1
-# Grands Prix are on Sundays; Jolpica has the results by Monday morning; Wednesday catches stewards' corrections. March to December.
+name: Sweep · Isle of Man TT
+# TT fortnight runs from late May into June; daily from 25 May to 20 June.
 # Times are UTC. Run workflow by hand any time; tick "dry run" to read and report without committing.
 on:
   schedule:
-    - cron: '17 6 * 3-12 1,3'
+    - cron: '53 9 25-31 5 *'
+    - cron: '53 9 1-20 6 *'
   workflow_dispatch:
     inputs:
       dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
@@ -13,7 +14,7 @@ jobs:
   sweep:
     uses: ./.github/workflows/sweep-run.yml
     with:
-      sport: f1
+      sport: tt
       dry_run: ${{ inputs.dry_run == true }}
     permissions: { contents: write }
   deploy:

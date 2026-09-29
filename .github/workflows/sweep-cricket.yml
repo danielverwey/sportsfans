@@ -1,9 +1,9 @@
-name: Sweep · Formula 1
-# Grands Prix are on Sundays; Jolpica has the results by Monday morning; Wednesday catches stewards' corrections. March to December.
+name: Sweep · Cricket
+# Internationals are played almost every day; Cricsheet adds scorecards within a few days. Daily.
 # Times are UTC. Run workflow by hand any time; tick "dry run" to read and report without committing.
 on:
   schedule:
-    - cron: '17 6 * 3-12 1,3'
+    - cron: '23 4 * * *'
   workflow_dispatch:
     inputs:
       dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
@@ -13,7 +13,7 @@ jobs:
   sweep:
     uses: ./.github/workflows/sweep-run.yml
     with:
-      sport: f1
+      sport: cricket
       dry_run: ${{ inputs.dry_run == true }}
     permissions: { contents: write }
   deploy:

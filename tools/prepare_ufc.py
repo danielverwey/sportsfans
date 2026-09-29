@@ -11,7 +11,6 @@ from the notes, elapsed time from round and time, each fighter's record from the
 """
 import json, re, sys, pathlib, collections, datetime
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ROOT/'build'/'harvest'/'ufc.json')
 slug = lambda s: re.sub(r'[^a-z0-9]+', '-', str(s).lower().replace('’', '').replace("'", '')).strip('-')
 
 def load(path):
@@ -64,7 +63,6 @@ def load(path):
             'coverage': {'indexEvents': D.get('coverage', {}).get('indexEvents'), 'eventsWithoutResults': len(issues), 'fightersWithArticle': sum(1 for f in fighters.values() if f['title'])},
             'method': 'Each past event in Wikipedia’s list of UFC events is read from its own article at a recorded revision: the results table gives the weight class, the two fighters, the result, the method, the round, the time and the notes; the infobox gives the date, venue, city and attendance. Events whose article carries no results table (cancelled cards) are listed as omitted. Fighters are identified by their article where they have one and by name otherwise.'}
 
-H = load(src)
 
 # ---- divisions: the weight-class label → a key, a display label, the limit, the sex
 DIVS = [('hw', 'Heavyweight', 265, 'M'), ('lhw', 'Light Heavyweight', 205, 'M'), ('mw', 'Middleweight', 185, 'M'), ('ww', 'Welterweight', 170, 'M'), ('lw', 'Lightweight', 155, 'M'), ('fw', 'Featherweight', 145, 'M'), ('bw', 'Bantamweight', 135, 'M'), ('flw', 'Flyweight', 125, 'M'),
@@ -139,79 +137,110 @@ def place_of(city):
     if not town: town = last if country != last else ''
     return town, country
 
-# ---- events
-events = []; bouts_by_event = {}
-for ev in H['events']:
-    name = ev['name'] or ev['title']; m = re.match(r'^(UFC \d+[A-Za-z]?|UFC Fight Night|UFC on [A-Za-z0-9+ ]+?|UFC Live|UFC Fight for the Troops|The Ultimate Fighter[^:]*|UFC [A-Za-z ]+?)\s*(?::|-|–)\s*(.+)$', name)
-    short, sub = (m.group(1).strip(), m.group(2).strip()) if m else (name, '')
-    kind = 'ppv' if re.match(r'^UFC \d+[A-Za-z]?$', short) else 'tuf' if 'ultimate fighter' in short.lower() else 'fight night'
-    town, country = place_of(ev.get('city') or '')
-    venue = (ev.get('venue') or '').strip()
-    events.append({'id': ev['id'], 'n': ev.get('n'), 'name': name, 'short': short, 'sub': sub, 'kind': kind, 'date': ev['date'], 'y': ev['y'], 'venue': venue, 'city': town, 'country': country, 'att': ev.get('attendance'), 'gate': ev.get('gate'), 'buys': ev.get('buyrate'), 'url': ev.get('url'), 'bouts': list(ev['bouts']), 'bonuses': [{'t': b['type'], 'who': b.get('titles') or b.get('who') or []} for b in ev.get('bonuses', [])]})
-events.sort(key=lambda e: (e['date'], e['n'] or 0))
-E = {e['id']: e for e in events}
+def prepare(H):
+    """The harvest shape (events / bouts / fighters) → the archive the site serves. Pure: reads H, returns the core."""
+    # ---- events
+    events = []; bouts_by_event = {}
+    for ev in H['events']:
+        name = ev['name'] or ev['title']; m = re.match(r'^(UFC \d+[A-Za-z]?|UFC Fight Night|UFC on [A-Za-z0-9+ ]+?|UFC Live|UFC Fight for the Troops|The Ultimate Fighter[^:]*|UFC [A-Za-z ]+?)\s*(?::|-|–)\s*(.+)$', name)
+        short, sub = (m.group(1).strip(), m.group(2).strip()) if m else (name, '')
+        kind = 'ppv' if re.match(r'^UFC \d+[A-Za-z]?$', short) else 'tuf' if 'ultimate fighter' in short.lower() else 'fight night'
+        town, country = place_of(ev.get('city') or '')
+        venue = (ev.get('venue') or '').strip()
+        events.append({'id': ev['id'], 'n': ev.get('n'), 'name': name, 'short': short, 'sub': sub, 'kind': kind, 'date': ev['date'], 'y': ev['y'], 'venue': venue, 'city': town, 'country': country, 'att': ev.get('attendance'), 'gate': ev.get('gate'), 'buys': ev.get('buyrate'), 'url': ev.get('url'), 'bouts': list(ev['bouts']), 'bonuses': [{'t': b['type'], 'who': b.get('titles') or b.get('who') or []} for b in ev.get('bonuses', [])]})
+    events.sort(key=lambda e: (e['date'], e['n'] or 0))
+    E = {e['id']: e for e in events}
 
-# ---- bouts
-F = {fid: dict(f) for fid, f in H['fighters'].items()}
-BF = ['id', 'e', 'y', 'date', 'n', 'card', 'ck', 'wc', 'div', 'lb', 'a', 'b', 'w', 'res', 'method', 'mk', 'det', 'dk', 'round', 'time', 'secs', 'title', 'tour', 'champ', 'notes']
-rows = []; div_seen = collections.Counter(); women = set()
-FIVE_MINUTE_ROUNDS = '1999-07-16'  # UFC 21: five-minute rounds; before that a long first round and short overtimes
-def secs_of(rnd, tm, date):
-    if not tm or not re.fullmatch(r'\d{1,2}:\d{2}', tm): return None
-    mm, ss = tm.split(':'); s = int(mm) * 60 + int(ss)
-    if rnd is None: return None
-    if date >= FIVE_MINUTE_ROUNDS: return (rnd - 1) * 300 + s
-    return s if rnd == 1 else None
-for b in H['bouts']:
-    if b['e'] not in E: continue
-    dk = div_of(b['wc']); t = title_of(b['notes'], b['card'], b['wc']); mk = method_kind(b['method'], b['sep'])
-    if b.get('title'): t['title'] = b['title']
-    if b.get('tour'): t['tour'] = t.get('tour') or 'round'
-    res = 'W' if b['sep'] == 'def.' and mk not in ('NC', 'DRAW') else 'D' if mk == 'DRAW' else 'NC'
-    w = b['a'] if res == 'W' else None
-    rows.append({'id': b['id'], 'e': b['e'], 'y': b['y'], 'date': b['date'], 'n': b['n'], 'card': b['card'], 'ck': card_kind(b['card']), 'wc': b['wc'], 'div': dk, 'lb': catch_lb(b['wc']) if dk == 'catch' else DIV[dk]['lb'], 'a': b['a'], 'b': b['b'], 'w': w, 'res': res, 'method': b['method'], 'mk': mk, 'det': detail_of(b['method']), 'dk': dec_kind(b['method']) if mk == 'DEC' else '', 'round': b['round'], 'time': b['time'], 'secs': secs_of(b['round'], b['time'], b['date']), 'title': t.get('title'), 'tour': t.get('tour'), 'champ': b.get('champ') or [], 'notes': b['notes']})
-    div_seen[dk] += 1
-    if DIV[dk]['sex'] == 'W': women.update((b['a'], b['b']))
-for r in rows:  # a catchweight between two women is a women's bout
-    if r['div'] == 'catch' and r['a'] in women and r['b'] in women: r['sex'] = 'W'
-    else: r['sex'] = DIV[r['div']]['sex'] or 'M'
-BF.append('sex')
-rows.sort(key=lambda r: (r['date'], E[r['e']]['n'] or 0, r['n']))
-for e in events: e['bouts'] = [r['id'] for r in rows if r['e'] == e['id']]
+    # ---- bouts
+    F = {fid: dict(f) for fid, f in H['fighters'].items()}
+    BF = ['id', 'e', 'y', 'date', 'n', 'card', 'ck', 'wc', 'div', 'lb', 'a', 'b', 'w', 'res', 'method', 'mk', 'det', 'dk', 'round', 'time', 'secs', 'title', 'tour', 'champ', 'notes']
+    rows = []; div_seen = collections.Counter(); women = set()
+    FIVE_MINUTE_ROUNDS = '1999-07-16'  # UFC 21: five-minute rounds; before that a long first round and short overtimes
+    def secs_of(rnd, tm, date):
+        if not tm or not re.fullmatch(r'\d{1,2}:\d{2}', tm): return None
+        mm, ss = tm.split(':'); s = int(mm) * 60 + int(ss)
+        if rnd is None: return None
+        if date >= FIVE_MINUTE_ROUNDS: return (rnd - 1) * 300 + s
+        return s if rnd == 1 else None
+    for b in H['bouts']:
+        if b['e'] not in E: continue
+        dk = div_of(b['wc']); t = title_of(b['notes'], b['card'], b['wc']); mk = method_kind(b['method'], b['sep'])
+        if b.get('title'): t['title'] = b['title']
+        if b.get('tour'): t['tour'] = t.get('tour') or 'round'
+        res = 'W' if b['sep'] == 'def.' and mk not in ('NC', 'DRAW') else 'D' if mk == 'DRAW' else 'NC'
+        w = b['a'] if res == 'W' else None
+        rows.append({'id': b['id'], 'e': b['e'], 'y': b['y'], 'date': b['date'], 'n': b['n'], 'card': b['card'], 'ck': card_kind(b['card']), 'wc': b['wc'], 'div': dk, 'lb': catch_lb(b['wc']) if dk == 'catch' else DIV[dk]['lb'], 'a': b['a'], 'b': b['b'], 'w': w, 'res': res, 'method': b['method'], 'mk': mk, 'det': detail_of(b['method']), 'dk': dec_kind(b['method']) if mk == 'DEC' else '', 'round': b['round'], 'time': b['time'], 'secs': secs_of(b['round'], b['time'], b['date']), 'title': t.get('title'), 'tour': t.get('tour'), 'champ': b.get('champ') or [], 'notes': b['notes']})
+        div_seen[dk] += 1
+        if DIV[dk]['sex'] == 'W': women.update((b['a'], b['b']))
+    for r in rows:  # a catchweight between two women is a women's bout
+        if r['div'] == 'catch' and r['a'] in women and r['b'] in women: r['sex'] = 'W'
+        else: r['sex'] = DIV[r['div']]['sex'] or 'M'
+    BF.append('sex')
+    rows.sort(key=lambda r: (r['date'], E[r['e']]['n'] or 0, r['n']))
+    for e in events: e['bouts'] = [r['id'] for r in rows if r['e'] == e['id']]
 
-# ---- fighters: record and span from the bouts
-rec = collections.defaultdict(lambda: {'w': 0, 'l': 0, 'd': 0, 'nc': 0, 'first': None, 'last': None, 'divs': collections.Counter(), 'ko': 0, 'sub': 0, 'title': 0, 'titleW': 0})
-for r in rows:
-    for side in ('a', 'b'):
-        fid = r[side]; x = rec[fid]
-        if r['res'] == 'W': x['w' if fid == r['w'] else 'l'] += 1
-        elif r['res'] == 'D': x['d'] += 1
-        else: x['nc'] += 1
-        x['first'] = min(x['first'] or r['y'], r['y']); x['last'] = max(x['last'] or r['y'], r['y']); x['divs'][r['div']] += 1
-        if fid == r['w'] and r['mk'] == 'KO': x['ko'] += 1
-        if fid == r['w'] and r['mk'] == 'SUB': x['sub'] += 1
-        if r['title']: x['title'] += 1; x['titleW'] += 1 if fid == r['w'] else 0
-fighters = {}
-for fid, f in F.items():
-    x = rec.get(fid)
-    if not x: continue
-    nat = f.get('nat') or []
-    fighters[fid] = {'id': fid, 'name': f['name'], 'url': f.get('url'), 'nat': nat[0] if nat else None, 'dob': f.get('dob') if f.get('dob') and not f['dob'].endswith('-00-00') else None, 'cm': f.get('height_cm'), 'rec': [x['w'], x['l'], x['d'], x['nc']], 'ko': x['ko'], 'sub': x['sub'], 'first': x['first'], 'last': x['last'], 'div': x['divs'].most_common(1)[0][0], 'divs': [d for d, _ in x['divs'].most_common()], 'title': x['title'], 'titleW': x['titleW']}
-for r in rows:
-    for side in ('a', 'b'):
-        if r[side] not in fighters: fighters[r[side]] = {'id': r[side], 'name': r[side].replace('-', ' ').title(), 'url': None, 'nat': None, 'dob': None, 'cm': None, 'rec': [0, 0, 0, 0], 'ko': 0, 'sub': 0, 'first': r['y'], 'last': r['y'], 'div': r['div'], 'divs': [r['div']], 'title': 0, 'titleW': 0}
+    # ---- fighters: record and span from the bouts
+    rec = collections.defaultdict(lambda: {'w': 0, 'l': 0, 'd': 0, 'nc': 0, 'first': None, 'last': None, 'divs': collections.Counter(), 'ko': 0, 'sub': 0, 'title': 0, 'titleW': 0})
+    for r in rows:
+        for side in ('a', 'b'):
+            fid = r[side]; x = rec[fid]
+            if r['res'] == 'W': x['w' if fid == r['w'] else 'l'] += 1
+            elif r['res'] == 'D': x['d'] += 1
+            else: x['nc'] += 1
+            x['first'] = min(x['first'] or r['y'], r['y']); x['last'] = max(x['last'] or r['y'], r['y']); x['divs'][r['div']] += 1
+            if fid == r['w'] and r['mk'] == 'KO': x['ko'] += 1
+            if fid == r['w'] and r['mk'] == 'SUB': x['sub'] += 1
+            if r['title']: x['title'] += 1; x['titleW'] += 1 if fid == r['w'] else 0
+    fighters = {}
+    for fid, f in F.items():
+        x = rec.get(fid)
+        if not x: continue
+        nat = f.get('nat') or []
+        fighters[fid] = {'id': fid, 'name': f['name'], 'url': f.get('url'), 'nat': nat[0] if nat else None, 'dob': f.get('dob') if f.get('dob') and not f['dob'].endswith('-00-00') else None, 'cm': f.get('height_cm'), 'rec': [x['w'], x['l'], x['d'], x['nc']], 'ko': x['ko'], 'sub': x['sub'], 'first': x['first'], 'last': x['last'], 'div': x['divs'].most_common(1)[0][0], 'divs': [d for d, _ in x['divs'].most_common()], 'title': x['title'], 'titleW': x['titleW']}
+    for r in rows:
+        for side in ('a', 'b'):
+            if r[side] not in fighters: fighters[r[side]] = {'id': r[side], 'name': r[side].replace('-', ' ').title(), 'url': None, 'nat': None, 'dob': None, 'cm': None, 'rec': [0, 0, 0, 0], 'ko': 0, 'sub': 0, 'first': r['y'], 'last': r['y'], 'div': r['div'], 'divs': [r['div']], 'title': 0, 'titleW': 0}
 
-# ---- venues, listed (never drawn): the venue where the archive names one, the town otherwise
-venues = {}
-for e in events:
-    key = slug(e['venue'] or e['city'] or e['country'] or 'unknown')
-    v = venues.get(key) or venues.setdefault(key, {'id': key, 'name': e['venue'] or e['city'] or e['country'] or 'Unrecorded', 'city': e['city'], 'country': e['country'], 'n': 0, 'first': e['y'], 'last': e['y'], 'events': []})
-    v['n'] += 1; v['first'] = min(v['first'], e['y']); v['last'] = max(v['last'], e['y']); v['events'].append(e['id']); e['venueId'] = key
+    # ---- venues, listed (never drawn): the venue where the archive names one, the town otherwise
+    venues = {}
+    for e in events:
+        key = slug(e['venue'] or e['city'] or e['country'] or 'unknown')
+        v = venues.get(key) or venues.setdefault(key, {'id': key, 'name': e['venue'] or e['city'] or e['country'] or 'Unrecorded', 'city': e['city'], 'country': e['country'], 'n': 0, 'first': e['y'], 'last': e['y'], 'events': []})
+        v['n'] += 1; v['first'] = min(v['first'], e['y']); v['last'] = max(v['last'], e['y']); v['events'].append(e['id']); e['venueId'] = key
 
-core = {'events': events, 'boutFields': BF, 'bouts': [[r.get(k) for k in BF] for r in rows], 'fighters': fighters, 'divisions': [DIV[k] for k, *_ in DIVS if div_seen[k]], 'venues': venues, 'issues': H.get('issues', []),
-        'sources': H.get('sources', []), 'pages': H.get('pages', []), 'attribution': H.get('attribution'), 'licence': H.get('licence'), 'licenceUrl': H.get('licenceUrl'), 'snapshot': H.get('snapshot'), 'lastDate': max(e['date'] for e in events), 'lastYear': max(e['y'] for e in events),
-        'coverage': dict(H.get('coverage', {}), events=len(events), bouts=len(rows), fighters=len(fighters), venues=len(venues), titleBouts=sum(1 for r in rows if r['title']), tournamentBouts=sum(1 for r in rows if r['tour']), withoutTime=sum(1 for r in rows if r['secs'] is None), womensBouts=sum(1 for r in rows if r['sex'] == 'W'), fightersWithNationality=sum(1 for f in fighters.values() if f['nat']), fightersWithBirthDate=sum(1 for f in fighters.values() if f['dob'])),
-        'method': (H.get('method', '') + ' Derived here, from those rows alone: the division from the weight-class label (a catchweight between two women counts as a women’s bout), the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21 in July 1999; before that only a first-round time is taken as elapsed), each fighter’s record from the bouts in the archive. Venues are listed as the sources name them and never drawn.').strip()}
-out = ROOT/'data'/'ufc.json'; out.write_text(json.dumps(core, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
-c = core['coverage']
-print(f'ufc: {c["events"]} events · {c["bouts"]:,} bouts · {c["fighters"]:,} fighters · {c["venues"]} venues · {c["titleBouts"]} title bouts · {c["womensBouts"]} women’s bouts · {c["withoutTime"]} bouts without an elapsed time · divisions {dict(div_seen)} · {out.stat().st_size/1e6:.1f} MB')
+    core = {'events': events, 'boutFields': BF, 'bouts': [[r.get(k) for k in BF] for r in rows], 'fighters': fighters, 'divisions': [DIV[k] for k, *_ in DIVS if div_seen[k]], 'venues': venues, 'issues': H.get('issues', []),
+            'sources': H.get('sources', []), 'pages': H.get('pages', []), 'attribution': H.get('attribution'), 'licence': H.get('licence'), 'licenceUrl': H.get('licenceUrl'), 'snapshot': H.get('snapshot'), 'lastDate': max(e['date'] for e in events), 'lastYear': max(e['y'] for e in events),
+            'coverage': dict(H.get('coverage', {}), events=len(events), bouts=len(rows), fighters=len(fighters), venues=len(venues), titleBouts=sum(1 for r in rows if r['title']), tournamentBouts=sum(1 for r in rows if r['tour']), withoutTime=sum(1 for r in rows if r['secs'] is None), womensBouts=sum(1 for r in rows if r['sex'] == 'W'), fightersWithNationality=sum(1 for f in fighters.values() if f['nat']), fightersWithBirthDate=sum(1 for f in fighters.values() if f['dob'])),
+            'method': (H.get('method', '') + ' Derived here, from those rows alone: the division from the weight-class label (a catchweight between two women counts as a women’s bout), the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21 in July 1999; before that only a first-round time is taken as elapsed), each fighter’s record from the bouts in the archive. Venues are listed as the sources name them and never drawn.').strip()}
+    return core
+
+METHOD_TAIL = ' Derived here, from those rows alone:'
+def unprepare(core):
+    """The archive back into the harvest shape, exactly: prepare(unprepare(core)) == core. The sweeper merges new events
+    into this and prepares the whole again, so every derived figure (records, venues, coverage) is recomputed the same way."""
+    BF = core['boutFields']
+    def raw_city(e):
+        town, country = e.get('city') or '', e.get('country') or ''
+        cand = [', '.join(x for x in (town, country) if x), town, country]
+        return next((c for c in cand if place_of(c) == (town, country)), cand[0])
+    events = [{'id': e['id'], 'n': e.get('n'), 'name': e['name'], 'title': e['name'], 'date': e['date'], 'y': e['y'], 'venue': e.get('venue') or '', 'city': raw_city(e),
+               'attendance': e.get('att'), 'gate': e.get('gate'), 'buyrate': e.get('buys'), 'url': e.get('url'), 'bouts': list(e.get('bouts') or []),
+               'bonuses': [{'type': b['t'], 'titles': list(b.get('who') or [])} for b in e.get('bonuses') or []]} for e in core['events']]
+    bouts = []
+    for row in core['bouts']:
+        r = dict(zip(BF, row))
+        bouts.append({'id': r['id'], 'e': r['e'], 'date': r['date'], 'y': r['y'], 'n': r['n'], 'card': r['card'], 'wc': r['wc'], 'a': r['a'], 'b': r['b'], 'champ': r.get('champ') or [],
+                      'sep': 'def.' if r['res'] == 'W' else 'vs.', 'method': r['method'], 'round': r['round'], 'time': r['time'], 'notes': r['notes'], 'title': r['title'], 'tour': r['tour']})
+    fighters = {fid: {'id': fid, 'name': f['name'], 'url': f.get('url'), 'title': (f.get('url') or '').split('/wiki/')[-1].replace('_', ' ') or None if f.get('url') else None,
+                      'nat': [f['nat']] if f.get('nat') else [], 'dob': f.get('dob'), 'height_cm': f.get('cm')} for fid, f in core['fighters'].items()}
+    keep = ('issues', 'sources', 'pages', 'attribution', 'licence', 'licenceUrl', 'snapshot', 'coverage')
+    H = {'events': events, 'bouts': bouts, 'fighters': fighters, **{k: core.get(k) for k in keep}}
+    H['method'] = (core.get('method') or '').split(METHOD_TAIL)[0]
+    return H
+
+if __name__ == '__main__':
+    src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ROOT/'build'/'harvest'/'ufc.json')
+    core = prepare(load(src))
+    out = ROOT/'data'/'ufc.json'; out.write_text(json.dumps(core, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    c = core['coverage']
+    print(f'ufc: {c["events"]} events · {c["bouts"]:,} bouts · {c["fighters"]:,} fighters · {c["venues"]} venues · {c["titleBouts"]} title bouts · {c["womensBouts"]} women’s bouts · {c["withoutTime"]} bouts without an elapsed time · divisions {dict((d["key"], sum(1 for b in core["bouts"] if b[core["boutFields"].index("div")] == d["key"])) for d in core["divisions"])} · {out.stat().st_size/1e6:.1f} MB')

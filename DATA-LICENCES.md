@@ -25,6 +25,10 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 | Tennis | Wimbledon Compendium | published roll of honour (facts) | champions and finalists before 1968 | — |
 | UFC (in preparation) | UFCStats via a public mirror | Zuffa terms forbid scraping and copying; facts are free | fight records | — |
 
+## How the archives stay current
+
+Each atlas is extended by a small reader that runs on a schedule in the site's public repository (`tools/sweepers/`, `.github/workflows/sweep-*.yml`). It reads only the source already credited above for that atlas — Jolpica (F1); the English Wikipedia season, event, race and rally articles through the MediaWiki API (MotoGP, WorldSBK, UFC, the Isle of Man TT, the Dakar Rally); Cricsheet's recently-added internationals and people register (cricket); Jeff Sackmann's `tennis_atp` / `tennis_wta` repositories (tennis); the data file Nuck's Rugby Archive publishes for its own pages (rugby union — held until permission is given). Each run makes a handful of requests with a pause between them and identifies itself (`sportsfans.co.za atlas sweeper (https://sportsfans.co.za/licences/; non-commercial)`). Before writing, each reader must reproduce what the archive already holds from that source; results before the current season are never rewritten. What a sweep adds carries the same licence as the rest of that data file.
+
 Fonts: Google Fonts, SIL Open Font License. Circuit geometry: © OpenStreetMap contributors, ODbL, where used. Code: MIT.
 
 Trademarks: every championship, team, event, venue and manufacturer name is the trademark of its owner and is used only to identify what the numbers describe. No logos are used.

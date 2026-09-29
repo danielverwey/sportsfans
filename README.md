@@ -46,8 +46,8 @@ Sportsfans/
 │   └── hub/      index.html  favicon.svg  favicon-32.png  apple-touch-icon.png
 ├── data/                          the archives; cricket_details/ and tennis_matches/ hold the yearly shards (tools/prepare_cricket.py and tools/prepare_tennis.py split them from the prototype exports)
 ├── audits/                        DATA-AUDIT-<sport>.md, the cross-check reports the audit tools write
-├── tools/                         sitegen.py (static pages), reading.py (reading editions), harvest/ (sweepers), gate.py, osm_outlines.py, check_site.js, check_links.py, audits
-├── .github/workflows/             deploy, sweep-f1, verify, harvest-bikes, outlines
+├── tools/                         sitegen.py (static pages), reading.py (reading editions), sweepers/ (one reader per atlas), harvest/ (shared readers), gate.py, osm_outlines.py, check_site.js, check_links.py, audits
+├── .github/workflows/             deploy, sweep-run + sweep-<atlas> ×9, verify, harvest-bikes, harvest-ufc, outlines
 ├── DATA-LICENCES.md  PERMISSIONS.md  ACTION-PLAN.md
 ├── build.py                       builds everything above from src/ + data/
 └── RELEASE.md                     how to publish
@@ -78,6 +78,31 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 1. The archive is the prototype page `paris_dakar_atlas_1979_2026.html` — every edition's route, era and class podiums transcribed from Wikipedia's Dakar Rally article at a recorded revision, plus the Natural Earth land silhouette and the gazetteer of route towns. Keep a copy at `build/harvest/paris_dakar_atlas_1979_2026.html`.
 2. `python tools/prepare_dakar.py path/to/paris_dakar_atlas_1979_2026.html` → `data/dakar.json` (editions, podium rows, people, marques, colours, map).
 3. Commit `data/dakar.json` and push — the deploy workflow builds and publishes. Routes are drawn schematically between the named towns; a town missing from the gazetteer is simply not drawn (the build prints any edition with fewer than two drawable stops).
+
+### Sweeping the data (automatic)
+
+Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that runs on its own schedule, reads its source, merges what is new into `data/`, runs `tools/gate.py`, rebuilds the site, checks every link, commits and deploys. Nothing is committed unless every step passes; a failed run shows red in Actions and GitHub e-mails the repository owner. Each run leaves its report in the run summary (and in `build/harvest/<atlas>.md` in the commit).
+
+| Atlas | Reader (`tools/sweepers/`) | Source | Schedule (UTC) |
+|---|---|---|---|
+| Formula 1 | `f1.py` (→ `tools/harvest/f1.py`) | Jolpica F1 | Mon + Wed 06:17, March–December |
+| MotoGP / WorldSBK | `bikes.py` | Wikipedia season article | Mon + Wed 07:27 (Feb–Nov) / 07:47 (Feb–Oct) |
+| UFC | `ufc.py` (→ `tools/harvest/wiki_ufc.py`) | Wikipedia event articles, last 21 days | Sun + Tue 13:13 |
+| Cricket | `cricket.py` | Cricsheet, recently added internationals | daily 04:23 |
+| Tennis | `tennis.py` | Jeff Sackmann's ATP/WTA CSVs, current season | Mon + Thu 09:33 |
+| Rugby union | `rugby.py` | Nuck's Rugby Archive data file | Mon + Thu 08:43 — **held until `RUGBY_APPROVED` is `yes`** |
+| Isle of Man TT | `tt.py` | Wikipedia "<year> Isle of Man TT" | daily 09:53, 25 May–20 June |
+| Dakar Rally | `dakar.py` | Wikipedia "Dakar Rally" | daily 10:03, 3–31 January |
+
+Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
+
+By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read and report without committing. Locally: `python tools/sweepers/run.py <atlas>` (then `python tools/gate.py <atlas>`; `git restore data` undoes it).
+
+**Rugby is held for permission.** Until the repository variable `RUGBY_APPROVED` is set to `yes` (Settings → Secrets and variables → Actions → Variables), its schedule does not run and a run started by hand is always a dry run.
+
+The gate (`tools/gate.py <atlas>`) compares the new archive with the last commit: nothing may be missing, the snapshot may not go backwards, changes to past records are listed, and every new record must have the same fields and types as the archive's own (so a reader that misreads a page cannot slip a malformed row in). `--accept` overrides it after a human has looked.
+
+The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
 
 ### Search engines
 
@@ -110,7 +135,7 @@ The site is non-commercial for good and uses no logos; every source and the lice
 - **MotoGP / WorldSBK** — rebuilt in September 2026 entirely from Wikipedia's season articles (CC BY-SA 4.0): results, calendars and published standings; circuit outlines from OpenStreetMap, or the F1DB survey at shared venues. `tools/prepare_bikes.py` brings a new export in; `tools/osm_outlines.py` (the *Circuit outlines* workflow) fetches the missing outlines.
 - **Isle of Man TT** — every race since 1907 from Wikipedia's lists and race articles (CC BY-SA 4.0), the Mountain Course and its named places from OpenStreetMap. `tools/prepare_tt.py` brings a new export in.
 
-The archives are not edited by hand. The sweepers in `tools/harvest/` extend the current season from each sport's source; `tools/gate.py` refuses any change to history. Replacing a `data/<sport>.json` with a newer export and rebuilding also works.
+The archives are not edited by hand. The sweepers in `tools/sweepers/` extend the current season from each sport's source on a schedule; `tools/gate.py` refuses any change to history. Replacing a `data/<sport>.json` with a newer export and rebuilding also works.
 
 ## Licence
 

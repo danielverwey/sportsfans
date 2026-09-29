@@ -1,0 +1,29 @@
+name: Sweep · Rugby union
+# Tests are on weekends in the international windows; Monday and Thursday, all year.
+# Times are UTC. Source: Nuck's Rugby Archive (tools/sweepers/rugby.py).
+#
+# HELD FOR APPROVAL: until the repository variable RUGBY_APPROVED is set to yes
+# (Settings → Secrets and variables → Actions → Variables → New repository variable),
+# the schedule does not run at all and a run started by hand only reads and reports
+# (dry run, nothing committed). Set RUGBY_APPROVED = yes once the source has agreed.
+on:
+  schedule:
+    - cron: '43 8 * * 1,4'
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep, cancel-in-progress: false }
+jobs:
+  sweep:
+    if: github.event_name == 'workflow_dispatch' || vars.RUGBY_APPROVED == 'yes'
+    uses: ./.github/workflows/sweep-run.yml
+    with:
+      sport: rugby
+      dry_run: ${{ inputs.dry_run == true || vars.RUGBY_APPROVED != 'yes' }}
+    permissions: { contents: write }
+  deploy:
+    needs: sweep
+    if: needs.sweep.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

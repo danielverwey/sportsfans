@@ -534,6 +534,9 @@ def gen_licences(*, site, v, published, held):
 {src('FiveThirtyEight', 'https://github.com/fivethirtyeight/data', 'CC BY 4.0.', 'historical NBA/BAA game results and Elo (basketball).', 'CC BY 4.0')}
 <p>Basketball box scores are facts recorded from public sources; the atlas will name its sources and their terms here when it is published.</p>
 
+<h3 id="updates">How the archives stay current</h3>
+<p>Each atlas is extended by a small reader that runs on a schedule in the site’s public repository. It reads only the source already credited above for that atlas — Jolpica for Formula 1; the English Wikipedia articles through the MediaWiki API for MotoGP, World Superbike, UFC, the Isle of Man TT and the Dakar Rally; Cricsheet for cricket; Jeff Sackmann’s repositories for tennis; and, once permission is given, the data file Nuck’s Rugby Archive publishes for its own pages. Each run makes a handful of requests, pauses between them and names this site in its user agent. Before it writes anything, a reader must reproduce what the archive already holds from that source; results before the current season are never rewritten. Anything a reader adds carries the same licence as the rest of that data file.</p>
+
 <h3>The data files</h3>
 <p>Each atlas serves its archive as one JSON file, under the licence stated above: {' · '.join(f'<a class="q" href="{rel}data/{k}.json">{k}.json</a>' for k in SPORTS if k in (published or []))}. The offline editions on the <a class="q" href="{rel}downloads/">downloads page</a> carry the same data embedded.</p>
 

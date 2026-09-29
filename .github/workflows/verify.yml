@@ -1,7 +1,7 @@
 name: Verify in a browser
-# Weekly and on demand: serves docs/ and drives every atlas headless (all seasons × tabs × eras, phone width, deep links, offline editions).
+# Weekly (Monday 12:37 UTC, after the sweeps) and on demand: serves docs/ and drives every atlas headless (all seasons × tabs × eras, phone width, deep links, offline editions).
 on:
-  schedule: [{ cron: '30 7 * * 1' }]
+  schedule: [{ cron: '37 12 * * 1' }]   # Monday afternoon UTC, after the morning's sweeps
   workflow_dispatch:
 jobs:
   verify:

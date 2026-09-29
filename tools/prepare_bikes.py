@@ -57,8 +57,14 @@ for oid, v in old.get('venues', {}).items():
     else: unmatched.append(v.get('name'))
 # an open OpenStreetMap chain yields to a closed F1DB survey of the same venue; otherwise the mapped geometry is used
 osm = {cid: d for cid, (d, closed) in raw.items() if closed or cid not in venues}
-assets_path.write_text(json.dumps({'osm': osm, 'venues': venues}, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+# outlines already in the assets file — found by the OpenStreetMap workflow (tools/osm_outlines.py), checked for lap length —
+# are kept: a new read of the archive only adds outlines for circuits that have none yet, it never takes one away
+kept = {cid: d for cid, d in old.get('osm', {}).items() if d}
+added_osm = [cid for cid in osm if cid not in kept]
+osm = {**kept, **{cid: d for cid, d in osm.items() if cid not in kept}}   # the file's own order first, so an unchanged read leaves it byte-identical
+assets_path.write_text(json.dumps({'osm': osm, 'venues': venues}, separators=(',', ':')), encoding='utf-8')   # written exactly as tools/osm_outlines.py writes it
 (ROOT/'data'/f'{sport}.json').write_text(json.dumps(A, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 mapped = [c for c in A['circuits'] if c in osm or c in venues]
 print(f'{sport}: {len(A["races"]):,} races · {sum(len(r["results"]) for r in A["races"]):,} results · {len(A["riders"]):,} riders · {len(A["circuits"])} circuits · outlines: {len(osm)} from OpenStreetMap, {len(venues)} F1DB surveys re-keyed ({len(set(venues) - set(osm))} circuits get one only from F1DB), {len(A["circuits"]) - len(mapped)} without an outline · snapshot {A.get("snapshot")} · through {A.get("lastDate")}')
+print(f'  outlines kept from the assets file: {len(kept)} · added from this archive: {len(added_osm)}{" (" + ", ".join(added_osm[:6]) + ("…" if len(added_osm) > 6 else "") + ")" if added_osm else ""}')
 if unmatched: print('  F1DB venues with no match in the new archive (dropped):', ', '.join(unmatched))
