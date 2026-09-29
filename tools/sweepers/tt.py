@@ -12,7 +12,13 @@ from tt_rules import MARQUES, MARQUE_ALIAS, derive
 
 TITLE = '{y} Isle of Man TT'
 GENERIC = ('result', 'classification', 'race', 'standings')
-CLASS = re.compile(r'\b(Superbike|Supersport|Superstock|Supertwin|Sidecar|Senior|Junior|Lightweight|Ultra-?Lightweight|Formula \w+|Production \w*|Classic \w*|TT Zero|Zero)\b', re.I)
+CLASSES = ['Superbike', 'Supersport', 'Superstock', 'Supertwins?', 'Sportbike', 'Sidecar', 'Senior', 'Junior', 'Ultra-?Lightweight', 'Lightweight', 'Production \\w*', 'Formula \\w+',
+           'Clubman[’\']?s', 'Historic \\w*', 'Classic \\w*', 'TT Zero', 'TTXGP', 'Singles', 'Zero']
+def class_regex(families=()):
+    """The class words a race heading is named by: the archive's own families first, then the known ones."""
+    words = [re.escape(x) for x in families] + CLASSES
+    return re.compile(r'\b(' + '|'.join(sorted(set(words), key=len, reverse=True)) + r')\b', re.I)
+CLASS = class_regex()
 AGREE = 0.9
 
 def race_name(heading):
@@ -109,6 +115,7 @@ def sweep(log, get_page=None, today=None):
     if get_page is None:
         from wiki import parse_page as get_page
     path = ROOT/'data'/'tt.json'; A = json.loads(path.read_text(encoding='utf-8'))
+    global CLASS; CLASS = class_regex({r['family'] for r in A['races']})
     y = today.year; new_riders = {}
     # 1. prove the reader on last year's article
     page, races = read_year(y - 1, get_page)
@@ -121,8 +128,8 @@ def sweep(log, get_page=None, today=None):
         checked += len(want); have += len(want & got)
         if len(want & got) < len(want): bad.append(f'{r["id"]}: {len(want & got)}/{len(want)}')
     log.append(f'Check on {y - 1}: the reader reproduces {have} of the archive\'s {checked} placings ({have / max(checked, 1):.1%}).')
+    log += [f'  - {b}' for b in bad[:10]]
     if checked and have / checked < AGREE:
-        log += [f'  - {b}' for b in bad[:10]]
         log += diagnose(page, races, mine, [r for r in A['races'] if r['y'] == y - 1])
         raise SystemExit(f'the {y - 1} article did not read back as the archive holds it — nothing written')
     # 2. this year's article
