@@ -1,6 +1,6 @@
 # APEX / Sports atlases · sportsfans.co.za
 
-Seven sporting archives, each drawn as an ode in one shared visual language — the River, the Grid (or the Grounds, the Courts, the Course), the Stage — and a landing page that opens onto all of them:
+Seven sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course) — and a landing page that opens onto all of them:
 
 | Atlas | Span | Live path | Offline edition |
 |---|---|---|---|
@@ -12,7 +12,7 @@ Seven sporting archives, each drawn as an ode in one shared visual language — 
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` | `/downloads/apex_motogp_ode_1949_2026.html` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` | `/downloads/apex_worldsbk_ode_1988_2026.html` |
 
-Every page is a single HTML file with its archive embedded: no server, no build step at view time, no external requests other than Google Fonts. Each carries an opening in the sport's own idiom (lights out; kick-off; the toss; the serve; the ten-second start), the River of its entire history at once, every circuit to its own outline and every ground or tournament listed — never drawn — in the colours of the side that has won there most or of its surface, the Stage of seasons, races or matches, replays, careers, records, barcodes and duels under one era lens, and a plain reading edition that works with scripts off. The landing page (`docs/index.html`) carries a miniature of each River, drawn from the data at build time.
+Every page is a single HTML file with its archive embedded: no server, no build step at view time, no external requests other than Google Fonts. Each carries an opening in the sport's own idiom (lights out; kick-off; the toss; the serve; the ten-second start), the River of its entire history at once, the Stage of seasons, races or matches, replays, careers, records, barcodes and duels under one era lens, every circuit to its own outline and every ground or tournament listed — never drawn — in the colours of the side that has won there most or of its surface, and a plain reading edition that works with scripts off. The landing page (`docs/index.html`) carries a miniature of each River, drawn from the data at build time.
 
 ## Layout
 
