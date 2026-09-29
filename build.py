@@ -95,8 +95,16 @@ def parts_ufc():
     assert b'</script>' not in data
     return dict(key='ufc', shell=shell, css=css, app=app, data=data, static=static, footer=footer, marker=b'type="application/json">', title='UFC · An Ode to the Cage · 1993–2026', global_='ARCHIVE', script_block='<script id="archive-data" type="application/json">__DATA__</script>\n<script>\n__APP__\n</script>')
 
+ICON_SVG = (SRC/'hub/favicon.svg').read_bytes()
+ICON_DATA = 'data:image/svg+xml;base64,' + base64.b64encode(ICON_SVG).decode('ascii')  # the offline editions carry the mark inline, so they make no request for it
+def ico_from_png(png: bytes, size: int) -> bytes:
+    """A one-image .ico wrapping a PNG (the PNG-in-ICO form every current browser and Windows since Vista read)."""
+    import struct
+    return struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', size % 256, size % 256, 0, 0, 1, 32, len(png), 22) + png
+
 def standalone(p):
-    shell = p['shell'].replace('__FOOTER__', '__FOOTER__\n' + NOTICE_HTML.replace('<div class="wrap">', '').replace('</p></div>', '</p>'), 1).encode('utf-8')
+    assert p['shell'].count('__ICON__') == 1, p['key']
+    shell = p['shell'].replace('__ICON__', f'<link rel="icon" href="{ICON_DATA}" type="image/svg+xml">', 1).replace('__FOOTER__', '__FOOTER__\n' + NOTICE_HTML.replace('<div class="wrap">', '').replace('</p></div>', '</p>'), 1).encode('utf-8')
     for ph in (b'__DATA__', b'__STATIC__', b'__FOOTER__', b'__CSS__', b'__APP__'): assert shell.count(ph) == 1, (p['key'], ph)
     blob = p.get('pack', p['data'])
     out = shell.replace(b'__CSS__', p['css'], 1).replace(b'__APP__', p['app'], 1).replace(b'__STATIC__', p['static'], 1).replace(b'__FOOTER__', p['footer'], 1).replace(b'__PAKO__', p.get('pako', '').encode('utf-8'), 1).replace(b'__DATA__', blob, 1)
@@ -107,6 +115,7 @@ LIGHT_KEYS = "['apex-lights','apex-kickoff','apex-toss','apex-serve','apex-tt','
 def production(p, vcss, vjs, vdata):
     """The same shell, but the stylesheet, the application and the archive come from files — small HTML, cached assets."""
     key = p['key']; s = p['shell']
+    assert s.count('__ICON__') == 1; s = s.replace('__ICON__', sitegen.icon_links('../'), 1)
     assert s.count('<style>\n__CSS__\n</style>') == 1 and s.count(p['script_block']) == 1 and s.count('__STATIC__') == 1 and s.count('__FOOTER__') == 1
     s = s.replace('<style>\n__CSS__\n</style>', f'<link rel="stylesheet" href="../assets/{key}.css?v={vcss}">\n<style>{HOME_CSS}</style>\n<link rel="canonical" href="{SITE}/{key}/">\n<meta property="og:url" content="{SITE}/{key}/">')
     # the way back: the brand is a link to the landing page, the strap line names it, the footer repeats it
@@ -275,6 +284,8 @@ if __name__ == '__main__':
         print(f'{key:7s} standalone {len(single):>11,} B · shell {(DOCS/key/"index.html").stat().st_size:>7,} B · data {len(p["data"]):>10,} B · {n:,} static pages  {p["title"]}')
     # hub, downloads index, plumbing
     hub = (SRC/'hub/index.html').read_text(encoding='utf-8').replace('__SITE__', SITE)
+    assert hub.count('__ICON__') == 1; hub = hub.replace('__ICON__', sitegen.icon_links(''), 1)
+    write(DOCS/'favicon.svg', ICON_SVG); write(DOCS/'apple-touch-icon.png', (SRC/'hub/apple-touch-icon.png').read_bytes()); write(DOCS/'favicon.ico', ico_from_png((SRC/'hub/favicon-32.png').read_bytes(), 32))
     for key in PARTS:
         hub = hub.replace(f'__PREVIEW_{key.upper()}__', preview(key) if key in PUBLISH else '')
         if key not in PUBLISH and key not in HELD: hub = re.sub(f'<!--{key.upper()}-->.*?<!--/{key.upper()}-->', '', hub, flags=re.S)  # a sport that is not on the site yet leaves no card
@@ -301,7 +312,7 @@ if __name__ == '__main__':
     for g, us in groups.items():
         (DOCS/f'sitemap-{g}.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<url><loc>{u}</loc><priority>{pri(u)}</priority></url>\n' for u in us) + '</urlset>\n')
     (DOCS/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(f'<sitemap><loc>{SITE}/sitemap-{g}.xml</loc></sitemap>\n' for g in ['site'] + [k for k in PUBLISH if k in groups]) + '</sitemapindex>\n')
-    (DOCS/'404.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APEX / Not found</title><style>body{margin:0;background:#07080a;color:#f4f4f2;font:16px/1.5 Barlow,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center}h1{font:900 italic 72px/1 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:-.03em;margin:0 0 12px}a{color:#FF8000}</style></head><body><div><h1>Off the racing line</h1><p>That page is not in the atlas. <a href="/">Back to the atlases</a></p></div></body></html>')
+    (DOCS/'404.html').write_text('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>APEX / Not found</title>' + sitegen.icon_links('/') + '<style>body{margin:0;background:#07080a;color:#f4f4f2;font:16px/1.5 Barlow,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;text-align:center}h1{font:900 italic 72px/1 "Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:-.03em;margin:0 0 12px}a{color:#FF8000}</style></head><body><div><h1>Off the racing line</h1><p>That page is not in the atlas. <a href="/">Back to the atlases</a></p></div></body></html>')
     if not args.no_cname and '.github.io' not in SITE: (DOCS/'CNAME').write_text(SITE.replace('https://', '').replace('http://', '').split('/')[0] + '\n')
     elif (DOCS/'CNAME').exists(): (DOCS/'CNAME').unlink()
     print(f'hub, reading editions, {pages_n:,} static pages, {len(urls):,} sitemap urls, robots, 404 → {DOCS}')

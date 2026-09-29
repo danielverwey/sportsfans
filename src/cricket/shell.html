@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+__ICON__
 <title>APEX / An Ode to the International Game · Cricket · 1877–2026</title>
 <meta name="description" content="A hundred and fifty years of international cricket drawn as a river of nation colours: every Test, one-day and T20 international, men’s and women’s, every ground in the colours of its winners, every scorecard opened to its sheet. 13,823 matches, 1877–2026.">
 <meta name="color-scheme" content="dark">
@@ -53,10 +54,27 @@ __CSS__
   <div class="river-legend" id="riverLegend" aria-label="Highlight a side"></div>
 </section>
 
+<section id="stage" aria-labelledby="stageH">
+  <div class="stagebar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div id="stageStatus" class="small muted mono"></div>
+  </div>
+  <div class="sect-head" style="margin-top:30px">
+    <div>
+      <p class="eyebrow">II · The Stage</p>
+      <h2 id="stageH">Season, match, team, player</h2>
+    </div>
+  </div>
+  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
+  <div class="era-text" id="eraContext"></div>
+  <div id="view" aria-live="polite"></div>
+</section>
+
 <section id="grid" aria-labelledby="gridH">
   <div class="sect-head">
     <div>
-      <p class="eyebrow">II · The Grounds</p>
+      <p class="eyebrow">III · The Grounds</p>
       <h2 id="gridH">Every ground, in its colours</h2>
       <p id="gridLede"></p>
     </div>
@@ -67,23 +85,6 @@ __CSS__
     </div>
   </div>
   <div class="circuits" id="circuits"></div>
-</section>
-
-<section id="stage" aria-labelledby="stageH">
-  <div class="stagebar">
-    <div class="tabs" id="tabs" role="tablist"></div>
-    <div class="spacer"></div>
-    <div id="stageStatus" class="small muted mono"></div>
-  </div>
-  <div class="sect-head" style="margin-top:30px">
-    <div>
-      <p class="eyebrow">III · The Stage</p>
-      <h2 id="stageH">Season, match, team, player</h2>
-    </div>
-  </div>
-  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
-  <div class="era-text" id="eraContext"></div>
-  <div id="view" aria-live="polite"></div>
 </section>
 
 <details id="sourcesBox">
