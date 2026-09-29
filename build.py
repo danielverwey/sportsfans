@@ -310,13 +310,10 @@ if __name__ == '__main__':
     # hub, downloads index, plumbing
     hub = (SRC/'hub/index.html').read_text(encoding='utf-8').replace('__SITE__', SITE)
     assert hub.count('__ICON__') == 1; hub = hub.replace('__ICON__', sitegen.icon_links(''), 1)
-<<<<<<< HEAD
     for png in sorted((SRC/'hub/share').glob('*.png')): write(DOCS/'share'/png.name, png.read_bytes())  # share cards (og:image), rendered once by tools/share_images.js
-=======
     # the header nav comes from the one list of sports (sitegen.SPORTS, alphabetical), so a new atlas cannot be left out of it
     assert hub.count('__NAV__') == 1
     hub = hub.replace('__NAV__', ''.join(f'<a href="{k}/" style="color:var(--muted);text-decoration:none;padding:6px 8px">{sitegen.SPORTS[k][0]}</a>' if k in PUBLISH else f'<span style="color:var(--dim);padding:6px 8px" title="{HELD[k]}">{sitegen.SPORTS[k][0]}</span>' for k in sitegen.SPORTS if k in PUBLISH or k in HELD), 1)
->>>>>>> e0bfe5bfd92d057c9f4fac8955ca4f54650fbc65
     write(DOCS/'favicon.svg', ICON_SVG); write(DOCS/'apple-touch-icon.png', (SRC/'hub/apple-touch-icon.png').read_bytes()); write(DOCS/'favicon.ico', ico_from_png((SRC/'hub/favicon-32.png').read_bytes(), 32))
     for key in PARTS:
         hub = hub.replace(f'__PREVIEW_{key.upper()}__', preview(key) if key in PUBLISH else '')
