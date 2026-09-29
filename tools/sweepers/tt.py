@@ -12,6 +12,7 @@ from tt_rules import MARQUES, MARQUE_ALIAS, derive
 
 TITLE = '{y} Isle of Man TT'
 GENERIC = ('result', 'classification', 'race', 'standings')
+CLASS = re.compile(r'\b(Superbike|Supersport|Superstock|Supertwin|Sidecar|Senior|Junior|Lightweight|Ultra-?Lightweight|Formula \w+|Production \w*|Classic \w*|TT Zero|Zero)\b', re.I)
 AGREE = 0.9
 
 def race_name(heading):
@@ -20,14 +21,17 @@ def race_name(heading):
     t = re.sub(r'\[.*?\]|\(.*?\)', '', t)
     if not re.fullmatch(r'\s*TT Zero\s*', t, re.I): t = re.sub(r'\bTT\b', '', t)
     t = re.sub(r'\bRace\s*$', '', t.strip()); t = re.sub(r'\bRace\s+(one|two)\b', lambda m: 'Race ' + {'one': '1', 'two': '2'}[m.group(1).lower()], t, flags=re.I)
+    m = CLASS.search(t)   # a sponsor's name before the class ("RST x D3O Superbike", "3wheeling.media Sidecar Race 1") is not part of the race's name
+    if m: t = t[m.start():]
     return re.sub(r'\s+', ' ', t).strip()
 
 def names_of(cell):
     """The rider (or the sidecar crew) in a cell: the linked names, else the text split at '/', '&' or a line break."""
     links = [a.get_text(' ', strip=True) for a in cell.find_all('a', href=True) if not a.find_parent(class_=re.compile('flagicon|reference')) and a.get_text(strip=True)]
-    if links: return links
-    parts = re.split(r'\s*/\s*|\s*&\s*|\n', cell.get_text('\n', strip=True))
-    return [re.sub(r'^[A-Z]{3}\s+', '', p).strip() for p in parts if p.strip()]
+    parts = re.split(r'\s*/\s*|\s*&\s*|\n', text(cell))
+    parts = [re.sub(r'^[A-Z]{3}\s+', '', p).strip() for p in parts if p.strip()]
+    if links and len(links) >= len(parts): return links   # every name linked: the linked spelling is the canonical one
+    return parts or links   # a crew with one member unlinked ("Ben Birchall / Patrick Rosney") keeps both names
 
 def read_year(y, get_page):
     page = get_page(TITLE.format(y=y))

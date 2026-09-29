@@ -12,7 +12,7 @@ TITLE = 'Dakar Rally'
 CATS = ['Cars', 'Bikes', 'Trucks', 'Quads', 'SSV', 'Challenger', 'Stock', 'Classic']
 CAT_OF = [(r'\bcars?\b', 'Cars'), (r'\b(bikes?|motorcycles?|motos?)\b', 'Bikes'), (r'\btrucks?\b', 'Trucks'), (r'\bquads?\b', 'Quads'), (r'\b(ssvs?|utvs?|side.by.side)\b', 'SSV'),
           (r'(light prototypes?|challenger|\bt3\b)', 'Challenger'), (r'\bstock\b', 'Stock'), (r'\bclassics?\b', 'Classic')]
-MAKE_COL = re.compile(r'make|model|truck|vehicle|machine|manufacturer|\bcar\b|\bbike\b|\bquad\b')
+MAKE_COL = re.compile(r'make|model|truck|vehicle|machine|manufacturer|\bcar\b|\bbike\b|\bquad\b|\butv\b|\bssv\b')
 FIX = [('Ḥaʼil', 'Ha’il'), ('near Yanbu', 'Yanbu'), ('al-Ula', 'AlUla'), ('Alger', 'Algiers'), ('Agades', 'Agadez'), ('Clermont-Ferrand', 'Clermont_Ferrand')]
 AGREE = 0.9
 
@@ -27,32 +27,60 @@ def names_in(cell):
     return [re.sub(r'^[A-Z]{3}\s+', '', p).strip() for p in re.split(r'\n|\s*/\s*', cell.get_text('\n', strip=True)) if p.strip() and not re.fullmatch(r'[A-Z]{3}', p.strip())]
 
 def read_article(page):
-    """{year: {'route': text, 'podium': {cat: [(rank, [names], make text)]}}} from every category table."""
-    out = {}
+    """{year: {'route': text, 'podium': {cat: [(rank, [names], make text)]}}} from the article's two table shapes: the winners
+    tables (Year | Route | <category> | <category> …, two columns per category, one row per edition — the route and each
+    category's winner) and the podium tables (Year | 1st | 1st | 2nd | 2nd | 3rd | 3rd under a category heading)."""
+    out = {}; pod = {}   # pod[(y, cat)][rank] = (people, make)
+    def groups(h0, h1):
+        """Consecutive columns with the same top header, from column `start`: [(label, name cols, make col)]."""
+        g = []
+        for i in range(2, len(h0)):
+            if g and g[-1][0] == h0[i]: (g[-1][1] if not MAKE_COL.search(h1[i]) else g[-1][2]).append(i)
+            else: g.append((h0[i], [] if MAKE_COL.search(h1[i]) else [i], [i] if MAKE_COL.search(h1[i]) else []))
+        return [(lab, ncols, mcols[0] if mcols else None) for lab, ncols, mcols in g]
+    def year_of(row):
+        m = re.match(r'(\d{4})', text(row[0])); return int(m.group(1)) if m and len(row) > 2 else None
+    def edition(y, route=None):
+        e = out.setdefault(y, {'route': '', 'podium': {}})
+        if route and not e['route']: e['route'] = route
+        return e
     for t in page.soup.find_all('table', class_=re.compile('wikitable')):
         m = grid(t)
         if len(m) < 3: continue
-        h0 = [text(c) for c in m[0]]
-        if not h0 or not h0[0].lower().startswith('year') or len(h0) < 3 or not h0[1].lower().startswith('route'): continue
-        cat = category(' '.join(h0[2:]))
-        if not cat: continue
-        h1 = [text(c).lower() for c in m[1]]
-        places = []; names = []
-        for i in range(2, len(h1)):
-            if MAKE_COL.search(h1[i]): places.append((names, i)); names = []
-            else: names.append(i)
-        if not places: continue
-        for row in m[2:]:
-            yt = text(row[0]); ym = re.match(r'(\d{4})', yt)
-            if not ym or len(row) < 3: continue
-            y = int(ym.group(1)); e = out.setdefault(y, {'route': text(row[1]), 'podium': {}})
-            pod = []
-            for k, (ncols, mcol) in enumerate(places[:3]):
-                if mcol >= len(row): continue
-                people = [n for c in ncols if c < len(row) for n in names_in(row[c])]
-                make = text(row[mcol])
-                if people and not re.search(r'cancel|not held|—', ' '.join(people).lower()): pod.append((k + 1, people, make))
-            if pod: e['podium'][cat] = pod
+        h0 = [text(c) for c in m[0]]; h1 = [text(c).lower() for c in m[1]]
+        if not h0 or not h0[0].lower().startswith('year') or len(h0) < 3 or len(h1) < len(h0): continue
+        if h0[1].lower().startswith('route'):
+            # winners: one place per category, the categories side by side
+            for lab, ncols, mcol in groups(h0, h1):
+                cat = category(lab)
+                if not cat or not ncols: continue
+                for row in m[2:]:
+                    y = year_of(row)
+                    if y is None: continue
+                    people = [n for c in ncols if c < len(row) for n in names_in(row[c])]
+                    make = text(row[mcol]) if mcol is not None and mcol < len(row) else ''
+                    edition(y, text(row[1]))
+                    if people and not re.search(r'cancel|not held|—', ' '.join(people).lower()): pod.setdefault((y, cat), {}).setdefault(1, (people, make))
+        else:
+            # a podium: 1st, 2nd, 3rd of one category, named by the heading (or caption) above the table
+            cap = t.find('caption'); h = t.find_previous(['h2', 'h3', 'h4'])
+            cat = category(text(cap)) if cap else None
+            if not cat and h is not None: cat = category(text(h))
+            if not cat: continue
+            h0b = ['Year', 'Route'] + h0[1:]; h1b = ['year', 'route'] + h1[1:]   # the same column grouping, with no route column
+            for lab, ncols, mcol in groups(h0b, h1b):
+                rk = re.match(r'(\d)', lab)
+                if not rk or not ncols: continue
+                rank = int(rk.group(1)); ncols = [c - 1 for c in ncols]; mcol = mcol - 1 if mcol is not None else None
+                for row in m[2:]:
+                    y = year_of(row)
+                    if y is None: continue
+                    people = [n for c in ncols if c < len(row) for n in names_in(row[c])]
+                    make = text(row[mcol]) if mcol is not None and mcol < len(row) else ''
+                    edition(y)
+                    if people and not re.search(r'cancel|not held|—', ' '.join(people).lower()): pod.setdefault((y, cat), {})[rank] = (people, make)
+    for (y, cat), ranks in pod.items():
+        out[y]['podium'][cat] = [(r, ranks[r][0], ranks[r][1]) for r in sorted(ranks)]
     return out
 
 def make_of(txt, marques):
