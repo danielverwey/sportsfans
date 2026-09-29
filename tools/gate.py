@@ -134,20 +134,21 @@ def misfits(r, P, where='', names=None):
     return out[:6]
 
 def what_changed(a, b, names=None, depth=0):
-    """The fields where two records of the same key differ, as 'field: old → new' (short), so a 'changed (review)' line can
-    be judged from the report alone. One level into lists of rows; at most six items."""
+    """The fields where two records of the same key differ, as 'field: old → new', so a 'changed (review)' line can be
+    judged from the report alone. Lists of equal length are compared item by item, three levels down; at most six items."""
     out = []; nm = lambda k: names[k] if names and isinstance(k, int) and k < len(names) else k
-    short = lambda v: (json.dumps(v, ensure_ascii=False) if not isinstance(v, (list, dict)) else f'{type(v).__name__}[{len(v)}]')[:40]
+    short = lambda v: (json.dumps(v, ensure_ascii=False) if not isinstance(v, (list, dict)) or len(json.dumps(v)) <= 48 else f'{type(v).__name__}[{len(v)}]')[:48]
     if isinstance(a, dict) and isinstance(b, dict):
         for k in sorted(set(a) | set(b), key=str):
             if a.get(k) == b.get(k): continue
-            if depth == 0 and isinstance(a.get(k), list) and isinstance(b.get(k), list) and len(a[k]) == len(b[k]):
-                inner = [f'{k}[{i}]·{d}' for i, (x, y) in enumerate(zip(a[k], b[k])) if x != y for d in what_changed(x, y, None, 1)]
-                out += inner or [f'{k}: {short(a.get(k))} → {short(b.get(k))}']
-            else: out.append(f'{k}: {short(a.get(k))} → {short(b.get(k))}')
+            inner = what_changed(a.get(k), b.get(k), None, depth + 1) if depth < 3 and type(a.get(k)) == type(b.get(k)) and isinstance(a.get(k), (list, dict)) else []
+            out += [f'{k}·{d}' for d in inner] or [f'{k}: {short(a.get(k))} → {short(b.get(k))}']
     elif isinstance(a, list) and isinstance(b, list):
-        if len(a) != len(b): out.append(f'{len(a)} → {len(b)} fields')
-        out += [f'{nm(i)}: {short(x)} → {short(y)}' for i, (x, y) in enumerate(zip(a, b)) if x != y]
+        if len(a) != len(b): out.append(f'{len(a)} → {len(b)} items')
+        for i, (x, y) in enumerate(zip(a, b)):
+            if x == y: continue
+            inner = what_changed(x, y, None, depth + 1) if depth < 3 and type(x) == type(y) and isinstance(x, (list, dict)) else []
+            out += [f'[{i}]·{d}' for d in inner] or [f'{nm(i)}: {short(x)} → {short(y)}']
     else: out.append(f'{short(a)} → {short(b)}')
     return out[:6]
 
