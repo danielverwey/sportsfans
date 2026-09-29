@@ -76,7 +76,10 @@ def recs_ufc(A, shard):
     F = A['boutFields']; i, iy = F.index('id'), F.index('y')
     return _keyed([(('event', e['id']), e['y'], e) for e in A['events']] + [(('bout', b[i]), b[iy], b) for b in A['bouts']])
 def recs_cricket(A, shard):
-    return _keyed([(('match', g['id']), g['y'], g) for g in A['games']])
+    out = [(('match', g['id']), g['y'], g) for g in A['games']]
+    for y in A.get('detailYears', []):   # the scorecards live in the yearly shards; a re-read that rewrites one must show here
+        for gid, card in (shard(f'data/cricket_details/{y}.json') or {}).items(): out.append((('scorecard', gid), y, card))
+    return _keyed(out)
 def recs_tennis(A, shard):
     ey = A['eFields'].index('y'); C = A['cFields']; ci, cc, cy = C.index('id'), C.index('c'), C.index('y')
     out = [(('edition', k), r[ey], r) for k, r in A['editions'].items()] + [(('title', r[ci], r[cc]), r[cy], r) for r in A['champions']]
@@ -130,6 +133,25 @@ def misfits(r, P, where='', names=None):
             for x in v[:60]: out += misfits(x, P['inner'][k], f'{where}{k}[]·')
     return out[:6]
 
+def what_changed(a, b, names=None, depth=0):
+    """The fields where two records of the same key differ, as 'field: old → new', so a 'changed (review)' line can be
+    judged from the report alone. Lists of equal length are compared item by item, three levels down; at most six items."""
+    out = []; nm = lambda k: names[k] if names and isinstance(k, int) and k < len(names) else k
+    short = lambda v: (json.dumps(v, ensure_ascii=False) if not isinstance(v, (list, dict)) or len(json.dumps(v)) <= 48 else f'{type(v).__name__}[{len(v)}]')[:48]
+    if isinstance(a, dict) and isinstance(b, dict):
+        for k in sorted(set(a) | set(b), key=str):
+            if a.get(k) == b.get(k): continue
+            inner = what_changed(a.get(k), b.get(k), None, depth + 1) if depth < 3 and type(a.get(k)) == type(b.get(k)) and isinstance(a.get(k), (list, dict)) else []
+            out += [f'{k}·{d}' for d in inner] or [f'{k}: {short(a.get(k))} → {short(b.get(k))}']
+    elif isinstance(a, list) and isinstance(b, list):
+        if len(a) != len(b): out.append(f'{len(a)} → {len(b)} items')
+        for i, (x, y) in enumerate(zip(a, b)):
+            if x == y: continue
+            inner = what_changed(x, y, None, depth + 1) if depth < 3 and type(x) == type(y) and isinstance(x, (list, dict)) else []
+            out += [f'[{i}]·{d}' for d in inner] or [f'{nm(i)}: {short(x)} → {short(y)}']
+    else: out.append(f'{short(a)} → {short(b)}')
+    return out[:6]
+
 def check_generic(sport, new, old):
     """Returns (failures, report lines)."""
     disk = lambda path: json.loads((ROOT/path).read_text(encoding='utf-8')) if (ROOT/path).exists() else None
@@ -148,7 +170,12 @@ def check_generic(sport, new, old):
                      f'  records {len(O):,} → {len(N):,}: {len(added):,} added · {len(gone):,} missing · {len(changed):,} changed']
     by = lambda ks, idx: {y: [k for k in ks if idx[k][0] == y] for y in sorted({idx[k][0] for k in ks}, reverse=True)}
     for y, ks in by(added, N).items(): rep.append(f'  {y}: +{len(ks)} added — {", ".join(label(k) for k in ks[:4])}{" …" if len(ks) > 4 else ""}')
-    for y, ks in by(changed, N).items(): rep.append(f'  {y}: {len(ks)} changed (review) — {", ".join(label(k) for k in ks[:4])}{" …" if len(ks) > 4 else ""}')
+    for y, ks in by(changed, N).items():
+        rep.append(f'  {y}: {len(ks)} changed (review) — {", ".join(label(k) for k in ks[:4])}{" …" if len(ks) > 4 else ""}')
+        for k in ks[:8]:
+            fields = {('ufc', 'bout'): new.get('boutFields'), ('tennis', 'edition'): new.get('eFields'), ('tennis', 'title'): new.get('cFields')}.get((sport, kind(k)))
+            rep.append(f'      {label(k)}: ' + '; '.join(what_changed(O[k][1], N[k][1], fields)))
+        if len(ks) > 8: rep.append(f'      … and {len(ks) - 8} more')
     for y, ks in by(gone, O).items():
         errs.append(f'{y}: {len(ks)} missing — {", ".join(label(k) for k in ks[:6])}{" …" if len(ks) > 6 else ""}')
     if snap(old) and snap(new) and snap(new) < snap(old): errs.append(f'snapshot went backwards: {snap(old)} → {snap(new)}')

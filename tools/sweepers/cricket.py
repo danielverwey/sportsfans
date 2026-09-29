@@ -56,7 +56,7 @@ def innings_of(inn, pid, bpo):
             conceded = off_bat + wd + nb
             if legal: bw[1] += 1; balls += 1; o_legal += 1
             bw[2] += conceded; bw[5] += wd; bw[6] += nb
-            if legal and off_bat == 0: bw[7] += 1
+            if legal and total == 0: bw[7] += 1   # a dot is a ball with no runs at all, as the archive counts it (byes and leg-byes are not dots)
             o_runs += total; o_bat += off_bat; o_conc += conceded
             for w in d.get('wickets', []) or []:
                 kind = w.get('kind', ''); out = pid(w['player_out']); row = batter(out); row[5] = kind

@@ -141,9 +141,21 @@ def infobox(soup):
         if th and td: out[clean(th).lower().rstrip(':')] = clean(td)
     return out
 
+def footnotes(soup):
+    """{cite_note id: text} for the page's explanatory footnotes (the {{efn}} notes a results table's Notes column points
+    to); source citations are left out."""
+    out = {}
+    for li in soup.find_all('li', id=re.compile(r'^cite_note')):
+        body = li.find(class_='reference-text') or li
+        for x in body.find_all(['sup', 'style', 'script']): x.decompose()   # a citation inside the note is not part of it
+        t = re.sub(r'\s+([.,;:)])', r'\1', re.sub(r'\s+', ' ', body.get_text(' ', strip=True))).strip()   # 'Championship .' → 'Championship.'
+        if t and not re.search(r'\bRetrieved\b|https?://|\bArchived\b', t): out[li['id']] = t
+    return out
+
 def bouts_of(soup, log, ename):
     """Every bout row of the article's results tables, in page order (the main event first), with its card heading."""
-    bouts = []; cards = []; card = None; ncards = 0
+    bouts = []; cards = []; card = None; ncards = 0; last_was_bout = False
+    notes_of = footnotes(soup)
     for t in soup.find_all('table'):
         cls = ' '.join(t.get('class', []))
         if 'infobox' in cls or 'navbox' in cls or 'sidebar' in cls: continue
@@ -152,14 +164,19 @@ def bouts_of(soup, log, ename):
         for tr in t.find_all('tr'):
             cells = tr.find_all(['th', 'td'], recursive=False)
             if not cells: continue
+            refs = [[a['href'][1:] for a in c.find_all('a', href=True) if a['href'].startswith('#cite_note')] for c in cells]   # before clean() drops the markers
             texts = [clean(c) for c in cells]
             if len(cells) == 1 or (len([x for x in texts if x]) == 1 and cells[0].get('colspan')):
                 head = next((x for x in texts if x), '')
+                # a bout's notes ("For the UFC Flyweight Championship.", "Catchweight bout.") are a full-width row under the bout:
+                # a sentence, not a heading — they belong to the bout above, and title and tournament flags are read from them
+                if bouts and last_was_bout and head and (head.endswith('.') or len(head) >= 60 or not any(w in head.lower() for w in CARD_WORDS)):
+                    bouts[-1]['notes'] = (bouts[-1]['notes'] + ' ' + head).strip(); continue
                 if head and len(head) < 60 and any(w in head.lower() for w in CARD_WORDS) and 'weight class' not in head.lower():
                     card = head; cards.append(card); ncards += 1
-                continue
+                last_was_bout = False; continue
             sep_i = next((i for i, x in enumerate(texts) if x.lower().rstrip('.') + '.' in SEP or x.lower() in SEP), None)
-            if sep_i is None or sep_i < 1 or len(texts) < sep_i + 4: continue
+            if sep_i is None or sep_i < 1 or len(texts) < sep_i + 4: last_was_bout = False; continue
             a_cell, b_cell = cells[sep_i - 1], cells[sep_i + 1]
             a, b = clean(a_cell), clean(b_cell)
             if not a or not b: continue
@@ -168,12 +185,15 @@ def bouts_of(soup, log, ename):
             rnd = texts[sep_i + 3] if len(texts) > sep_i + 3 else ''
             tm = texts[sep_i + 4] if len(texts) > sep_i + 4 else ''
             notes = ' '.join(x for x in texts[sep_i + 5:] if x) if len(texts) > sep_i + 5 else ''
+            foot = [notes_of[r] for rs in refs[sep_i + 5:] for r in rs if r in notes_of]   # a note given as a footnote marker in the Notes column
+            notes = ' '.join(dict.fromkeys(x for x in [notes] + foot if x))
             def fighter(cell, txt):
                 champ = bool(re.search(r'\((?:c|ic)\)', txt))
                 name = re.sub(r'\s*\((?:c|ic)\)', '', txt).strip()
                 return {'name': name, 'title': link_title(cell), 'champ': champ}
             bouts.append({'card': card or 'Card', 'wc': wc, 'a': fighter(a_cell, a), 'b': fighter(b_cell, b), 'sep': SEP.get(texts[sep_i].lower(), SEP.get(texts[sep_i].lower().rstrip('.') + '.', 'vs.')),
                           'method': method, 'round': int(rnd) if rnd.isdigit() else None, 'time': tm if re.fullmatch(r'\d{1,2}:\d{2}', tm) else (tm or None), 'notes': notes})
+            last_was_bout = True
     if not bouts: log.append(f'- {ename}: no results table read')
     return bouts
 
