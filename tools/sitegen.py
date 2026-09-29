@@ -51,7 +51,7 @@ footer{padding:30px 0 60px;color:var(--muted);font:11px var(--mono);letter-spaci
 .lic h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:22px;text-transform:uppercase;margin:28px 0 8px}.lic p{color:var(--muted);max-width:900px;margin:6px 0}.lic p b{color:var(--ink);font-weight:600}.lic .tag{display:inline-block;font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);border-radius:4px;padding:2px 7px;margin-left:8px;color:var(--accent)}
 '''
 
-SPORTS = {'f1': ('F1', 'Formula 1'), 'rugby': ('Rugby', 'Rugby union'), 'cricket': ('Cricket', 'Cricket'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'motogp': ('MotoGP', 'MotoGP'), 'sbk': ('WorldSBK', 'World Superbike'), 'ufc': ('UFC', 'UFC bouts')}
+SPORTS = {'cricket': ('Cricket', 'Cricket'), 'f1': ('F1', 'Formula 1'), 'motogp': ('MotoGP', 'MotoGP'), 'rugby': ('Rugby', 'Rugby union'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'ufc': ('UFC', 'UFC bouts'), 'sbk': ('WorldSBK', 'World Superbike')}  # alphabetical by the label shown in the navigation
 
 CONTACT = 'sportsfans.co.za@gmail.com'
 NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. Contribute — a correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '">' + CONTACT + '</a>.'
