@@ -108,7 +108,7 @@ def page(*, site, sport, depth, title, desc, crumbs, body, path, v, extra_head='
 <p class="crumbs">{cr}</p>
 {body}
 </main>
-<footer><span>APEX / {E(sport_name)} · sportsfans.co.za · figures as recorded in the archive{f', sources inside <a href="{rel}{sport}/">the atlas</a>' if sport else ''} · <a href="{rel}licences/">sources and licences</a></span><span>{f'<a href="{rel}{sport}/reading/">Reading edition</a> · ' if sport else ''}<a href="{rel}downloads/">Offline editions</a></span><span class="notice">{NOTICE}</span></footer>
+<footer><span>APEX / {E(sport_name)} · sportsfans.co.za · figures as recorded in the archive{f', sources inside <a href="{rel}{sport}/">the atlas</a>' if sport else ''} · <a href="{rel}licences/">sources and licences</a></span><span>{f'<a href="{rel}{sport}/reading/">Reading edition</a>' if sport else ''}</span><span class="notice">{NOTICE}</span></footer>
 </div>
 </body>
 </html>'''
@@ -538,7 +538,7 @@ def gen_licences(*, site, v, published, held):
 <p>Each atlas is extended by a small reader that runs on a schedule in the site’s public repository. It reads only the source already credited above for that atlas — Jolpica for Formula 1; the English Wikipedia articles through the MediaWiki API for MotoGP, World Superbike, UFC, the Isle of Man TT and the Dakar Rally; Cricsheet for cricket; Jeff Sackmann’s repositories for tennis; and, once permission is given, the data file Nuck’s Rugby Archive publishes for its own pages. Each run makes a handful of requests, pauses between them and names this site in its user agent. Before it writes anything, a reader must reproduce what the archive already holds from that source; results before the current season are never rewritten. Anything a reader adds carries the same licence as the rest of that data file.</p>
 
 <h3>The data files</h3>
-<p>Each atlas serves its archive as one JSON file, under the licence stated above: {' · '.join(f'<a class="q" href="{rel}data/{k}.json">{k}.json</a>' for k in SPORTS if k in (published or []))}. The offline editions on the <a class="q" href="{rel}downloads/">downloads page</a> carry the same data embedded.</p>
+<p>Each atlas serves its archive as one JSON file, under the licence stated above: {' · '.join(f'<a class="q" href="{rel}data/{k}.json">{k}.json</a>' for k in SPORTS if k in (published or []))}.</p>
 
 <h3>Trademarks</h3>
 <p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Dakar, Dakar Rally, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>

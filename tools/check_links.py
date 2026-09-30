@@ -5,7 +5,6 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent; DOCS = ROOT/'docs'
 href = re.compile(r'''(?:href|src)=["']([^"'#?]+)(?:[?#][^"']*)?["']''')
 bad = []; n = 0; checked = 0
 for f in DOCS.rglob('*.html'):
-    if f.parent.name == 'downloads' and f.name != 'index.html': continue  # the self-contained editions carry their scripts inline
     n += 1; txt = f.read_text(encoding='utf-8', errors='replace')
     for m in href.finditer(txt):
         u = m.group(1)

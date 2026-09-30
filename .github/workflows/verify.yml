@@ -1,5 +1,5 @@
 name: Verify in a browser
-# Weekly (Monday 12:37 UTC, after the sweeps) and on demand: serves docs/ and drives every atlas headless (all seasons × tabs × eras, phone width, deep links, offline editions).
+# Weekly (Monday 12:37 UTC, after the sweeps) and on demand: serves docs/ and drives every atlas headless (all seasons × tabs × eras, phone width, deep links).
 on:
   schedule: [{ cron: '37 12 * * 1' }]   # Monday afternoon UTC, after the morning's sweeps
   workflow_dispatch:
@@ -12,6 +12,6 @@ jobs:
         with: { python-version: '3.12' }
       - uses: actions/setup-node@v5
         with: { node-version: '22' }
-      - run: python build.py   # docs/data and docs/downloads are not committed
+      - run: python build.py   # docs/data is not committed
       - run: npm install playwright@1.47 && npx playwright install --with-deps chromium
       - run: node tools/check_site.js
