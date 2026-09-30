@@ -339,6 +339,19 @@ if __name__ == '__main__':
         K = json.loads((DATA/'dakar.json').read_text(encoding='utf-8')); c = K['coverage']; hub = hub.replace('__DAKAR_EDITIONS__', f'{c["held"]}').replace('__DAKAR_PODIUMS__', f'{c["podiums"]:,}').replace('__DAKAR_CLASSES__', f'{c["categories"]}')
     if 'olympics' in PUBLISH:
         K = json.loads((DATA/'olympics.json').read_text(encoding='utf-8')); c = K['coverage']; hub = hub.replace('__OLYMPICS_GAMES__', f'{c["held"]}').replace('__OLYMPICS_EVENTS__', f'{c["events"]:,}').replace('__OLYMPICS_MEDALS__', f'{c["awards"]:,}').replace('__OLYMPICS_MEDALLISTS__', f'{c["medallists"]:,}')
+    # every card's figures come from its archive, so a sweep can never leave the landing page behind
+    def facts(page, key, fn):
+        if key in PUBLISH:
+            for ph, v in fn(json.loads((DATA/f'{key}.json').read_text(encoding='utf-8'))).items(): page = page.replace(ph, f'{v:,}' if isinstance(v, int) else str(v))
+        return page
+    hub = facts(hub, 'cricket', lambda C: {'__CRICKET_MATCHES__': len(C['games']), '__CRICKET_CARDS__': C['coverage'].get('detailed', 0), '__CRICKET_PLAYERS__': len(C['players'])})
+    hub = facts(hub, 'f1', lambda F: {'__F1_RACES__': sum(1 for s in F['seasons'] for r in s['races'] if r['rows']), '__F1_RESULTS__': sum(len(r['rows']) for s in F['seasons'] for r in s['races']), '__F1_DRIVERS__': len(F['drivers'])})
+    hub = facts(hub, 'tt', lambda T: {'__TT_RACES__': len(T['races']), '__TT_YEARS__': len({r['y'] for r in T['races']}), '__TT_RIDERS__': len(T['riders'])})
+    hub = facts(hub, 'motogp', lambda G: {'__MOTOGP_RACES__': sum(1 for r in G['races'] if r.get('type') != 'SPR'), '__MOTOGP_RESULTS__': sum(len(r.get('results') or []) for r in G['races']), '__MOTOGP_RIDERS__': len(G['riders'])})
+    hub = facts(hub, 'sbk', lambda G: {'__SBK_RACES__': len(G['races']), '__SBK_RESULTS__': sum(len(r.get('results') or []) for r in G['races']), '__SBK_RIDERS__': len(G['riders'])})
+    hub = facts(hub, 'tennis', lambda T: {'__TENNIS_MATCHES__': T['coverage']['matches'], '__TENNIS_TITLES__': len(T['champions']), '__TENNIS_PLAYERS__': len(T['players'])})
+    if 'rugby' in PUBLISH:
+        R = json.loads((DATA/'rugby.json').read_text(encoding='utf-8')); hub = hub.replace('__RUGBY_TESTS__', f'{len(R["matches"]):,}').replace('__RUGBY_PLAYERS__', f'{len(R["players"]):,}').replace('__RUGBY_SHEETS__', f'{(R.get("harvest") or {}).get("sheetsAny", 0):,}')
     if 'ufc' in PUBLISH:
         U = json.loads((DATA/'ufc.json').read_text(encoding='utf-8')); hub = hub.replace('__UFC_EVENTS__', f'{len(U["events"]):,}').replace('__UFC_BOUTS__', f'{len(U["bouts"]):,}').replace('__UFC_FIGHTERS__', f'{len(U["fighters"]):,}')
     for key, why in HELD.items():  # a held card is not a link and says why
