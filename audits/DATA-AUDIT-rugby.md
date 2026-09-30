@@ -1,11 +1,11 @@
 # Data audit — Ten Nations rugby atlas
 
-Archive as of 2026-09-23, results through 2026-09-12. Checks compare the embedded data against itself plus scoring-value arithmetic and well-known facts. Nothing was changed.
+Archive as of 2026-09-30, results through 2026-09-27. Checks compare the embedded data against itself plus scoring-value arithmetic and well-known facts. Nothing was changed.
 
 ## Inventory
 
-- 3,960 matches · 484 player snapshots · 217 coach profiles · 10 perspectives
-- 718 matches carry a scoring breakdown; 38 pre-1885 fixtures are scored in goals; 21 legacy fixtures; 72 dates flagged uncertain
+- 3,961 matches · 20539 player snapshots · 217 coach profiles · 10 perspectives
+- 2837 matches carry a scoring breakdown; 38 pre-1885 fixtures are scored in goals; 21 legacy fixtures; 72 dates flagged uncertain
 - World Cup matches by tournament: 1987: 29, 1991: 28, 1995: 30, 1999: 35, 2003: 40, 2007: 40, 2011: 40, 2015: 40, 2019: 38, 2023: 40
 
 ## Consistency checks
@@ -35,7 +35,7 @@ Archive as of 2026-09-23, results through 2026-09-12. Checks compare the embedde
 | complete history ≠ caps | ✅ none |
 | player span reversed | ✅ none |
 
-Scoring breakdowns reconcile with the final score under the scoring values of the day (try 3/4/5 by era, conversion 2, penalty 3, drop 4 then 3, penalty try 7 from 2017) in 718 of 718 matches that carry one.
+Scoring breakdowns reconcile with the final score under the scoring values of the day (try 3/4/5 by era, conversion 2, penalty 3, drop 4 then 3, penalty try 7 from 2017) in 2837 of 2837 matches that carry one.
 
 ## World Cup finals in the archive
 
