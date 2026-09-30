@@ -1,6 +1,6 @@
 import json,collections,datetime
 import pathlib as _pl; ROOT=_pl.Path(__file__).resolve().parent.parent
-d=json.load(open(ROOT/'data'/'rugby.json',encoding='utf-8'));TEN=[t['name'] for t in d['teams']];M=d['matches'];iss=collections.defaultdict(list)
+d=json.load(open(ROOT/'data'/'rugby.json',encoding='utf-8'));TEN=[t['name'] for t in d['teams']];M=d['matches'];SIDES={s for m in M for s in (m['home'],m['away'])};iss=collections.defaultdict(list)
 n=lambda k,m:iss[k].append(m)
 ids=[m['id'] for m in M]
 if ids!=list(range(len(M))):n('match ids not 0..N-1','')
@@ -11,7 +11,7 @@ for m in M:
   except: n('bad date',m['sourceId'])
   if m['year']!=int(m['date'][:4]):n('year ≠ date',m['sourceId'])
   if not set(m['eligible'])<=set(TEN):n('eligible outside the ten',m['sourceId'])
-  if not any(x in m['eligible'] for x in (m['home'],m['away'])):n('eligible names neither side',m['sourceId'])
+  if m['eligible'] and not any(x in m['eligible'] for x in (m['home'],m['away'])):n('eligible names neither side',m.get('sourceId'))
   for e in m['eligible']:
     if e not in (m['home'],m['away']):n('eligible nation not playing',m['sourceId'])
   if m.get('scoring'):
@@ -51,8 +51,9 @@ for c in d['coaches']:
   if lr and c.get('reported') and c.get('reconciles') and (lr['w'],lr['l'],lr['d'])!=(c['reported']['w'],c['reported']['l'],c['reported']['d']):n('reconciles flag but records differ',c['id'])
 # players
 for p in d['players']:
-  if p['team'] not in TEN:n('player team outside ten',p['id'])
-  h=p.get('history') or []
+  if p['team'] not in SIDES:n('player team not in any match',p['id'])
+  HF=d.get('historyFields') or ['match','position','scoring','tries','shirt','bench']
+  h=[dict(zip(HF,x)) if isinstance(x,list) else x for x in (p.get('history') or [])]
   if h and p.get('complete') and len(h)!=p['caps']:n('complete history ≠ caps',p['id'])
   for x in h:
     i=x.get('match')

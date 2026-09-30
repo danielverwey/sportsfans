@@ -148,3 +148,10 @@ Nothing is updated by hand any more. Each atlas has a *Sweep · <atlas>* workflo
 - [ ] Register names Daniel's prototype expanded that look doubtful (e.g. MS Gony shown as Manpreet Singh Grewal) are carried as they are; a review pass is worth doing
 - [ ] Canada's and East Africa's 1970s World Cup matches are not in the results list, so those players are known only by their published careers
 - [x] Offline editions withdrawn (30 September 2026): `docs/downloads/` is no longer built, the downloads page and every link to it are gone (hub, atlas footers, static-page footers, licences page). The build still writes the single-file editions to `HTML FILEs/` locally as its embedding check
+
+## 12. Rugby: the register, the team sheets, the scorers (30 September 2026)
+
+- [x] Daniel's consolidated harvest merged (`tools/merge_rugby_harvest.py`, batch open-harvest-021): 20,539 players across 28 sides (from 484), the published caps, tries and points of the national lists, 102,812 history rows from 2,321 team sheets and 3,008 sets of named scorers, 2,119 new scoring breakdowns that reconcile to the score (2,837 in all), dates of birth and death from Wikidata for 12,048 people, ten reviewed match corrections (six dates, one score orientation, the 2016 Americas Rugby Championship side as Argentina XV) and one more from the same batch, each listed with its evidence
+- [x] The ode unchanged in function and look: the same tabs, views and theme; team sheets fill the match view's line-up towers (shirt order, bench marked), full names, register numbers and dates on the player page, the register searchable, the sources panel and licences page say where each part comes from
+- [ ] 2,515 names printed in match sources are still unlinked to a register entry (kept as printed, marked for review); 3,361 team sheets are still missing; 35 scoring breakdowns do not reconcile and were not added
+- [ ] Rights: the harvest's own status is "mixed sources, not wholesale cleared" — Wikipedia parts CC BY-SA, Wikidata CC0, the unions' match records cross-checks only with no licence stated; the inherited match compilations still await permission

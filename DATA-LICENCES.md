@@ -8,10 +8,13 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 |---|---|---|---|---|
 | Formula 1 | [F1DB](https://github.com/f1db/f1db) | CC BY 4.0 | circuit outlines, track specifications, supplementary fastest laps | `data/f1.json`: **CC BY-NC-SA 4.0** (attribute F1DB and Jolpica; non-commercial; share alike) |
 | Formula 1 | [Jolpica F1](https://github.com/jolpica/jolpica-f1) | CC BY-NC-SA 4.0; API free for non-commercial use | results, sprints, standings | " |
-| Rugby | [Nuck's Rugby Archive](https://rugbyarchive.github.io/about.html) | no licence stated (hobby archive) | the ten nations' match archive | `data/rugby.json`: no licence granted for reuse; facts are free, compilations credited; permission being sought |
+| Rugby | [Nuck's Rugby Archive](https://rugbyarchive.github.io/about.html) | no licence stated (hobby archive) | the ten nations' match archive | `data/rugby.json` is mixed: the match compilation carries no licence for reuse (facts are free, compilations credited; permission being sought); see the Wikipedia and Wikidata rows for the register, team sheets, scorers and dates |
 | Rugby | [Springbok Rugby History](https://bokhist.com/) | no licence stated | Springbok record, player histories, squads | " |
 | Rugby | [Pick & Go](https://www.lassen.co.nz/pickandgo.php) | © www.pickandgo.nz, no terms | cross-check only | — |
-| Rugby | Wikipedia | CC BY-SA 4.0 | coaching lists | — |
+| Rugby | Wikipedia | CC BY-SA 4.0 | coaching lists; the national player registers of every side in the archive; team sheets and named scorers from match, tour and championship articles (English, French and German editions) | `data/rugby.json`: these parts CC BY-SA 4.0, attribute Wikipedia contributors, share alike |
+| Rugby | Wikidata | CC0 1.0 | dates of birth and death, linked by exact Wikipedia sitelink | — |
+| Rugby | National unions and World Rugby (UAR, JRFU, IRFU, FIR, SA Rugby, Scottish Rugby, Six Nations; World Rugby hall of fame) | no licence stated | factual cross-checks only: a date, a score, a starting fifteen, two identities | — |
+| Rugby | RugbyScope v1.2.0 (Labatut and O'Sullivan) | CC BY 4.0 | identity cross-checks for early players printed by initials | — |
 | MotoGP, WorldSBK, Isle of Man TT | Wikipedia (English season articles; the German list of TT winners) | CC BY-SA 4.0 | every result, calendar and published standing; every TT winner and classification | `data/motogp.json`, `data/sbk.json`, `data/tt.json`: CC BY-SA 4.0; attribute; share alike |
 | MotoGP, WorldSBK | Wikidata | CC0 1.0 | circuit coordinates and countries | — |
 | MotoGP, WorldSBK, Isle of Man TT | OpenStreetMap | ODbL 1.0 | circuit outlines; the Mountain Course and its named places | ODbL |

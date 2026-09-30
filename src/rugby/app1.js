@@ -43,8 +43,10 @@ for(const g of Object.values(GROUNDS)){const best=o=>Object.entries(o).sort((a,b
 const groundName=id=>GROUNDS[id]?.name||(id.startsWith('ground-not-recorded')?'Ground not recorded':id);
 
 /* ---------- players and coaches, linked to archive ids ---------- */
-const perspIdx={};for(const t of TEN_NAMES)perspIdx[t]=MATCHES.filter(m=>m.eligible.includes(t)).map(m=>m.id);
-const PLAYERS=A.players.map(p=>({...p,games:p.history.map(h=>({...h,mid:perspIdx[p.team]?.[h.match]??null})).filter(h=>h.mid!=null)}));
+const perspIdx={};for(const t of new Set(MATCHES.flatMap(m=>[m.home,m.away])))perspIdx[t]=MATCHES.filter(m=>plays(m,t)).map(m=>m.id);
+const HF=A.historyFields||['match','position','scoring','tries','shirt','bench'];const unpackH=r=>Array.isArray(r)?Object.fromEntries(HF.map((k,i)=>[k,r[i]])):r;
+const PLAYERS=A.players.map(p=>({...p,games:p.history.map(unpackH).map(h=>{const mid=perspIdx[p.team]?.[h.match]??null;const m=mid!=null?byId[mid]:null;return {...h,mid,date:h.date||m?.date,opponent:h.opponent||(m?(m.home===p.team?m.away:m.home):'')};}).filter(h=>h.mid!=null)}));
+const fullNameOf=p=>{if(!p.fullName||p.fullName===p.name)return '';const parts=p.name.split(' ');const sur=parts.slice(1).join(' ');if(p.fullName===parts[0])return '';return sur&&p.fullName.endsWith(sur)?p.fullName:p.fullName+(sur?' '+sur:'');};
 const playerBy=Object.fromEntries(PLAYERS.map(p=>[p.id,p]));
 const COACHES=A.coaches.map(c=>({...c,matches:c.matchIds.map(i=>byId[i]).filter(Boolean)}));
 const coachBy=Object.fromEntries(COACHES.map(c=>[c.id,c]));

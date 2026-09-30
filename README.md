@@ -9,7 +9,7 @@ Nine sporting archives, each drawn as an ode in one shared visual language — t
 | Formula 1 | 1950–2026 · 1,163 Grands Prix · 26,181 results | `/f1/` |
 | Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` |
-| Rugby union · ten nations | 1871–2026 · 3,960 Test matches | `/rugby/` |
+| Rugby union · ten nations | 1871–2026 · 3,960 Test matches · 20,539 players · 2,321 team sheets | `/rugby/` |
 | Tennis · the tour | 1877–2026 · 11,043 titles · 388,665 matches | `/tennis/` |
 | UFC bouts | 1993–2026 · 791 events · 8,917 bouts | `/ufc/` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` |
@@ -117,6 +117,17 @@ python tools/audit_cricket.py
 
 It never overwrites a result, a date, a ground or a Cricsheet scorecard; it gives a scorecard only to a match that has none, fills the toss and last day only where they were blank, links every scorecard player to the register (the harvest's own link, then the Cricinfo id, then name, side and career years, then surname with the same initial or given name — two register entries that are one player are joined, and a career list attached to the wrong namesake moves to the one the scorecards show), recomputes the player-season figures of every season it touches, and prints what it did. The audit then checks the whole archive against itself and against known facts (Bradman 6,996 runs at 99.94, the three ten-wicket innings, 952/6 and 26 all out). The historical cards carry nulls where their source recorded nothing (balls faced before the 1970s, the bowler credited with a catch), so `tools/gate.py cricket` flags them as a new shape the first time; that is expected for this one merge.
 
+### Rugby: bringing in a harvest
+
+The player register, team sheets and scorers come from Daniel's consolidated harvest (`rugby_harvest_consolidated_<batch>.json`, the Wikipedia national player lists and match articles, Wikidata, and factual cross-checks against the unions' own match records). A new batch goes in with
+
+```
+python tools/merge_rugby_harvest.py build/harvest/rugby_harvest_consolidated_021.json
+python tools/audit_rugby.py
+```
+
+It keeps the archive's own shape: the 484 original profiles keep their ids and figures and gain the harvest's histories; every other register entry is added with the caps, tries and points its national list gives and a history built from the team sheets and scorers, linked to the atlas's match ids by the perspective index the existing histories use (`historyFields` names the packed columns). A Test gains a scoring breakdown only where the named scorers reconcile to the recorded score under the values of the day. Names printed in a match source that no register entry could be linked to are kept as printed and marked for review. The only changes to existing records are the harvest's reviewed corrections, each listed in `harvestCorrections` with its evidence.
+
 ### Search engines
 
 Every page carries a title, description, canonical link, share card (`og:image` from `src/hub/share/`, rendered once by `node tools/share_images.js` after a build) and JSON-LD: breadcrumbs everywhere, a typed entity on career, venue and team pages, one `Dataset` per data file on the licences page. Career pages with fewer than three appearances and nothing of note are built and linked but marked `noindex,follow` and kept out of the sitemap (the threshold lives in each generator's `noindex=` argument in `tools/sitegen.py`). Directory indexes over 1,500 entries split into a page per surname initial. The sitemap index has one file per atlas with `lastmod` taken from the archive's snapshot date.
@@ -142,7 +153,7 @@ The site is non-commercial for good and uses no logos; every source and the lice
 ## Data
 
 - **F1** — results, standings, circuit layouts and car eras; sources listed inside the atlas.
-- **Rugby** — ten nations' Test archives, careers and coaching records; recognition scope and coverage notes inside the atlas.
+- **Rugby** — ten nations' Test archives and coaching records (Nuck's Rugby Archive, Springbok Rugby History, credited); the national player registers of every side in the archive, team sheets and named scorers (Wikipedia, CC BY-SA 4.0), dates from Wikidata (CC0); recognition scope and coverage notes inside the atlas. `tools/merge_rugby_harvest.py` brings a consolidated harvest in.
 - **Cricket** — every men's and women's international from 1877 with its scorecard: ball by ball from Cricsheet (ODC-By) from the 2000s (innings worms), historical scorecards before that (Hugging Face datasets and Cricbuzz, no licence stated, credited); batting and bowling figures, line-ups and player-season totals are added up from the cards; full names and the published career of every Test and ODI player from Wikipedia's national player lists (CC BY-SA). `tools/merge_cricket_harvest.py` brings a new harvest in (see below).
 - **Tennis** — every tour-level ATP and WTA match from 1968 (Jeff Sackmann, CC BY-NC-SA 4.0) with seedings, rankings, durations and serve statistics; Wimbledon's roll of honour from 1877.
 - **MotoGP / WorldSBK** — rebuilt in September 2026 entirely from Wikipedia's season articles (CC BY-SA 4.0): results, calendars and published standings; circuit outlines from OpenStreetMap, or the F1DB survey at shared venues. `tools/prepare_bikes.py` brings a new export in; `tools/osm_outlines.py` (the *Circuit outlines* workflow) fetches the missing outlines.
