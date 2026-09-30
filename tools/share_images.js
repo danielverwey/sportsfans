@@ -25,7 +25,7 @@ h1{position:absolute;left:60px;top:196px;margin:0;font:900 120px/.9 "Barlow Cond
 .hubgrid > div{position:relative;overflow:hidden;height:115px}`;
 const cardHtml = c => `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>${CSS}</style></head><body style="--sc:${c.colour}">
 <div class="brand">APEX <i>/</i></div><div class="strap">sportsfans.co.za · sports atlases from open data</div><div class="tag">${c.span}</div>
-<div class="eyebrow">${c.eyebrow}</div><h1>${c.name}</h1><div class="site">The whole record, drawn to be explored</div>
+<div class="eyebrow">${c.eyebrow}</div><h1${c.name.length > 14 ? ' style="font-size:100px"' : ''}>${c.name}</h1><div class="site">The whole record, drawn to be explored</div>
 <div class="river">${c.svg}</div></body></html>`;
 const hubHtml = () => `<!doctype html><html><head><meta charset="utf-8">${FONTS}<style>${CSS}</style></head><body style="--sc:#FF8000">
 <div class="brand">APEX <i>/</i> Sportsfans</div><div class="strap">sportsfans.co.za · sports atlases drawn from open data</div>

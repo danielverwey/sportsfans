@@ -46,6 +46,13 @@ Trademarks: every championship, team, event, venue and manufacturer name is the 
 - Derived in `tools/prepare_ufc.py` from the transcribed rows alone: the division key from the weight-class label, the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21, July 1999), each fighter's record from the bouts in the archive.
 - The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike. No logos, marks or official artwork; the promotion's names identify the events and nothing on the site is affiliated with it.
 
+## Summer Olympics (`data/olympics.json`)
+
+- **Wikipedia** — the "List of <year> Summer Olympics medal winners" article for each of the 30 Games held, at the recorded revisions (retrieved 29 September 2026), reconciled against each "<year> Summer Olympics medal table" article: every medal event with its sport and category, and the gold, silver and bronze awards with the delegation and the athletes the list names. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Transcribed by Daniel's prototype page; `tools/prepare_olympics.py` reads it. The sweeper reads the next Games' list the same way and writes it only when its medal table reconciles.
+- **Natural Earth** — the 1:110m land silhouette behind the host maps (public domain), projected and rounded by the prototype. Host cities are placed at approximate coordinates; venues are not drawn.
+- Nothing is taken from the IOC's own site, results service or artwork. No Olympic rings, emblems, pictograms, mascots or official typography appear anywhere; medals are drawn as plain coloured discs of the site's own palette. Art competitions, demonstration events and the 1906 Intercalated Games are outside the archive; the cancelled 1916, 1940 and 1944 Games are listed as gaps.
+- The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. The words Olympic, Olympics and Olympic Games identify the event; nothing on the site is affiliated with, endorsed by or connected to the International Olympic Committee or any national committee.
+
 ## Dakar Rally (`data/dakar.json`)
 
 - **Wikipedia** — the "Dakar Rally" article at revision 1377153751 (retrieved 29 September 2026): every edition's route as the article names it, its era, and the first three of every class with the crew and the make. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Transcribed by Daniel's prototype page; `tools/prepare_dakar.py` reads it.

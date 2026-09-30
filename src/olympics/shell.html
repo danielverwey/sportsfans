@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+__ICON__
+<title>APEX / An Ode to the Games · Summer Olympics · 1896–2024</title>
+<meta name="description" content="Every medal of every Summer Games since Athens 1896 drawn as a river of national colours, every host city placed on the map, every Games opened to its medal table and every event to its podium: 30 Games, 5,766 events, 17,825 medals, 27,685 medallists, from open sources.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,700;1,800;1,900&family=Barlow:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<a class="skip" href="#stage">Skip to the data</a>
+
+<div id="lights" role="dialog" aria-label="The flame">
+  <svg class="ko" viewBox="0 0 600 360" aria-hidden="true"><path class="stem" d="M300 330 L300 250" stroke="#2e333d" stroke-width="10" stroke-linecap="round"/><path class="foot" d="M240 332 L360 332" stroke="#2e333d" stroke-width="8" stroke-linecap="round"/><path class="bowl" d="M228 236 C232 268 260 284 300 284 C340 284 368 268 372 236 Z" fill="#0e1014" stroke="#f2c666" stroke-width="3" stroke-linejoin="round"/><g class="flame"><path class="f1" d="M300 236 C264 206 270 170 296 150 C304 176 322 176 316 146 C338 168 344 210 300 236 Z" fill="#f2c666"/><path class="f2" d="M300 232 C282 214 286 190 298 176 C302 190 312 190 309 174 C322 190 322 216 300 232 Z" fill="#fff1b8"/></g><g class="sparks"><circle cx="286" cy="150" r="2.4" fill="#f2c666"/><circle cx="318" cy="132" r="2" fill="#f2c666"/><circle cx="302" cy="112" r="1.6" fill="#fff1b8"/></g><text class="cnt" x="300" y="80" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="12" letter-spacing="3" fill="#8b9099">SUMMER OLYMPICS · 1896–2024</text></svg>
+  <div class="cap">The cauldron is lit · then the whole record</div>
+  <button type="button" id="skipLights">Skip ⏎</button>
+</div>
+
+<div class="wrap" id="top">
+<header class="mast">
+  <div class="brand">APEX <i>/</i> <small>An ode to the Games · Summer Olympics · 1896–2024</small></div>
+  <div class="ctl">
+    <div class="field"><label for="family">Sport</label><select id="family"></select></div>
+    <div class="field"><label for="catSelect">Events</label><select id="catSelect"><option value="all">All events</option><option value="Men">Men’s</option><option value="Women">Women’s</option><option value="Mixed">Mixed</option><option value="Open">Open</option></select></div>
+    <div class="field"><label for="eraSelect">Era lens</label><select id="eraSelect"></select></div>
+    <div class="field"><label for="season">Games</label><select id="season"></select></div>
+    <div class="field"><label for="theme">Colours</label><select id="theme"><option value="champion">Nation of the Games</option></select></div>
+  </div>
+</header>
+
+<main id="main">
+
+<section id="river" aria-labelledby="riverH">
+  <div class="river-title">
+    <div>
+      <p class="eyebrow">I · The River</p>
+      <h1 id="riverH">Thirty <span>Games</span> in the colours of their medallists</h1>
+    </div>
+    <div>
+      <p class="river-lede">Every gold medal of every Summer Games, flowing left to right in the colours of the delegations that won them — Athens in 1896, Paris three times, the Soviet Union’s forty years, the gaps of two world wars. The river thickens as the programme grows from 43 events to 329. <b>Hover a Games</b> to read it; <b>click</b> to step into it. Pick a sport above, or a category of event.</p>
+      <div class="edition" id="edition"></div>
+      <div class="river-metric" id="riverMetric" role="group" aria-label="What the river counts"><button type="button" data-metric="gold" aria-pressed="true">Gold medals</button><button type="button" data-metric="total" aria-pressed="false">All medals</button></div>
+      <a class="explore" href="#stage" onclick="document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});return false">Explore the data ↓</a>
+    </div>
+  </div>
+  <div class="river-stage" id="riverStage"><svg id="riverSvg" role="img" aria-label="Share of the Games’ medals by delegation, Games by Games"></svg><div class="river-tip" id="riverTip"></div></div>
+  <div class="river-axis" id="riverAxis"></div>
+  <div class="river-legend" id="riverLegend" aria-label="Highlight a delegation"></div>
+</section>
+
+<section id="stage" aria-labelledby="stageH">
+  <div class="stagebar">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div id="stageStatus" class="small muted mono" role="button" tabindex="0" title="Jump to the Games timeline"></div>
+  </div>
+  <div class="sect-head" style="margin-top:30px">
+    <div>
+      <p class="eyebrow">II · The Stage</p>
+      <h2 id="stageH">Games, event, athlete, nation</h2>
+    </div>
+  </div>
+  <div class="era-strip" id="eraStrip" role="group" aria-label="Era lens — one segment per era, widths in proportion to years"></div><div class="era-caption" id="eraCaption"></div>
+  <div class="era-text" id="eraContext"></div>
+  <div class="season-nav" id="seasonNav" aria-label="Games timeline"></div>
+  <div id="view" aria-live="polite"></div>
+</section>
+
+<section id="grid" aria-labelledby="gridH">
+  <div class="sect-head">
+    <div>
+      <p class="eyebrow">III · The Hosts</p>
+      <h2 id="gridH">Every Games, on the map</h2>
+      <p id="gridLede"></p>
+    </div>
+    <div class="tools">
+      <input type="search" id="gridFind" placeholder="Find a city, a country, a year or a nation" aria-label="Find a Games">
+      <select id="gridSort" aria-label="Sort the Games"><option value="year">Newest first</option><option value="oldest">Oldest first</option><option value="city">By host city</option><option value="leader">By the nation on top</option><option value="size">By size of programme</option></select>
+    </div>
+  </div>
+  <div class="worldmap" id="worldMap"></div>
+  <div class="circuits hosts" id="circuits"></div>
+</section>
+
+<details id="sourcesBox">
+  <summary>Sources, coverage &amp; calculations</summary>
+  <div id="sourcesBody"></div>
+</details>
+
+<details id="reading" open>
+  <summary>
+    <div><p class="eyebrow">IV · The Reading Edition</p><h2>Every Games, on the page</h2><p class="muted" style="margin:8px 0 0;max-width:640px">Every Summer Games as plain reading matter: the host, the dates, the medal table, and the gold, silver and bronze of every event. This is what you get with scripts off, in print, or in a preview that blocks interactive pages.</p></div>
+    <span class="btn">Open / close</span>
+  </summary>
+  <div class="previewnotice">Interactive exploration is available when scripts are enabled. This edition is fully readable without them.</div>
+__STATIC__
+</details>
+
+</main>
+__FOOTER__
+</div>
+
+<script id="archive-data" type="application/json">__DATA__</script>
+<script>
+__APP__
+</script>
+</body>
+</html>
