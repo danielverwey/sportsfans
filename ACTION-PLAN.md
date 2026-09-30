@@ -147,3 +147,4 @@ Nothing is updated by hand any more. Each atlas has a *Sweep · <atlas>* workflo
 - [x] Licences page, DATA-LICENCES.md and data/LICENCE.txt: the Hugging Face datasets and Cricbuzz credited as "no licence stated" (Daniel's decision, 30 September), Wikipedia lists CC BY-SA, Wikidata CC0, CricketWeb cross-check only
 - [ ] Register names Daniel's prototype expanded that look doubtful (e.g. MS Gony shown as Manpreet Singh Grewal) are carried as they are; a review pass is worth doing
 - [ ] Canada's and East Africa's 1970s World Cup matches are not in the results list, so those players are known only by their published careers
+- [x] Offline editions withdrawn (30 September 2026): `docs/downloads/` is no longer built, the downloads page and every link to it are gone (hub, atlas footers, static-page footers, licences page). The build still writes the single-file editions to `HTML FILEs/` locally as its embedding check
