@@ -1,6 +1,6 @@
 # APEX / Sports atlases · sportsfans.co.za
 
-Nine sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
+Ten sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
 
 | Atlas | Span | Live path |
 |---|---|---|
@@ -10,6 +10,7 @@ Nine sporting archives, each drawn as an ode in one shared visual language — t
 | Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` |
 | Rugby union · ten nations | 1871–2026 · 3,960 Test matches · 20,539 players · 2,321 team sheets | `/rugby/` |
+| Summer Olympics | 1896–2024 · 30 Games · 5,766 medal events · 17,825 medals · 27,685 medallists | `/olympics/` |
 | Tennis · the tour | 1877–2026 · 11,043 titles · 388,665 matches | `/tennis/` |
 | UFC bouts | 1993–2026 · 791 events · 8,917 bouts | `/ufc/` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` |
@@ -22,7 +23,7 @@ Every page loads its own archive and needs no server-side code: no build step at
 Sportsfans/
 ├── docs/                          ← the published site (GitHub Pages root, sportsfans.co.za)
 │   ├── index.html                 landing page, with a miniature of each River drawn at build time
-│   ├── cricket/  dakar/  f1/  motogp/  rugby/  sbk/  tennis/  tt/  ufc/
+│   ├── cricket/  dakar/  f1/  motogp/  olympics/  rugby/  sbk/  tennis/  tt/  ufc/
 │   │   ├── index.html             the atlas: a 7–13 KB shell that loads its stylesheet, app and archive
 │   │   ├── reading/index.html     the reading edition, generated from the archive (plain tables, no scripts)
 │   │   ├── seasons/<year>/        one static page per season
@@ -81,6 +82,12 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 2. `python tools/prepare_dakar.py path/to/paris_dakar_atlas_1979_2026.html` → `data/dakar.json` (editions, podium rows, people, marques, colours, map).
 3. Commit `data/dakar.json` and push — the deploy workflow builds and publishes. Routes are drawn schematically between the named towns; a town missing from the gazetteer is simply not drawn (the build prints any edition with fewer than two drawable stops).
 
+### Summer Olympics (prototype → prepare → publish)
+
+1. The archive is the prototype page `summer_olympics_atlas_1896_2024.html` — every medal event of every Summer Games with its gold, silver and bronze awards (delegation and named athletes), transcribed from Wikipedia's per-Games lists of medal winners at recorded revisions and reconciled against each Games' medal table, plus the Natural Earth land silhouette. Keep a copy at `build/harvest/summer_olympics_atlas_1896_2024.html`.
+2. `python tools/prepare_olympics.py path/to/summer_olympics_atlas_1896_2024.html` → `data/olympics.json` (the Games with the three cancelled editions kept as gaps, events and awards as rows, athletes' names, delegation colours, the map, sources, validation, corrections, aliases). Each event gets a lineage key (`tools/olympics_common.py`) so the same event can be followed across Games whatever a year's list called it.
+3. Commit `data/olympics.json` and push — the deploy workflow builds and publishes: the atlas, a page for every Games, every champion and multiple medallist, every delegation, every sport, every event held at three Games or more, and every host city. `python tools/audit_olympics.py` checks the archive against itself and a few well-known facts (`audits/DATA-AUDIT-olympics.md`).
+
 ### Sweeping the data (automatic)
 
 Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that runs on its own schedule, reads its source, merges what is new into `data/`, runs `tools/gate.py`, rebuilds the site, checks every link, commits and deploys. Nothing is committed unless every step passes; a failed run shows red in Actions and GitHub e-mails the repository owner. Each run leaves its report in the run summary (and in `build/harvest/<atlas>.md` in the commit).
@@ -95,8 +102,9 @@ Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that 
 | Rugby union | `rugby.py` | Nuck's Rugby Archive data file | Mon + Thu 08:43 — **held until `RUGBY_APPROVED` is `yes`** |
 | Isle of Man TT | `tt.py` | Wikipedia "<year> Isle of Man TT" | daily 09:53, 25 May–20 June |
 | Dakar Rally | `dakar.py` | Wikipedia "Dakar Rally" | daily 10:03, 3–31 January |
+| Summer Olympics | `olympics.py` | Wikipedia "List of <year> Summer Olympics medal winners", "<year> Summer Olympics medal table", "<year> Summer Olympics" | Mon + Thu 11:07, July–September (every fourth year has a Games; in between it reports nothing new) |
 
-Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
+Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests, the latest Games' medals) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
 
 By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read and report without committing. Locally: `python tools/sweepers/run.py <atlas>` (then `python tools/gate.py <atlas>`; `git restore data` undoes it).
 
@@ -104,7 +112,7 @@ By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read
 
 The gate (`tools/gate.py <atlas>`) compares the new archive with the last commit: nothing may be missing, the snapshot may not go backwards, changes to past records are listed, and every new record must have the same fields and types as the archive's own (so a reader that misreads a page cannot slip a malformed row in). `--accept` overrides it after a human has looked.
 
-The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
+The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar|olympics> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
 
 ### Cricket: bringing in a harvest
 

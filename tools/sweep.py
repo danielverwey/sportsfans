@@ -7,6 +7,7 @@
     python tools/sweep.py tennis  "C:/path/to/tennis_data.json (or the page)"
     python tools/sweep.py tt      "C:/path/to/isle_of_man_tt_atlas_1907_2026.html"
     python tools/sweep.py dakar   "C:/path/to/paris_dakar_atlas_1979_2026.html"
+    python tools/sweep.py olympics "C:/path/to/summer_olympics_atlas_1896_2024.html"
 
 Runs the atlas's prepare script (writes data/<sport>.json, and the shards for cricket and tennis), its audit (writes
 audits/DATA-AUDIT-<sport>.md) and the gate against the last commit. Formula 1 is not here: it sweeps itself on GitHub
@@ -23,6 +24,7 @@ STEPS = {
     'tennis': (['prepare_tennis.py', '{src}'], ['audit_tennis.py'], ['data/tennis.json', 'data/tennis_matches']),
     'tt': (['prepare_tt.py', '{src}'], None, ['data/tt.json']),
     'dakar': (['prepare_dakar.py', '{src}'], None, ['data/dakar.json']),
+    'olympics': (['prepare_olympics.py', '{src}'], ['audit_olympics.py'], ['data/olympics.json']),
 }
 try: sys.stdout.reconfigure(encoding='utf-8')
 except Exception: pass

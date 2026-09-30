@@ -1,0 +1,24 @@
+name: Sweep · Summer Olympics
+# The Games run in July and August every fourth year (Los Angeles 2028, Brisbane 2032); Mondays and Thursdays from July to
+# September every year — in the years between, the next list does not exist yet and the sweep reports "nothing new".
+# Times are UTC. Run workflow by hand any time; tick "dry run" to read and report without committing.
+on:
+  schedule:
+    - cron: '7 11 * 7-9 1,4'
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep-olympics, cancel-in-progress: false }   # one group per atlas: GitHub keeps only one pending run per group, so a shared group would cancel sweeps that overlap
+jobs:
+  sweep:
+    uses: ./.github/workflows/sweep-run.yml
+    with:
+      sport: olympics
+      dry_run: ${{ inputs.dry_run == true }}
+    permissions: { contents: write }
+  deploy:
+    needs: sweep
+    if: needs.sweep.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

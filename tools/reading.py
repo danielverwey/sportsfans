@@ -244,3 +244,39 @@ def reading_dakar(core):
 
 def footer_dakar(core):
     return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / DAKAR RALLY · THE DESERT EDITION</div><p>An independent, fan-made record of the Dakar Rally from the first Paris–Dakar of 1979. Routes, eras and the podium of every class transcribed from Wikipedia’s Dakar Rally article (CC BY-SA 4.0) at a recorded revision; the land silhouette from Natural Earth (public domain). Routes are drawn schematically between their named towns, not stage by stage. Latest included edition: {core.get("lastYear", "")}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · No affiliation with the Amaury Sport Organisation or the Dakar Rally is implied; the name identifies the event</span><span><a href="https://en.wikipedia.org/wiki/Dakar_Rally" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain) · <a href="#top">Back to top ↑</a></span></div></footer>'
+
+def reading_olympics(core):
+    """Every Games, newest first: host, dates, the medal table, and the gold, silver and bronze of every event."""
+    EF = core['eventFields']; WF = core['awardFields']; ATH = core['athletes']; an = lambda i: ATH.get(i) or str(i).replace('_', ' ')
+    games = sorted(core['games'], key=lambda g: -g['y']); c = core['coverage']
+    events = [dict(zip(EF, r)) for r in core['events']]; ev = {e['id']: e for e in events}
+    for e in events: e['awards'] = []
+    for r in core['awards']:
+        w = dict(zip(WF, r)); e = ev.get(w['e'])
+        if e: e['awards'].append(w)
+    MED = {1: 'Gold', 2: 'Silver', 3: 'Bronze'}
+    def cell(e, rank):
+        ws = [w for w in e['awards'] if w['rank'] == rank]
+        return ' / '.join((E(', '.join(an(i) for i in w['athletes'])) + ' ' if w['athletes'] else '') + f'<span class="muted">{E(w["nation"])}</span>' for w in ws) or '—'
+    out = ['<div id="staticArchive"><nav class="staticnav" aria-label="Games archive">' + ''.join(f'<a href="#static-{g["y"]}">{g["y"]}</a>' for g in games) + '</nav>']
+    out.append(f'<section class="panel"><p class="eyebrow">Summer Olympics · {games[-1]["y"]}–{games[0]["y"]}</p><h2>Every Games, on the page</h2><p>{c["held"]} Games held and {c["cancelled"]} cancelled, {c["events"]:,} medal events, {c["awards"]:,} medals to {c["nations"]} delegations and {c["medallists"]:,} named athletes. Each Games with its host and dates, its medal table by gold, then silver, then bronze, and the podium of every event as the source lists it. A team, pair or relay is one award; ties are listed side by side.</p></section>')
+    for g in games:
+        if g['cancelled']:
+            out.append(f'<section class="panel" id="static-{g["y"]}"><p class="eyebrow">{g["y"]} · cancelled</p><h2>{g["y"]}</h2><p>{E(g.get("note", "Cancelled."))}</p></section>'); continue
+        es = sorted([e for e in events if e['y'] == g['y']], key=lambda e: (e['sport'], e['gender'], e['event']))
+        t = collections.defaultdict(lambda: [0, 0, 0])
+        for e in es:
+            for w in e['awards']: t[w['nation']][w['rank'] - 1] += 1
+        tab = sorted(t.items(), key=lambda kv: (-kv[1][0], -kv[1][1], -kv[1][2], kv[0]))
+        out.append(f'<section class="panel" id="static-{g["y"]}"><p class="eyebrow">{g["y"]} · {E(g["country"])} · {E(g["dates"] or "")}</p><h2>{E(g["city"])} {g["y"]}</h2><p class="small muted">{len(es)} medal events · {sum(len(e["awards"]) for e in es):,} medals · {len(tab)} delegations on the podium{" · " + E(g["note"]) if g.get("note") else ""}</p>')
+        out.append('<h3>Medal table</h3><div class="tablewrap"><table><thead><tr><th>Place</th><th>Delegation</th><th>Gold</th><th>Silver</th><th>Bronze</th><th>Total</th></tr></thead><tbody>')
+        for k, (n, m) in enumerate(tab): out.append(f'<tr class="{"win" if k == 0 else ""}"><td>{k + 1}</td><td><b>{E(n)}</b></td><td>{m[0]}</td><td>{m[1]}</td><td>{m[2]}</td><td>{sum(m)}</td></tr>')
+        out.append('</tbody></table></div><h3>Every event</h3><div class="tablewrap"><table><thead><tr><th>Sport</th><th>Event</th><th>Gold</th><th>Silver</th><th>Bronze</th></tr></thead><tbody>')
+        for e in es:
+            name = e['event'] if re.match(r'^(men|women|mixed|open)', e['event'], re.I) or not e['gender'] else f'{ {"Men": "Men’s", "Women": "Women’s"}.get(e["gender"], e["gender"])} {e["event"]}'
+            out.append(f'<tr><td>{E(e["sport"])}</td><td>{E(name)}</td><td><b>{cell(e, 1)}</b></td><td>{cell(e, 2)}</td><td>{cell(e, 3)}</td></tr>')
+        out.append('</tbody></table></div></section>')
+    out.append('</div>'); return '\n'.join(out)
+
+def footer_olympics(core):
+    return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / SUMMER OLYMPICS · AN ODE TO THE GAMES</div><p>An independent, fan-made record of the Summer Olympic Games from Athens 1896. Every medal event and every gold, silver and bronze transcribed from Wikipedia’s lists of medal winners for each Games (CC BY-SA 4.0) at recorded revisions; the land silhouette from Natural Earth (public domain). Host cities are placed at approximate coordinates. No Olympic rings, emblems or pictograms are used or reproduced. Latest included Games: {core.get("lastYear", "")}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · Not affiliated with, endorsed by or connected to the International Olympic Committee; the names identify the Games</span><span><a href="https://en.wikipedia.org/wiki/Summer_Olympic_Games" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain) · <a href="#top">Back to top ↑</a></span></div></footer>'

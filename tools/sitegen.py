@@ -51,7 +51,7 @@ footer{padding:30px 0 60px;color:var(--muted);font:11px var(--mono);letter-spaci
 .lic h3{font-family:var(--display);font-weight:800;font-style:italic;font-size:22px;text-transform:uppercase;margin:28px 0 8px}.lic p{color:var(--muted);max-width:900px;margin:6px 0}.lic p b{color:var(--ink);font-weight:600}.lic .tag{display:inline-block;font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line2);border-radius:4px;padding:2px 7px;margin-left:8px;color:var(--accent)}
 '''
 
-SPORTS = {'cricket': ('Cricket', 'Cricket'), 'dakar': ('Dakar', 'Dakar Rally'), 'f1': ('F1', 'Formula 1'), 'motogp': ('MotoGP', 'MotoGP'), 'rugby': ('Rugby', 'Rugby union'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'ufc': ('UFC', 'UFC bouts'), 'sbk': ('WorldSBK', 'World Superbike')}  # alphabetical by the label shown in the navigation
+SPORTS = {'cricket': ('Cricket', 'Cricket'), 'dakar': ('Dakar', 'Dakar Rally'), 'f1': ('F1', 'Formula 1'), 'motogp': ('MotoGP', 'MotoGP'), 'olympics': ('Olympics', 'Summer Olympics'), 'rugby': ('Rugby', 'Rugby union'), 'tennis': ('Tennis', 'Tennis'), 'tt': ('TT', 'Isle of Man TT'), 'ufc': ('UFC', 'UFC bouts'), 'sbk': ('WorldSBK', 'World Superbike')}  # alphabetical by the label shown in the navigation
 
 CONTACT = 'sportsfans.co.za@gmail.com'
 NOTICE = 'Independent and non-commercial: no advertising, no sponsorship, no paywall. The names of championships, teams, events and venues are the trademarks of their owners and appear here only to identify them; nothing on this site is affiliated with or endorsed by any of them. A correction, a missing result, a source, a sport you would like to see: <a href="mailto:' + CONTACT + '?subject=sportsfans.co.za">contribute</a>.'
@@ -61,8 +61,8 @@ def icon_links(rel):
     return f'<link rel="icon" href="{rel}favicon.svg" type="image/svg+xml"><link rel="icon" href="{rel}favicon.ico" sizes="32x32"><link rel="apple-touch-icon" href="{rel}apple-touch-icon.png">'
 
 SITE_NAME = 'APEX / Sportsfans'
-ENTITY_TYPES = {'Drivers': 'Person', 'Riders': 'Person', 'Players': 'Person', 'Fighters': 'Person', 'Drivers & riders': 'Person', 'Coaches': 'Person',
-                'Circuits': 'Place', 'Grounds': 'Place', 'Venues': 'Place',
+ENTITY_TYPES = {'Drivers': 'Person', 'Riders': 'Person', 'Players': 'Person', 'Fighters': 'Person', 'Drivers & riders': 'Person', 'Coaches': 'Person', 'Athletes': 'Person',
+                'Circuits': 'Place', 'Grounds': 'Place', 'Venues': 'Place', 'Host cities': 'Place',
                 'Nations': 'SportsTeam', 'Teams': 'SportsTeam', 'Constructors': 'SportsOrganization', 'Makers': 'Organization', 'Marques': 'Organization'}
 def ld_json(*objs):
     """Structured data for search engines, one script per page; nothing here is shown to readers."""
@@ -490,6 +490,7 @@ def gen_licences(*, site, v, published, held):
     def src(title, url, terms, use, tag=''):
         return f'<p><b><a class="q" href="{E(url)}" target="_blank" rel="noopener">{E(title)}</a></b>{f"<span class=tag>{E(tag)}</span>" if tag else ""}<br>{terms}<br><span style="color:var(--dim)">Used for: {use}</span></p>'
     dakar_lic = ('<h3 id="dakar">Dakar Rally</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/Dakar_Rally', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every edition of the Dakar Rally article at a recorded revision — the route as the article names it, the era, and the first three of every class with the crew and the make. Nothing is taken from the organiser’s own site, results service or artwork.', 'CC BY-SA 4.0') + src('Natural Earth', 'https://www.naturalearthdata.com/about/terms-of-use/', 'Public domain.', 'the 1:110m land silhouette behind every route map; routes are drawn schematically between their named towns, not from any official course.', 'Public domain') + '<p><b>The data file <code>/data/dakar.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No logos, marks or official artwork are included; the rally’s name appears only to identify the event.</p>\n') if 'dakar' in (published or []) else ''
+    olympics_lic = ('<h3 id="olympics">Summer Olympics</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/Lists_of_Olympic_medalists', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'the list of medal winners of every Summer Games at a recorded revision — every medal event with its sport and category, and the gold, silver and bronze awards with the delegation and the named athletes; the medal table of each Games, read only to reconcile the totals; the Games’ own articles for host, dates and participation. Nothing is taken from the International Olympic Committee’s own sites, results services or artwork.', 'CC BY-SA 4.0') + src('Natural Earth', 'https://www.naturalearthdata.com/about/terms-of-use/', 'Public domain.', 'the 1:110m land silhouette behind every map; host cities are points at approximate coordinates, not venues.', 'Public domain') + '<p><b>The data file <code>/data/olympics.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. No rings, emblems, mascots, pictograms or official artwork are included; the names of the Games appear only to identify them, and nothing on the site is affiliated with the International Olympic Committee or any organising committee.</p>\n') if 'olympics' in (published or []) else ''
     ufc_lic = ('<h3 id="ufc">UFC</h3>\n' + src('Wikipedia', 'https://en.wikipedia.org/wiki/List_of_UFC_events', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'every past event in the list of UFC events and each event’s own article — the results table (weight class, fighters, result, method, round, time, notes), the infobox (date, venue, city, attendance) and the bonus awards. Nothing is taken from the promotion’s own site or its statistics partner.', 'CC BY-SA 4.0') + src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'fighter nationality, date of birth and height, where the fighter has an article.', 'CC0 1.0') + '<p><b>The data file <code>/data/ufc.json</code></b> is CC BY-SA 4.0: attribute Wikipedia contributors and share alike. No logos, marks or official artwork are included; the promotion’s names appear only to identify the events.</p>\n') if 'ufc' in (published or []) else ''
     body = f'''<p class="eyebrow">Sources and licences</p><h1>Where the numbers <span>come from</span></h1>
 <p class="lede">Every atlas is built from sources that state their terms, or from facts that belong to no one. This page lists each source, the terms it publishes, and the licence that applies to each data file this site serves. The site itself is <b>non-commercial for good</b>: two of its backbone sources permit nothing else, and the rest are honoured in the same spirit. Checked 29 September 2026.</p>
@@ -523,6 +524,7 @@ def gen_licences(*, site, v, published, held):
 {src('F1DB', 'https://github.com/f1db/f1db', 'CC BY 4.0.', 'circuit surveys at venues Formula 1 has raced, used where OpenStreetMap has no raceway mapped.', 'CC BY 4.0')}
 <p><b>The data files <code>/data/motogp.json</code>, <code>/data/sbk.json</code> and <code>/data/tt.json</code></b> are CC BY-SA 4.0: attribute Wikipedia contributors and share alike; the geometry inside them is ODbL. No logos, marks or official artwork are included.</p>
 
+{olympics_lic}
 {ufc_lic}
 <h3 id="cricket">Cricket</h3>
 {src('Cricsheet', 'https://cricsheet.org/', 'Open Data Commons Attribution License (ODC-By 1.0): attribution required, which this page and the atlas give.', 'ball-by-ball scorecards of every international it covers (men’s Tests and ODIs from 2001–02, T20Is from 2005, the women’s game from its first recorded matches); the innings worms, and every batting, bowling and line-up figure of those matches, are computed from them.', 'ODC-By 1.0')}
@@ -551,13 +553,14 @@ def gen_licences(*, site, v, published, held):
 <p>Each atlas serves its archive as one JSON file, under the licence stated above: {' · '.join(f'<a class="q" href="{rel}data/{k}.json">{k}.json</a>' for k in SPORTS if k in (published or []))}.</p>
 
 <h3>Trademarks</h3>
-<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Dakar, Dakar Rally, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
+<p>Formula 1, F1, Grand Prix, MotoGP, WorldSBK, Isle of Man TT, TT, UFC, Dakar, Dakar Rally, Olympic, Olympics, Olympic Games, Rugby World Cup, Springboks, All Blacks, ICC, Cricket World Cup, ATP, WTA, Wimbledon, Roland-Garros and every other championship, team, event, venue and manufacturer name on this site are the trademarks of their respective owners. They appear here only to identify what the numbers describe. This site is an independent, fan-made record; it is not affiliated with, sponsored by or endorsed by any rights holder, federation, union, league or team.</p>
 </div>'''
     return sitegen_page(site=site, v=v, body=body, published=published)
 DATASETS = {
     'cricket': ('Cricket internationals 1877–2026', 'Every men’s and women’s international with its result and scorecard — ball by ball from Cricsheet from the 2000s, historical scorecards before that — plus the published career of every Test and ODI player.', 'https://opendatacommons.org/licenses/by/1-0/', '1877/2026', ['Cricsheet', 'Qammar Shahzad (Kaggle)', 'Bhuvanesh Prasad (Hugging Face)', 'Cricbuzz', 'Wikipedia contributors']),
     'dakar': ('Dakar Rally editions and class podiums 1979–2026', 'Every edition’s route, era and the first three of every class, transcribed from Wikipedia; Natural Earth land silhouette for the route maps.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1979/2026', ['Wikipedia contributors', 'Natural Earth']),
     'f1': ('Formula 1 results and standings 1950–2026', 'Every Grand Prix and sprint result, championship standings, circuit outlines and specifications.', 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '1950/2026', ['Jolpica F1', 'F1DB']),
+    'olympics': ('Summer Olympics medal events and medallists 1896–2024', 'Every medal event of every Summer Games with its gold, silver and bronze awards, delegations and named athletes, transcribed from Wikipedia; Natural Earth land silhouette for the host maps.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1896/2024', ['Wikipedia contributors', 'Natural Earth']),
     'motogp': ('MotoGP premier-class results 1949–2026', 'Every premier-class race result, calendar and published standing, transcribed from Wikipedia; circuit outlines from OpenStreetMap.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1949/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
     'rugby': ('Rugby union Test matches of ten nations 1871–2026', 'Every Test match of the ten nations with scores, grounds, team sheets and scorers where published, the national player registers and coaching records.', None, '1871/2026', ['Nuck’s Rugby Archive', 'Springbok Rugby History', 'Wikipedia contributors', 'Wikidata']),
     'sbk': ('World Superbike results 1988–2026', 'Every Superbike World Championship race result and standing, transcribed from Wikipedia; circuit outlines from OpenStreetMap.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1988/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
@@ -698,6 +701,161 @@ def gen_cricket(A, *, site, v):
     out.append(('cricket/teams/index.html', page(site=site, sport='cricket', depth=2, title='Cricket teams · APEX', desc='Every side in the international archive.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Teams', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>side</span></h1>' + index_list(sorted([(t, f'cricket/teams/{slug(t)}/', f'{sum(1 for g in games if t in g["teams"])} matches') for t in sides]), rel), path='cricket/teams/', v=v)))
     out += index_pages(site=site, sport='cricket', title='Cricket players · APEX', desc='Every player with recorded international figures.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', None)], intro=f'<p class="eyebrow">Cricket</p><h1>Every <span>player</span></h1><p class="lede">{len(by_p):,} players with recorded figures from the scorecards (men’s Tests from 1877, ODIs from 1971, T20Is and the women’s game from their first recorded cards){f", and {len(only):,} known by their published careers" if only else ""}.</p>', items=sorted([(P.get(pid, {}).get('n', pid), f'cricket/players/{pid}/', f'{sum(r["runs"] for r in rows)} runs · {sum(r["wickets"] for r in rows)} wkts') for pid, rows in by_p.items()] + [(P[pid].get('n', pid), f'cricket/players/{pid}/', f'published career · {sum(c.get("games") or 0 for c in cs)} matches') for pid, cs in only.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='cricket/players', v=v)
     out.append(('cricket/grounds/index.html', page(site=site, sport='cricket', depth=2, title='Cricket grounds · APEX', desc='Every recorded international ground.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Grounds', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>ground</span></h1><p class="lede">{len(by_v)} recorded grounds and cities.</p>' + index_list(sorted([(V[vid]['n'], f'cricket/grounds/{vid}/', f'{len(ms)} matches') for vid, ms in by_v.items()], key=lambda t: (t[0], t[1])), rel), path='cricket/grounds/', v=v)))
+    return out
+
+
+# ============================================================ Summer Olympics ============================================================
+def gen_olympics(A, *, site, v):
+    """Static pages for the Summer Olympics atlas: every Games, every medallist, every delegation, every sport, every event across
+    the Games it was held at, every host city."""
+    out = []; EF = A['eventFields']; WF = A['awardFields']; ATH = A['athletes']; COLS = A.get('colours', {})
+    def hue(t):
+        h = 0
+        for ch in str(t or '?'): h = (h * 31 + ord(ch)) & 0xffffffff
+        import colorsys; r, g, b = colorsys.hls_to_rgb((h % 360) / 360, .66, .38); return '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
+    col = lambda n: COLS.get(n) or hue(n)
+    an = lambda i: ATH.get(i) or str(i).replace('_', ' ')
+    games = sorted(A['games'], key=lambda g: g['y']); held = [g for g in games if not g['cancelled']]; gby = {g['y']: g for g in games}
+    events = [dict(zip(EF, r)) for r in A['events']]; eby = {e['id']: e for e in events}
+    for e in events: e['awards'] = []
+    awards = [dict(zip(WF, r)) for r in A['awards']]
+    for w in awards:
+        e = eby.get(w['e'])
+        if e: w['ev'] = e; w['y'] = e['y']; w['sport'] = e['sport']; e['awards'].append(w)
+    awards = [w for w in awards if 'ev' in w]
+    MED = {1: 'Gold', 2: 'Silver', 3: 'Bronze'}; MK = lambda r: f'<i class="mk{r}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{ {1: "#f2c666", 2: "#c9d3dc", 3: "#d19b79"}[r]};margin-right:6px;vertical-align:-1px"></i>{MED[r]}'
+    GEN = {'Men': 'men’s', 'Women': 'women’s', 'Mixed': 'mixed', 'Open': 'open'}
+    def evlabel(e, gender=True):
+        n = e['event']
+        if gender and e['gender'] and not re.match(r'^(men|women|mixed|open)', n, re.I): return (GEN.get(e['gender'], '').capitalize() + ' ' + n).strip()
+        return n
+    aid = lambda i: slug(i)
+    al = lambda i, rel: f'<a class="q" href="{rel}olympics/athletes/{aid(i)}/">{E(an(i))}</a>' if i in PAGED else E(an(i))
+    alist = lambda ids, rel: ', '.join(al(i, rel) for i in ids)
+    nl = lambda n, rel: f'<i class="dot" style="--c:{col(n)}"></i><a class="q" href="{rel}olympics/nations/{slug(n)}/">{E(n)}</a>'
+    sl = lambda sp, rel: f'<a class="q" href="{rel}olympics/sports/{slug(sp)}/">{E(sp)}</a>'
+    yl = lambda y, rel: f'<a class="q" href="{rel}olympics/games/{y}/">{y}</a>'
+    LIN = collections.defaultdict(list)
+    for e in events: LIN[e['key']].append(e)
+    for k in LIN: LIN[k].sort(key=lambda e: e['y'])
+    LINPAGE = {k for k, es in LIN.items() if len(es) >= 3}
+    linl = lambda e, rel: f'<a class="q" href="{rel}olympics/events/{slug(e["key"])}/">{E(evlabel(e))}</a>' if e['key'] in LINPAGE else E(evlabel(e))
+    medal_cell = lambda e, r, rel: ' / '.join((alist(w['athletes'], rel) + ' ' if w['athletes'] else '') + f'<span class="D">{E(w["nation"])}</span>' for w in e['awards'] if w['rank'] == r) or '—'
+    def tally(rows):
+        t = collections.defaultdict(lambda: {'gold': 0, 'silver': 0, 'bronze': 0, 'total': 0})
+        for w in rows: t[w['nation']][MED[w['rank']].lower()] += 1; t[w['nation']]['total'] += 1
+        return sorted(({'id': n, **v} for n, v in t.items()), key=lambda a: (-a['gold'], -a['silver'], -a['bronze'], a['id']))
+    # per athlete
+    by_a = collections.defaultdict(list)
+    for w in awards:
+        for i in w['athletes']: by_a[i].append(w)
+    PAGED = {i for i, rr in by_a.items() if len(rr) >= 2 or any(w['rank'] == 1 for w in rr)}   # a page for every champion and every multiple medallist; a single silver or bronze is named, unlinked, and lives in the atlas
+    mt = lambda rows, rel, n=None: table(['Place', 'Delegation', 'Gold', 'Silver', 'Bronze', 'Total'], [[i + 1, nl(a['id'], rel), a['gold'], a['silver'], a['bronze'], a['total']] for i, a in enumerate(rows[:n] if n else rows)], num=(0, 2, 3, 4, 5))
+    # ---- Games
+    ys = [g['y'] for g in games]
+    for g in games:
+        y = g['y']; rel = '../../../'; prev = next((x for x in reversed(ys) if x < y), None); nxt = next((x for x in ys if x > y), None)
+        nav = f'<a class="open" href="{rel}olympics/#season={y}&tab=season">Open {y} in the atlas →</a>' + (f'<a class="also" href="{rel}olympics/games/{prev}/">← {prev}</a>' if prev else '') + (f'<a class="also" href="{rel}olympics/games/{nxt}/">{nxt} →</a>' if nxt else '')
+        if g['cancelled']:
+            body = f'<p class="eyebrow">Summer Olympics · cancelled</p><h1>{y} <span>Games</span></h1><p class="lede">{E(g.get("note", "Cancelled."))} No events, no medals; the year stands in the record as a gap.</p>' + nav
+            out.append((f'olympics/games/{y}/index.html', page(site=site, sport='olympics', depth=3, title=f'{y} Summer Olympics · cancelled · APEX', desc=f'The {y} Summer Games were cancelled: {g.get("note", "")}', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Games', rel + 'olympics/games/'), (str(y), None)], body=body, path=f'olympics/games/{y}/', v=v))); continue
+        es = [e for e in events if e['y'] == y]; ws = [w for e in es for w in e['awards']]; tab = tally(ws); sports = sorted({e['sport'] for e in es}); meds = {i for w in ws for i in w['athletes']}
+        lead = tab[0] if tab else None
+        body = f"""<p class="eyebrow">Summer Olympics · {E(g['country'])} · {E(g['dates'] or '')}</p><h1>{E(g['city'])} <span>{y}</span></h1>
+<p class="lede">{len(es)} medal events in {len(sports)} sports, {len(ws):,} medals to {len(tab)} delegations, {len(meds):,} named medallists.{f' On top of the table: <b>{E(lead["id"])}</b> with {lead["gold"]} gold.' if lead else ''}{' ' + E(g['note']) if g.get('note') else ''}</p>
+{nav}
+{kpis([('Athletes', fmt(g['athletes']) if g['athletes'] else '—', f"{fmt(g['men'])} men · {fmt(g['women'])} women" if g.get('women') is not None else ''), ('Delegations', fmt(g['delegations']) if g['delegations'] else '—', ''), ('Programme', fmt(g['scheduled']) if g['scheduled'] else '—', 'events scheduled'), ('Medal events', len(es), f'{len(sports)} sports'), ('Medals', fmt(len(ws)), f'{sum(1 for w in ws if w["rank"] == 1)} gold')])}
+<h2>The medal table</h2>{mt(tab, rel)}
+<h2>Every event <small>gold, silver, bronze</small></h2>{table(['Sport', 'Event', 'Gold', 'Silver', 'Bronze'], [[sl(e['sport'], rel), linl(e, rel), medal_cell(e, 1, rel), medal_cell(e, 2, rel), medal_cell(e, 3, rel)] for e in sorted(es, key=lambda e: (e['sport'], e['gender'], e['event']))])}"""
+        out.append((f'olympics/games/{y}/index.html', page(site=site, sport='olympics', depth=3, title=f'{g["city"]} {y} · every medal event and the medal table · APEX', desc=f'The {y} Summer Olympics in {g["city"]}: {len(es)} medal events, {len(ws):,} medals, the medal table' + (f' topped by {lead["id"]}.' if lead else '.'), crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Games', rel + 'olympics/games/'), (f'{g["city"]} {y}', None)], body=body, path=f'olympics/games/{y}/', v=v)))
+    # ---- athletes
+    for i in PAGED:
+        rr = by_a[i]; rel = '../../../'; rr = sorted(rr, key=lambda w: (-w['y'], w['rank'])); g = sum(1 for w in rr if w['rank'] == 1); sv = sum(1 for w in rr if w['rank'] == 2); b = len(rr) - g - sv
+        yrs = sorted({w['y'] for w in rr}); nations = collections.Counter(w['nation'] for w in rr); sports = collections.Counter(w['sport'] for w in rr)
+        body = f"""<p class="eyebrow">Summer Olympics · Athlete · {yrs[0]}{'–' + str(yrs[-1]) if yrs[-1] != yrs[0] else ''} · {' / '.join(nl(n, rel) for n, _ in nations.most_common())}</p><h1>{E(an(i))}</h1>
+<p class="lede">{len(rr)} Olympic medal{'' if len(rr) == 1 else 's'}: {g} gold, {sv} silver, {b} bronze, over {len(yrs)} Games in {', '.join(E(s) for s, _ in sports.most_common())}. Medals in a team, pair or relay count for every named member, as the source lists them.</p>
+<a class="open" href="{rel}olympics/#tab=athletes&athlete={E(i)}">Open in the atlas →</a><a class="also" href="https://en.wikipedia.org/wiki/{E(i)}" target="_blank" rel="noopener">Wikipedia ↗</a>
+{kpis([('Gold', g, ''), ('Silver', sv, ''), ('Bronze', b, ''), ('Games', len(yrs), ', '.join(map(str, yrs))), ('Sports', len(sports), '')])}
+<h2>Every medal</h2>{table(['Games', 'Sport', 'Event', 'Medal', 'For', 'With'], [[yl(w['y'], rel) + f' <span class="D">{E(gby[w["y"]]["city"])}</span>', sl(w['sport'], rel), linl(w['ev'], rel), MK(w['rank']), nl(w['nation'], rel), alist([x for x in w['athletes'] if x != i], rel) or '<span class="D">individual</span>'] for w in rr])}"""
+        out.append((f'olympics/athletes/{aid(i)}/index.html', page(site=site, sport='olympics', depth=3, title=f'{an(i)} · Olympic medals · APEX', desc=f'{an(i)} ({", ".join(n for n, _ in nations.most_common())}): {g} gold, {sv} silver, {b} bronze at the Summer Olympics, {yrs[0]}–{yrs[-1]}.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Athletes', rel + 'olympics/athletes/'), (an(i), None)], body=body, path=f'olympics/athletes/{aid(i)}/', v=v, noindex=(len(rr) < 3 and g == 0))))
+    # ---- nations
+    by_n = collections.defaultdict(list)
+    for w in awards: by_n[w['nation']].append(w)
+    alltab = tally(awards); rank_of = {a['id']: k + 1 for k, a in enumerate(alltab)}
+    for n, rr in by_n.items():
+        rel = '../../../'; g = sum(1 for w in rr if w['rank'] == 1); sv = sum(1 for w in rr if w['rank'] == 2); b = len(rr) - g - sv; yrs = sorted({w['y'] for w in rr})
+        per = []
+        for gm in held:
+            ws = [w for w in rr if w['y'] == gm['y']]
+            if not ws: continue
+            t = tally([w for w in awards if w['y'] == gm['y']]); place = next(k + 1 for k, a in enumerate(t) if a['id'] == n)
+            per.append([yl(gm['y'], rel) + f' <span class="D">{E(gm["city"])}</span>', place, sum(1 for w in ws if w['rank'] == 1), sum(1 for w in ws if w['rank'] == 2), sum(1 for w in ws if w['rank'] == 3), len(ws)])
+        sports = tally([]) if False else None
+        sp = collections.defaultdict(lambda: [0, 0])
+        for w in rr: sp[w['sport']][1] += 1; sp[w['sport']][0] += (w['rank'] == 1)
+        top_sp = sorted(sp.items(), key=lambda t: (-t[1][0], -t[1][1]))
+        ath = collections.defaultdict(lambda: [0, 0])
+        for w in rr:
+            for i in w['athletes']: ath[i][1] += 1; ath[i][0] += (w['rank'] == 1)
+        top_a = sorted(ath.items(), key=lambda t: (-t[1][0], -t[1][1]))[:15]
+        body = f"""<p class="eyebrow">Summer Olympics · Delegation · {yrs[0]}–{yrs[-1]} · {len(yrs)} Games on the podium</p><h1><i class="dot" style="--c:{col(n)};width:.5em;height:.5em;border-radius:6px;vertical-align:.15em"></i>{E(n)}</h1>
+<p class="lede">{len(rr):,} medals — {g} gold, {sv} silver, {b} bronze — {rank_of[n]}{'st' if rank_of[n] % 10 == 1 and rank_of[n] != 11 else 'nd' if rank_of[n] % 10 == 2 and rank_of[n] != 12 else 'rd' if rank_of[n] % 10 == 3 and rank_of[n] != 13 else 'th'} in the all-time table by gold, then silver, then bronze.{f' Best sport: <b>{E(top_sp[0][0])}</b> ({top_sp[0][1][0]} gold).' if top_sp else ''} Delegations stay as the source names them; historical teams are not merged into their successors.</p>
+<a class="open" href="{rel}olympics/#tab=nations&nation={E(n)}">Open in the atlas →</a>
+{kpis([('Gold', g, ''), ('Silver', sv, ''), ('Bronze', b, ''), ('Medals', fmt(len(rr)), f'{len(sp)} sports'), ('Games', len(yrs), f'{yrs[0]}–{yrs[-1]}')])}
+<div class="two"><div><h2>Games by Games</h2>{table(['Games', 'Place', 'Gold', 'Silver', 'Bronze', 'Total'], list(reversed(per)), num=(1, 2, 3, 4, 5))}</div><div><h2>By sport</h2>{table(['Sport', 'Gold', 'Medals'], [[sl(s_, rel), t[0], t[1]] for s_, t in top_sp], num=(1, 2))}<h2>Most decorated</h2>{table(['Athlete', 'Gold', 'Medals'], [[al(i, rel), t[0], t[1]] for i, t in top_a], num=(1, 2))}</div></div>"""
+        out.append((f'olympics/nations/{slug(n)}/index.html', page(site=site, sport='olympics', depth=3, title=f'{n} at the Summer Olympics · every medal, Games by Games · APEX', desc=f'{n} at the Summer Olympics: {g} gold, {sv} silver and {b} bronze over {len(yrs)} Games, {yrs[0]}–{yrs[-1]}.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Nations', rel + 'olympics/nations/'), (n, None)], body=body, path=f'olympics/nations/{slug(n)}/', v=v)))
+    # ---- sports
+    by_s = collections.defaultdict(list)
+    for e in events: by_s[e['sport']].append(e)
+    for sp, es in by_s.items():
+        rel = '../../../'; ws = [w for e in es for w in e['awards']]; tab = tally(ws); yrs = sorted({e['y'] for e in es}); lins = collections.defaultdict(list)
+        for e in es: lins[e['key']].append(e)
+        ath = collections.defaultdict(lambda: [0, 0])
+        for w in ws:
+            for i in w['athletes']: ath[i][1] += 1; ath[i][0] += (w['rank'] == 1)
+        top_a = sorted(ath.items(), key=lambda t: (-t[1][0], -t[1][1]))[:15]
+        body = f"""<p class="eyebrow">Summer Olympics · Sport · {yrs[0]}–{yrs[-1]} · {len(yrs)} Games</p><h1>{E(sp)}</h1>
+<p class="lede">{len(es)} medal events across {len(lins)} different events, {len(ws):,} medals.{f' Most golds: <b>{E(tab[0]["id"])}</b> ({tab[0]["gold"]}).' if tab else ''}{f' Most decorated: <b>{E(an(top_a[0][0]))}</b> ({top_a[0][1][0]} gold, {top_a[0][1][1]} medals).' if top_a else ''}</p>
+<a class="open" href="{rel}olympics/#sport={E(sp)}&tab=sports&sportv={E(sp)}">Open in the atlas →</a>
+{kpis([('Medal events', len(es), ''), ('Different events', len(lins), ''), ('Medals', fmt(len(ws)), ''), ('Games', len(yrs), f'{yrs[0]}–{yrs[-1]}')])}
+<div class="two"><div><h2>The medal table of the sport</h2>{mt(tab, rel, 25)}</div><div><h2>Most decorated</h2>{table(['Athlete', 'Gold', 'Medals'], [[al(i, rel), t[0], t[1]] for i, t in top_a], num=(1, 2))}</div></div>
+<h2>Every event</h2>{table(['Event', 'Category', 'Games', 'Held', 'Latest gold'], [[linl(l[-1], rel) if l[0]['key'] in LINPAGE else E(evlabel(l[-1], False)), E(GEN.get(l[-1]['gender'], l[-1]['gender'])), len(l), f'{l[0]["y"]} – {l[-1]["y"]}' if len(l) > 6 else ', '.join(str(e['y']) for e in l), medal_cell(l[-1], 1, rel)] for l in sorted(lins.values(), key=lambda l: (-len(l), l[-1]['event']))], num=(2,))}"""
+        out.append((f'olympics/sports/{slug(sp)}/index.html', page(site=site, sport='olympics', depth=3, title=f'{sp} at the Summer Olympics · every medal event · APEX', desc=f'{sp} at the Summer Olympics, {yrs[0]}–{yrs[-1]}: {len(es)} medal events, {len(ws):,} medals, the medal table of the sport.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Sports', rel + 'olympics/sports/'), (sp, None)], body=body, path=f'olympics/sports/{slug(sp)}/', v=v)))
+    # ---- events across the Games (lineages held at three Games or more)
+    for k in LINPAGE:
+        es = LIN[k]; e0 = es[-1]; rel = '../../../'; ws = [w for e in es for w in e['awards']]; tab = tally(ws)
+        ath = collections.defaultdict(lambda: [0, 0])
+        for w in ws:
+            for i in w['athletes']: ath[i][1] += 1; ath[i][0] += (w['rank'] == 1)
+        top_a = sorted(ath.items(), key=lambda t: (-t[1][0], -t[1][1]))[:12]
+        body = f"""<p class="eyebrow">Summer Olympics · {sl(e0['sport'], rel)} · {E(GEN.get(e0['gender'], e0['gender']))} · {es[0]['y']}–{es[-1]['y']}</p><h1>{E(evlabel(e0))}</h1>
+<p class="lede">Held at {len(es)} Games, {es[0]['y']}–{es[-1]['y']}.{f' Most golds: <b>{E(tab[0]["id"])}</b> ({tab[0]["gold"]}).' if tab else ''}{f' Most medals: <b>{E(an(top_a[0][0]))}</b> ({top_a[0][1][1]}).' if top_a else ''} The event as the lists name it each year; names that changed are joined here.</p>
+<a class="open" href="{rel}olympics/#season={e0['y']}&tab=podium&event={E(e0['id'])}">Open the latest podium in the atlas →</a>
+{kpis([('Games', len(es), f'{es[0]["y"]}–{es[-1]["y"]}'), ('Medals', len(ws), ''), ('Delegations', len(tab), 'on the podium')])}
+<h2>Games by Games <small>gold, silver, bronze</small></h2>{table(['Games', 'Gold', 'Silver', 'Bronze'], [[yl(e['y'], rel) + f' <span class="D">{E(gby[e["y"]]["city"])}</span>', medal_cell(e, 1, rel), medal_cell(e, 2, rel), medal_cell(e, 3, rel)] for e in reversed(es)])}
+<div class="two"><div><h2>Most golds</h2>{mt(tab, rel, 12)}</div><div><h2>Most medals</h2>{table(['Athlete', 'Gold', 'Medals'], [[al(i, rel), t[0], t[1]] for i, t in top_a], num=(1, 2))}</div></div>"""
+        out.append((f'olympics/events/{slug(k)}/index.html', page(site=site, sport='olympics', depth=3, title=f'{evlabel(e0)} ({e0["sport"]}) · every Olympic podium · APEX', desc=f'The {evlabel(e0).lower()} in {e0["sport"]} at the Summer Olympics: every gold, silver and bronze at {len(es)} Games, {es[0]["y"]}–{es[-1]["y"]}.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Events', rel + 'olympics/events/'), (evlabel(e0), None)], body=body, path=f'olympics/events/{slug(k)}/', v=v)))
+    # ---- host cities
+    hosts = {}
+    for g in held:
+        for p in g['points']: h = hosts.setdefault(p[0], {'city': p[0], 'years': [], 'countries': []}); h['years'].append(g['y']); (h['countries'].append(g['country']) if p[0] == g['city'] else None)
+    for h in hosts.values():
+        rel = '../../../'; rows = []
+        for y in h['years']:
+            t = tally([w for w in awards if w['y'] == y]); rows.append([yl(y, rel), E(gby[y]['dates'] or ''), nl(t[0]['id'], rel) + f' <span class="D">{t[0]["gold"]} gold</span>' if t else '—', sum(1 for e in events if e['y'] == y)])
+        cs = sorted(set(h['countries']))
+        body = f"""<p class="eyebrow">Summer Olympics · Host city · {E(' / '.join(cs))}</p><h1>{E(h['city'])}</h1>
+<p class="lede">Host of {len(h['years'])} Summer Games: {', '.join(map(str, h['years']))}.</p>
+<a class="open" href="{rel}olympics/#tab=hosts&host={E(h['city'])}">Open on the map in the atlas →</a>
+<h2>The Games here</h2>{table(['Games', 'Dates', 'On top of the table', 'Medal events'], rows, num=(3,))}"""
+        out.append((f'olympics/hosts/{slug(h["city"])}/index.html', page(site=site, sport='olympics', depth=3, title=f'{h["city"]} · Summer Olympics host · APEX', desc=f'{h["city"]} hosted the Summer Olympics in {", ".join(map(str, h["years"]))}.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Host cities', rel + 'olympics/hosts/'), (h['city'], None)], body=body, path=f'olympics/hosts/{slug(h["city"])}/', v=v)))
+    rel = '../../'
+    out.append(('olympics/games/index.html', page(site=site, sport='olympics', depth=2, title=f'The Summer Olympics, Games by Games, {ys[0]}–{ys[-1]} · APEX', desc='Every Summer Games on its own page: host, medal table, and the podium of every event.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Games', None)], body=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>Games</span></h1><p class="lede">{len(held)} Games held and {len(games) - len(held)} cancelled, {ys[0]}–{ys[-1]}.</p>' + index_list([(f'{g["y"]} {g["city"]}', f'olympics/games/{g["y"]}/', 'cancelled' if g['cancelled'] else f'{sum(1 for e in events if e["y"] == g["y"])} medal events') for g in reversed(games)], rel), path='olympics/games/', v=v)))
+    out += index_pages(site=site, sport='olympics', title='Olympic champions and multiple medallists · APEX', desc='Every Olympic champion and every multiple medallist of the Summer Olympics, with their medals Games by Games.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Athletes', None)], intro=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>champion</span></h1><p class="lede">{len(PAGED):,} Olympic champions and multiple medallists of the {len(by_a):,} athletes named on a medal, {ys[0]}–{ys[-1]}; every medallist is in the atlas itself.</p>', items=sorted([(an(i), f'olympics/athletes/{aid(i)}/', f'{sum(1 for w in by_a[i] if w["rank"] == 1)} gold · {len(by_a[i])} medals') for i in PAGED], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='olympics/athletes', v=v)
+    out.append(('olympics/nations/index.html', page(site=site, sport='olympics', depth=2, title='Summer Olympics medal table, all time · APEX', desc='Every delegation with a Summer Olympic medal, in the all-time table.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Nations', None)], body=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>delegation</span></h1><p class="lede">{len(alltab)} delegations with a medal, by gold, then silver, then bronze.</p>' + mt(alltab, rel), path='olympics/nations/', v=v)))
+    out.append(('olympics/sports/index.html', page(site=site, sport='olympics', depth=2, title='Summer Olympic sports · APEX', desc='Every sport on the Summer Olympic programme, with its medal events.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Sports', None)], body=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>sport</span></h1>' + index_list(sorted([(sp, f'olympics/sports/{slug(sp)}/', f'{len(es)} medal events · {min(e["y"] for e in es)}–{max(e["y"] for e in es)}') for sp, es in by_s.items()]), rel), path='olympics/sports/', v=v)))
+    out += index_pages(site=site, sport='olympics', title='Summer Olympic events · APEX', desc='Every event held at three Summer Games or more, with its podiums.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Events', None)], intro=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>event</span></h1><p class="lede">{len(LINPAGE)} events held at three Games or more, by sport.</p>', items=sorted([(f'{LIN[k][-1]["sport"]} · {evlabel(LIN[k][-1])}', f'olympics/events/{slug(k)}/', f'{len(LIN[k])} Games · {LIN[k][0]["y"]}–{LIN[k][-1]["y"]}') for k in LINPAGE]), dir='olympics/events', v=v, threshold=3000)
+    out.append(('olympics/hosts/index.html', page(site=site, sport='olympics', depth=2, title='Summer Olympics host cities · APEX', desc='Every city that has hosted the Summer Olympics.', crumbs=[('Sportsfans', rel), ('Summer Olympics', rel + 'olympics/'), ('Host cities', None)], body=f'<p class="eyebrow">Summer Olympics</p><h1>Every <span>host city</span></h1>' + index_list([(h['city'], f'olympics/hosts/{slug(h["city"])}/', ', '.join(map(str, h['years']))) for h in sorted(hosts.values(), key=lambda h: h['years'][0])], rel), path='olympics/hosts/', v=v)))
     return out
 
 # ============================================================ Tennis ============================================================
