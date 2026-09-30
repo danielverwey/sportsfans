@@ -123,7 +123,9 @@ def season_rows(games, PSF):
             if inn[6]: continue
             bt = inn[0]; ft = next((t for t, _ in pl if t != bt), None) if len(pl) == 2 else None
             for pid_, r, balls, f4, s6, how, bw, fl in inn[8]:
-                a = row(gm, bt, pid_); a['inns'] += 1; a['runs'] += r; a['balls'] += balls; a['fours'] += f4; a['sixes'] += s6
+                # historical scorecards leave balls, fours and sixes blank (None) where they were not recorded
+                a = row(gm, bt, pid_); a['inns'] += 1; a['runs'] += r; a['balls'] += balls or 0; a['fours'] += f4 or 0; a['sixes'] += s6 or 0
+                if 'sruns' in a and balls is not None: a['sruns'] += r   # runs off known balls: the strike rate's numerator
                 out = how not in NOT_OUT
                 a['outs' if out else 'notouts'] += 1
                 if r >= 100: a['hundreds'] += 1
@@ -134,7 +136,7 @@ def season_rows(games, PSF):
                     if how == 'caught': fa['catches'] += 1
                     elif how == 'stumped': fa['stumps'] += 1
                     elif how == 'run out': fa['runouts'] += 1
-                if how == 'caught and bowled': row(gm, ft, bw)['catches'] += 1
+                if how == 'caught and bowled' and bw: row(gm, ft, bw)['catches'] += 1
             for pid_, balls, conc, wk, md, wd, nb, dots in inn[9]:
                 a = row(gm, ft, pid_); a['binns'] += 1; a['bballs'] += balls; a['conceded'] += conc; a['wickets'] += wk; a['maidens'] += md
                 if wk >= 5: a['five'] += 1

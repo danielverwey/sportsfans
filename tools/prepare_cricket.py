@@ -3,7 +3,8 @@
 
     python tools/prepare_cricket.py <the reader's export: the prototype page, or its archive as .json / .json.gz>
 
-data/cricket.json               everything except scorecards and line-ups (results, player-season figures, registers, titles)
+data/cricket.json               everything except scorecards and line-ups (results, player-season figures, registers, titles,
+                                the career register as rows under careerFields)
 data/cricket_details/<year>.json  {gameId: {inn, players}} for the games with a recorded scorecard
 The archive's content is not edited; it is only divided. unprepare() puts it back together (the sweeper uses it).
 """
@@ -21,6 +22,9 @@ def prepare(src):
         core['games'].append(lean)
         if g.get('inn') or g.get('players'): details[g['y']][g['id']] = {'inn': g.get('inn', []), 'players': g.get('players', [])}
     for t in core['teams'].values(): t.pop('logo', None)   # flags are the flag-icons set (MIT); no other artwork is carried
+    cs = src.get('careers')
+    if cs and isinstance(cs[0], dict) and all(tuple(c) == tuple(cs[0]) for c in cs):   # the career register as rows under one field list
+        core['careerFields'] = list(cs[0]); core['careers'] = [list(c.values()) for c in cs]
     core['detailYears'] = sorted(details)
     return core, details
 
@@ -29,7 +33,8 @@ def read_details():
 
 def unprepare(core, details):
     """The site's files back into the whole archive, so prepare(unprepare(core, details)) gives them again."""
-    src = {k: v for k, v in core.items() if k not in ('games', 'detailYears')}
+    src = {k: v for k, v in core.items() if k not in ('games', 'detailYears', 'careerFields')}
+    if 'careerFields' in core: src['careers'] = [dict(zip(core['careerFields'], r)) for r in core['careers']]
     games = []
     for g in core['games']:
         x = {k: v for k, v in g.items() if k != 'sc'}

@@ -4,7 +4,7 @@ Every season, driver/rider/player, constructor/maker/nation, circuit/ground and 
 of its own — crawlable, linkable, permanent — rendered from the same archive the atlas embeds. Each page
 opens the interactive atlas at the matching view through a deep link (#tab=…&…).
 """
-import html, json, re, collections, datetime
+import html, json, re, collections, datetime, urllib.parse
 def longdate(iso):
     try: d = datetime.date.fromisoformat(iso); return f'{d.day} {d.strftime("%B %Y")}'
     except Exception: return iso or ''
@@ -520,10 +520,15 @@ def gen_licences(*, site, v, published, held):
 
 {ufc_lic}
 <h3 id="cricket">Cricket</h3>
-{src('Cricsheet', 'https://cricsheet.org/', 'Open Data Commons Attribution License (ODC-By 1.0): attribution required, which this page and the atlas give.', 'ball-by-ball scorecards of every international it covers (men’s Tests and ODIs from 2001–02, T20Is from 2005, the women’s game from its first recorded matches); every batting, bowling and line-up figure, every innings worm and every player-season total on the atlas is computed from them.', 'ODC-By 1.0')}
+{src('Cricsheet', 'https://cricsheet.org/', 'Open Data Commons Attribution License (ODC-By 1.0): attribution required, which this page and the atlas give.', 'ball-by-ball scorecards of every international it covers (men’s Tests and ODIs from 2001–02, T20Is from 2005, the women’s game from its first recorded matches); the innings worms, and every batting, bowling and line-up figure of those matches, are computed from them.', 'ODC-By 1.0')}
 {src('Historical results (Kaggle: “Cricket match dataset, Test nations 1877–2025”, Qammar Shahzad)', 'https://www.kaggle.com/datasets/qammarshahzad/cricket-match-dataset-test-nations-18772025', 'Match results are facts; the compilation is credited here and its own licence is stated on its Kaggle page.', 'dates, sides, results and margins of internationals before the Cricsheet era.')}
 {src('International Cricket Council', 'https://www.icc-cricket.com/', 'Published results of ICC events, used as facts.', 'World Cup, T20 World Cup, Champions Trophy and World Test Championship winners, runners-up and finals.')}
-<p><b>The data files <code>/data/cricket.json</code> and <code>/data/cricket_details/</code></b>: the scorecard-derived parts are ODC-By 1.0 (attribute Cricsheet); the historical results are facts compiled from the sources above. No logos or marks are included.</p>
+{src('Historical scorecards (Hugging Face: “Test cricket dataset 1877–2014”, “ODI cricket dataset 1971–2014”, “T20I cricket dataset 2005–2014”, Bhuvanesh Prasad)', 'https://huggingface.co/bhuvaneshprasad', 'No licence is stated on the datasets; the figures in a scorecard are facts. Credited here and on every scorecard they supply; no licence is granted for those parts.', 'batting, bowling, dismissals, extras and line-ups of 3,934 internationals before Cricsheet’s coverage, each read at a recorded dataset revision and checked against its result and innings totals.', 'no licence stated')}
+{src('Cricbuzz scorecards', 'https://www.cricbuzz.com/', 'No reuse licence is established; the figures are facts. Credited on each of the 54 scorecards it supplies, with a link to the page it was read from.', 'the scorecards of 54 internationals the datasets above lack or hold incompletely.', 'no licence stated')}
+{src('Wikipedia national player lists', 'https://en.wikipedia.org/wiki/Lists_of_cricketers', 'Creative Commons Attribution-ShareAlike 4.0 (Wikipedia contributors): attribution and share-alike, both given.', 'the published career of every Test and ODI player (74 lists, each at a recorded revision) and the full names of players the scorecards know by initials.', 'CC BY-SA 4.0')}
+{src('Wikidata', 'https://www.wikidata.org/', 'CC0 1.0.', 'full names confirmed by a stable Cricinfo identifier.', 'CC0 1.0')}
+{src('CricketWeb', 'https://www.cricketweb.net/statsspider/', 'Used only to cross-check; nothing is taken.', 'an independent check of the first fifty Test scorecards.')}
+<p><b>The data files <code>/data/cricket.json</code> and <code>/data/cricket_details/</code></b>: the Cricsheet-derived parts are ODC-By 1.0 (attribute Cricsheet); the published career register and the names drawn from Wikipedia are CC BY-SA 4.0 (attribute Wikipedia contributors, share alike); the historical results and the historical scorecards are facts compiled from the sources above, credited, with no licence granted for them. No logos or marks are included.</p>
 
 <h3 id="tennis">Tennis</h3>
 {src('Jeff Sackmann / Tennis Abstract', 'https://github.com/JeffSackmann', 'Creative Commons Attribution-NonCommercial-ShareAlike 4.0: attribution, no commercial use, share alike. This site is non-commercial and shares its data files under the same terms.', 'every tour-level match of the ATP and WTA from 1968 — results, seedings, rankings, durations and serve statistics — from the tennis_atp and tennis_wta repositories.', 'CC BY-NC-SA 4.0')}
@@ -545,7 +550,7 @@ def gen_licences(*, site, v, published, held):
 </div>'''
     return sitegen_page(site=site, v=v, body=body, published=published)
 DATASETS = {
-    'cricket': ('Cricket internationals 1877–2026', 'Every men’s and women’s international with its result, plus ball-by-ball scorecard figures where Cricsheet records them.', 'https://opendatacommons.org/licenses/by/1-0/', '1877/2026', ['Cricsheet', 'Qammar Shahzad (Kaggle)']),
+    'cricket': ('Cricket internationals 1877–2026', 'Every men’s and women’s international with its result and scorecard — ball by ball from Cricsheet from the 2000s, historical scorecards before that — plus the published career of every Test and ODI player.', 'https://opendatacommons.org/licenses/by/1-0/', '1877/2026', ['Cricsheet', 'Qammar Shahzad (Kaggle)', 'Bhuvanesh Prasad (Hugging Face)', 'Cricbuzz', 'Wikipedia contributors']),
     'dakar': ('Dakar Rally editions and class podiums 1979–2026', 'Every edition’s route, era and the first three of every class, transcribed from Wikipedia; Natural Earth land silhouette for the route maps.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1979/2026', ['Wikipedia contributors', 'Natural Earth']),
     'f1': ('Formula 1 results and standings 1950–2026', 'Every Grand Prix and sprint result, championship standings, circuit outlines and specifications.', 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '1950/2026', ['Jolpica F1', 'F1DB']),
     'motogp': ('MotoGP premier-class results 1949–2026', 'Every premier-class race result, calendar and published standing, transcribed from Wikipedia; circuit outlines from OpenStreetMap.', 'https://creativecommons.org/licenses/by-sa/4.0/', '1949/2026', ['Wikipedia contributors', 'OpenStreetMap contributors']),
@@ -630,20 +635,46 @@ def gen_cricket(A, *, site, v):
 <div class="two"><div><h2>Record by opponent</h2>{table(['Opponent', 'P', 'W', 'L', 'D/T', 'NR', 'Win %'], opprows, num=(1, 2, 3, 4, 5, 6))}</div><div>{('<h2>Run-scorers <small>recorded player-seasons</small></h2><div class="chips">' + ''.join(f'<a class="chip" href="{rel}cricket/players/{p["p"]}/"><i style="--c:{col(t)}"></i>{E(P.get(p["p"], {}).get("n", p["p"]))} <span style="color:var(--muted)">{p["runs"]} · {p["y"]} {p["f"]}</span></a>' for p in topp) + '</div>') if topp else ''}</div></div>
 <h2>Every match <small>{len(mine)}</small></h2>{table(['Date', 'Format', 'Sides', 'Scores', 'Result', 'Ground'], [grow(g, rel) for g in reversed(mine)])}'''
         out.append((f'cricket/teams/{slug(t)}/index.html', page(site=site, sport='cricket', depth=3, title=f'{t} · every international, record by opponent · APEX', desc=f'{t} in international cricket, {ys[0]}–{ys[-1]}: {len(mine)} matches, {w_all} won; by format and by opponent.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Teams', rel + 'cricket/teams/'), (t, None)], body=body, path=f'cricket/teams/{slug(t)}/', v=v)))
-    # players (only those with recorded figures)
+    # players: those with recorded figures, and those known only by a published career
     by_p = collections.defaultdict(list)
     for r in PS: by_p[r['p']].append(r)
+    CF = A.get('careerFields'); CAR = collections.defaultdict(list); CSRC = A.get('careerSources') or []
+    for c in (A.get('careers') or []): c = dict(zip(CF, c)) if CF else c; CAR[c['p']].append(c)
+    def career_table(pid, rel):
+        cs = sorted(CAR.get(pid, []), key=lambda c: (c['first'], c['f']))
+        if not cs: return ''
+        cv = lambda x: '—' if x is None or x == '' else (fmt(x) if isinstance(x, int) else E(str(x)))
+        av = lambda x: '—' if x is None else f'{x:.2f}'
+        srcs = [CSRC[i] for i in dict.fromkeys(c['source'] for c in cs) if isinstance(i, int) and i < len(CSRC)]
+        links = ', '.join(f'<a href="{E("https://en.wikipedia.org/w/index.php?title=" + urllib.parse.quote(s_["slug"]) + "&oldid=" + s_["revision"] if s_.get("revision") else s_["url"])}" target="_blank" rel="noopener">{E(s_["t"])} {"women’s " if s_["g"] == "W" else ""}{E(s_["f"])} players</a>' for s_ in srcs)
+        return ('<h2>Published career <small>as the national player lists give it</small></h2>' + table(['Team', 'Format', 'Years', 'Cap', 'M', 'Runs', 'Avg', 'HS', 'Wkts', 'Avg', 'BB', 'Ct/St'],
+                [[(nl(c['t'], rel) if c['t'] in sides else f'<i class="dot" style="--c:{col(c["t"])}"></i>{E(c["t"])}'), c['f'] + (' (W)' if c['g'] == 'W' else ''), f"{c['first']}–{'' if c.get('ongoing') else c['last']}", cv(c.get('cap')), cv(c.get('games')), cv(c.get('runs')), av(c.get('batavg')), cv(c.get('hs')), cv(c.get('wickets')), av(c.get('bowlavg')), cv(c.get('best')), f"{cv(c.get('catches'))}/{cv(c.get('stumps'))}"] for c in cs], num=(4, 5, 6, 8, 9))
+                + f'<p class="lede" style="font-size:12px">From {links} (Wikipedia contributors, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>), shown as published; never added to the recorded figures.</p>')
+    ext = lambda info: ' · '.join(x for x in ((f'<a href="https://www.espncricinfo.com/cricketers/{E(info["espn"])}" target="_blank" rel="noopener">Cricinfo profile ↗</a>' if info.get('espn') else ''), (f'<a href="https://en.wikipedia.org/wiki/{E(urllib.parse.quote(info["wiki"]))}" target="_blank" rel="noopener">Wikipedia ↗</a>' if info.get('wiki') else '')) if x)
+    full = lambda info: (E(info['fullName']) + ' · ') if info.get('fullName') and info['fullName'] != info.get('n') else ''
     for pid, rows in by_p.items():
         rel = '../../../'; info = P.get(pid, {}); rows.sort(key=lambda r: (r['y'], r['f']))
         runs = sum(r['runs'] for r in rows); outs = sum(r['outs'] for r in rows); wk = sum(r['wickets'] for r in rows); conc = sum(r['conceded'] for r in rows); gm = sum(r['games'] for r in rows)
         hs = max(rows, key=lambda r: (r['hs'], r['hsno'])); team = collections.Counter(r['t'] for r in rows).most_common(1)[0][0]
         body = f'''<p class="eyebrow">Cricket · Player · {nl(team, rel)} · {rows[0]['y']}–{rows[-1]['y']}</p><h1>{E(info.get('n', pid))}</h1>
-<p class="lede">{E(info.get('short', ''))} · recorded figures from {gm} internationals with scorecards ({rows[0]['y']}–{rows[-1]['y']}); these are recorded totals, not a complete career.</p>
+<p class="lede">{full(info)}{E(info.get('short', ''))} · recorded figures from {gm} internationals with scorecards ({rows[0]['y']}–{rows[-1]['y']}), added up from the cards.</p>
 <a class="open" href="{rel}cricket/#tab=players&player={pid}">Open in the atlas →</a>
 {kpis([('Matches', gm, 'with recorded figures'), ('Runs', fmt(runs), f'avg {round(runs / outs, 2) if outs else "—"}'), ('Highest', f'{hs["hs"]}{"*" if hs["hsno"] else ""}', f'{sum(r["hundreds"] for r in rows)} hundreds · {sum(r["fifties"] for r in rows)} fifties'), ('Wickets', wk, f'avg {round(conc / wk, 2) if wk else "—"}'), ('Catches', sum(r['catches'] for r in rows), f'{sum(r["stumps"] for r in rows)} stumpings')])}
 <h2>Season by season</h2>{table(['Year', 'Format', 'Team', 'M', 'Inns', 'Runs', 'Avg', 'HS', '100/50', 'Wkts', 'Avg', 'BB', 'Ct'], [[f'<a class="q" href="{rel}cricket/seasons/{r["y"]}/">{r["y"]}</a>', r['f'] + (' (W)' if r['g'] == 'W' else ''), nl(r['t'], rel), r['games'], r['inns'], r['runs'], round(r['runs'] / r['outs'], 1) if r['outs'] else '—', f'{r["hs"]}{"*" if r["hsno"] else ""}', f'{r["hundreds"]}/{r["fifties"]}', r['wickets'], round(r['conceded'] / r['wickets'], 1) if r['wickets'] else '—', f'{r["bbw"]}/{r["bbr"]}' if r['bbw'] else '—', r['catches']] for r in reversed(rows)], num=(3, 4, 5, 6, 9, 10, 12))}
-{f'<p class="lede" style="font-size:12px"><a href="https://www.espncricinfo.com/cricketers/{E(info["espn"])}" target="_blank" rel="noopener">Cricinfo profile ↗</a></p>' if info.get('espn') else ''}'''
+{career_table(pid, rel)}
+{f'<p class="lede" style="font-size:12px">{ext(info)}</p>' if ext(info) else ''}'''
         out.append((f'cricket/players/{pid}/index.html', page(site=site, sport='cricket', depth=3, title=f'{info.get("n", pid)} · recorded international figures · APEX', desc=f'{info.get("n", pid)} ({team}): {fmt(runs)} runs and {wk} wickets in {gm} recorded internationals, season by season.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', rel + 'cricket/players/'), (info.get('n', pid), None)], body=body, path=f'cricket/players/{pid}/', v=v, noindex=(gm < 3))))
+    only = {pid: cs for pid, cs in CAR.items() if pid not in by_p and pid in P}
+    for pid, cs in only.items():
+        rel = '../../../'; info = P[pid]; team = max(cs, key=lambda c: c.get('games') or 0)['t']; y0 = min(c['first'] for c in cs); y1 = max(c['last'] for c in cs)
+        gm = sum(c.get('games') or 0 for c in cs)
+        tl = nl(team, rel) if team in sides else f'<i class="dot" style="--c:{col(team)}"></i>{E(team)}'
+        body = f'''<p class="eyebrow">Cricket · Player · {tl} · {y0}–{y1}</p><h1>{E(info.get('n', pid))}</h1>
+<p class="lede">{full(info)}{'women’s' if 'W' in (info.get('gender') or []) else 'men’s'} internationals · no scorecard of this career is in the archive (it holds the women’s game from its first recorded scorecards), so the published career is the record here.</p>
+<a class="open" href="{rel}cricket/#tab=players&player={pid}">Open in the atlas →</a>
+{career_table(pid, rel)}
+{f'<p class="lede" style="font-size:12px">{ext(info)}</p>' if ext(info) else ''}'''
+        out.append((f'cricket/players/{pid}/index.html', page(site=site, sport='cricket', depth=3, title=f'{info.get("n", pid)} · published international career · APEX', desc=f'{info.get("n", pid)} ({team}), {y0}–{y1}: {gm} internationals in the published career.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', rel + 'cricket/players/'), (info.get('n', pid), None)], body=body, path=f'cricket/players/{pid}/', v=v, noindex=(gm < 3))))
     # grounds
     by_v = collections.defaultdict(list)
     for g in games:
@@ -660,7 +691,7 @@ def gen_cricket(A, *, site, v):
     rel = '../../'
     out.append(('cricket/seasons/index.html', page(site=site, sport='cricket', depth=2, title='International cricket, year by year, 1877–2026 · APEX', desc='Every year of international cricket on its own page.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Seasons', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>year</span></h1><p class="lede">{len(years)} years with internationals.</p>' + index_list([(str(y), f'cricket/seasons/{y}/', f'{len(by_year[y])} matches') for y in reversed(years)], rel), path='cricket/seasons/', v=v)))
     out.append(('cricket/teams/index.html', page(site=site, sport='cricket', depth=2, title='Cricket teams · APEX', desc='Every side in the international archive.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Teams', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>side</span></h1>' + index_list(sorted([(t, f'cricket/teams/{slug(t)}/', f'{sum(1 for g in games if t in g["teams"])} matches') for t in sides]), rel), path='cricket/teams/', v=v)))
-    out += index_pages(site=site, sport='cricket', title='Cricket players · APEX', desc='Every player with recorded international figures.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', None)], intro=f'<p class="eyebrow">Cricket</p><h1>Every <span>player</span></h1><p class="lede">{len(by_p):,} players with recorded figures from scorecards (2000s onward).</p>', items=sorted([(P.get(pid, {}).get('n', pid), f'cricket/players/{pid}/', f'{sum(r["runs"] for r in rows)} runs · {sum(r["wickets"] for r in rows)} wkts') for pid, rows in by_p.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='cricket/players', v=v)
+    out += index_pages(site=site, sport='cricket', title='Cricket players · APEX', desc='Every player with recorded international figures.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Players', None)], intro=f'<p class="eyebrow">Cricket</p><h1>Every <span>player</span></h1><p class="lede">{len(by_p):,} players with recorded figures from the scorecards (men’s Tests from 1877, ODIs from 1971, T20Is and the women’s game from their first recorded cards){f", and {len(only):,} known by their published careers" if only else ""}.</p>', items=sorted([(P.get(pid, {}).get('n', pid), f'cricket/players/{pid}/', f'{sum(r["runs"] for r in rows)} runs · {sum(r["wickets"] for r in rows)} wkts') for pid, rows in by_p.items()] + [(P[pid].get('n', pid), f'cricket/players/{pid}/', f'published career · {sum(c.get("games") or 0 for c in cs)} matches') for pid, cs in only.items()], key=lambda t: (t[0].split(' ')[-1], t[0], t[1])), dir='cricket/players', v=v)
     out.append(('cricket/grounds/index.html', page(site=site, sport='cricket', depth=2, title='Cricket grounds · APEX', desc='Every recorded international ground.', crumbs=[('Sportsfans', rel), ('Cricket', rel + 'cricket/'), ('Grounds', None)], body=f'<p class="eyebrow">Cricket</p><h1>Every <span>ground</span></h1><p class="lede">{len(by_v)} recorded grounds and cities.</p>' + index_list(sorted([(V[vid]['n'], f'cricket/grounds/{vid}/', f'{len(ms)} matches') for vid, ms in by_v.items()], key=lambda t: (t[0], t[1])), rel), path='cricket/grounds/', v=v)))
     return out
 
