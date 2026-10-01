@@ -8,13 +8,10 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 |---|---|---|---|---|
 | Formula 1 | [F1DB](https://github.com/f1db/f1db) | CC BY 4.0 | circuit outlines, track specifications, supplementary fastest laps | `data/f1.json`: **CC BY-NC-SA 4.0** (attribute F1DB and Jolpica; non-commercial; share alike) |
 | Formula 1 | [Jolpica F1](https://github.com/jolpica/jolpica-f1) | CC BY-NC-SA 4.0; API free for non-commercial use | results, sprints, standings | " |
-| Rugby | [Nuck's Rugby Archive](https://rugbyarchive.github.io/about.html) | no licence stated (hobby archive) | the ten nations' match archive | `data/rugby.json` is mixed: the match compilation carries no licence for reuse (facts are free, compilations credited; permission being sought); see the Wikipedia and Wikidata rows for the register, team sheets, scorers and dates |
+| Rugby | [Nuck's Rugby Archive](https://rugbyarchive.github.io/about.html) | no licence stated (hobby archive) | the ten nations' match archive | `data/rugby.json`: no licence granted for reuse; facts are free, compilations credited; permission being sought |
 | Rugby | [Springbok Rugby History](https://bokhist.com/) | no licence stated | Springbok record, player histories, squads | " |
 | Rugby | [Pick & Go](https://www.lassen.co.nz/pickandgo.php) | © www.pickandgo.nz, no terms | cross-check only | — |
-| Rugby | Wikipedia | CC BY-SA 4.0 | coaching lists; the national player registers of every side in the archive; team sheets and named scorers from match, tour and championship articles (English, French and German editions) | `data/rugby.json`: these parts CC BY-SA 4.0, attribute Wikipedia contributors, share alike |
-| Rugby | Wikidata | CC0 1.0 | dates of birth and death, linked by exact Wikipedia sitelink | — |
-| Rugby | National unions and World Rugby (UAR, JRFU, IRFU, FIR, SA Rugby, Scottish Rugby, Six Nations; World Rugby hall of fame) | no licence stated | factual cross-checks only: a date, a score, a starting fifteen, two identities | — |
-| Rugby | RugbyScope v1.2.0 (Labatut and O'Sullivan) | CC BY 4.0 | identity cross-checks for early players printed by initials | — |
+| Rugby | Wikipedia | CC BY-SA 4.0 | coaching lists | — |
 | MotoGP, WorldSBK, Isle of Man TT | Wikipedia (English season articles; the German list of TT winners) | CC BY-SA 4.0 | every result, calendar and published standing; every TT winner and classification | `data/motogp.json`, `data/sbk.json`, `data/tt.json`: CC BY-SA 4.0; attribute; share alike |
 | MotoGP, WorldSBK | Wikidata | CC0 1.0 | circuit coordinates and countries | — |
 | MotoGP, WorldSBK, Isle of Man TT | OpenStreetMap | ODbL 1.0 | circuit outlines; the Mountain Course and its named places | ODbL |
@@ -49,12 +46,12 @@ Trademarks: every championship, team, event, venue and manufacturer name is the 
 - Derived in `tools/prepare_ufc.py` from the transcribed rows alone: the division key from the weight-class label, the method kind from the method text, the title flag from the notes, the elapsed time from round and time (five-minute rounds from UFC 21, July 1999), each fighter's record from the bouts in the archive.
 - The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike. No logos, marks or official artwork; the promotion's names identify the events and nothing on the site is affiliated with it.
 
-## Summer Olympics (`data/olympics.json`)
+## Summer and Winter Olympics (`data/olympics.json`, `data/winter.json`)
 
-- **Wikipedia** — the "List of <year> Summer Olympics medal winners" article for each of the 30 Games held, at the recorded revisions (retrieved 29 September 2026), reconciled against each "<year> Summer Olympics medal table" article: every medal event with its sport and category, and the gold, silver and bronze awards with the delegation and the athletes the list names. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Transcribed by Daniel's prototype page; `tools/prepare_olympics.py` reads it. The sweeper reads the next Games' list the same way and writes it only when its medal table reconciles.
+- **Wikipedia** — the "List of <year> Summer Olympics medal winners" article for each of the 30 Summer Games held and the "List of <year> Winter Olympics medal winners" article for each of the 25 Winter Games held, at the recorded revisions (retrieved 29 September 2026), each reconciled against the Games’ "medal table" article: every medal event with its sport and category, and the gold, silver and bronze awards with the delegation and the athletes the list names. Text and tables are CC BY-SA 4.0 (Wikipedia contributors); the results themselves are facts. Transcribed by Daniel's two prototype pages; `tools/prepare_olympics.py` reads them. The sweepers read the next Games' list the same way and writes it only when its medal table reconciles.
 - **Natural Earth** — the 1:110m land silhouette behind the host maps (public domain), projected and rounded by the prototype. Host cities are placed at approximate coordinates; venues are not drawn.
 - Nothing is taken from the IOC's own site, results service or artwork. No Olympic rings, emblems, pictograms, mascots or official typography appear anywhere; medals are drawn as plain coloured discs of the site's own palette. Art competitions, demonstration events and the 1906 Intercalated Games are outside the archive; the cancelled 1916, 1940 and 1944 Games are listed as gaps.
-- The data file is **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike; the land geometry inside it is public domain. The words Olympic, Olympics and Olympic Games identify the event; nothing on the site is affiliated with, endorsed by or connected to the International Olympic Committee or any national committee.
+- Both data files are **CC BY-SA 4.0**: attribute Wikipedia contributors and share alike; the land geometry inside them is public domain. The words Olympic, Olympics and Olympic Games identify the event; nothing on the site is affiliated with, endorsed by or connected to the International Olympic Committee or any national committee.
 
 ## Dakar Rally (`data/dakar.json`)
 

@@ -1,6 +1,6 @@
 # Data audit · Summer Olympics atlas
 
-Checked 2026-09-30 against `data/olympics.json` (snapshot 2026-09-29). Nothing was changed.
+Checked 2026-10-01 against `data/olympics.json` (snapshot 2026-09-29). Nothing was changed.
 
 ## Totals
 

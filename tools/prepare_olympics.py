@@ -1,6 +1,7 @@
-"""Bring the Summer Olympics archive into the site.
+"""Bring the Summer or Winter Olympics archive into the site.
 
-  python3 tools/prepare_olympics.py /path/to/summer_olympics_atlas_1896_2024.html
+  python3 tools/prepare_olympics.py /path/to/summer_olympics_atlas_1896_2024.html     → data/olympics.json
+  python3 tools/prepare_olympics.py /path/to/winter_olympics_atlas_1924_2026.html     → data/winter.json   (the page's title says which)
 
 Reads the prototype page's embedded <script id="archive"> — every medal event of every Summer Games and the awards
 (gold, silver, bronze, with the delegation and the named athletes), transcribed from Wikipedia's per-Games lists of medal
@@ -13,6 +14,8 @@ import json, re, sys, pathlib, collections, unicodedata
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 src = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ROOT/'build'/'harvest'/'summer_olympics_atlas_1896_2024.html')
 html = src.read_text(encoding='utf-8')
+WINTER = 'winter' in (re.search(r'<title>(.*?)</title>', html, re.S | re.I).group(1) if re.search(r'<title>', html, re.I) else src.name).lower()
+SEASON, KEY, NAME = ('Winter', 'winter', 'Winter Olympics') if WINTER else ('Summer', 'olympics', 'Summer Olympics')
 D = json.loads(re.search(r'<script id="archive"[^>]*>(.*?)</script>', html, re.S).group(1))
 land = re.search(r"const land='([^']+)'", html).group(1)
 proto_colours = json.loads(re.sub(r"'", '"', re.search(r"const colors=(\{.*?\});", html, re.S).group(1)))
@@ -36,18 +39,22 @@ sys.path.insert(0, str(ROOT/'tools')); from olympics_common import slug, lineage
 games = []
 for y in sorted(D['editions'], key=lambda e: e['year']):
     games.append({'y': y['year'], 'city': y['city'], 'country': y['country'], 'dates': y['dates'], 'athletes': y['athletes'], 'men': y['men'], 'women': y['women'], 'scheduled': y['scheduledEvents'],
-                  'delegations': int(str(y['delegations']).replace(',', '')) if str(y['delegations']).replace(',', '').isdigit() else y['delegations'], 'points': [[p['city'], p['lon'], p['lat']] for p in y['points']], 'cancelled': False})
-for y, why in ((1916, 'Berlin was to host; the Games were cancelled because of the First World War.'), (1940, 'Tokyo, then Helsinki, were to host; the Games were cancelled because of the Second World War.'), (1944, 'London was to host; the Games were cancelled because of the Second World War.')):
+                  'delegations': int(re.match(r'\d+', str(y['delegations']).replace(',', '')).group(0)) if re.match(r'\d+', str(y['delegations']).replace(',', '')) else None, 'points': [[p['city'], p['lon'], p['lat']] for p in y['points']], 'cancelled': False})
+CANCELLED = {'Summer': ((1916, 'Berlin was to host; the Games were cancelled because of the First World War.'), (1940, 'Tokyo, then Helsinki, were to host; the Games were cancelled because of the Second World War.'), (1944, 'London was to host; the Games were cancelled because of the Second World War.')),
+             'Winter': ((1940, 'Sapporo, then St. Moritz, then Garmisch-Partenkirchen were to host; the Games were cancelled because of the Second World War.'), (1944, 'Cortina d’Ampezzo was to host; the Games were cancelled because of the Second World War.'))}
+for y, why in CANCELLED[SEASON]:
     games.append({'y': y, 'city': 'Cancelled', 'country': '', 'dates': '', 'athletes': None, 'men': None, 'women': None, 'scheduled': None, 'delegations': None, 'points': [], 'cancelled': True, 'note': why})
 games.sort(key=lambda g: g['y'])
+NOTES = {'Summer': {1956: 'The equestrian events were held in Stockholm in June because of Australian quarantine rules; everything else in Melbourne in November and December.', 2020: 'Held in 2021 after a one-year postponement, and kept the name Tokyo 2020.'},
+         'Winter': {1994: 'Two years after Albertville: from Lillehammer the Winter Games moved to the even years between the Summer Games.', 2026: 'Two host cities, Milan and Cortina d’Ampezzo, with the snow events spread across the Dolomites and the Valtellina.'}}
 for g in games:
-    if g['y'] == 1956: g['note'] = 'The equestrian events were held in Stockholm in June because of Australian quarantine rules; everything else in Melbourne in November and December.'
-    if g['y'] == 2020: g['note'] = 'Held in 2021 after a one-year postponement, and kept the name Tokyo 2020.'
+    if g['y'] in NOTES[SEASON]: g['note'] = NOTES[SEASON][g['y']]
 
 # ---- events and awards as rows
 EF = ['id', 'y', 'sport', 'event', 'gender', 'url', 'section', 'status', 'note', 'key']
-events = []
+events = []; fixed = []
 for e in D['events']:
+    if re.search(r'\bwoman\b', e['event'], re.I) and e['gender'] == 'Men': e['gender'] = 'Women'; fixed.append(f"{e['year']} {e['sport']} {e['event']}")   # the prototype read 'Two-woman' bobsleigh as men's
     events.append([e['id'], e['year'], e['sport'], e['event'], e['gender'], e['url'], e.get('section') or '', e.get('status') or '', e.get('note') or '', lineage(e['sport'], e['gender'], e['event'])])
 WF = ['e', 'rank', 'nation', 'athletes', 'correction']
 awards = [[w['eventId'], w['rank'], w['nation'], list(w['athletes']), w.get('correction') or ''] for w in D['awards']]
@@ -63,11 +70,12 @@ notes = [re.sub(r'<[^>]+>', '', p) for p in re.findall(r'<details open><summary>
 held = [g for g in games if not g['cancelled']]
 core = {'games': games, 'eventFields': EF, 'events': events, 'awardFields': WF, 'awards': awards, 'athletes': athletes, 'sports': sports, 'nations': nations, 'colours': colours,
         'map': {'land': land, 'projection': 'equirectangular: x = (lon + 180) × 3, y = (90 − lat) × 3', 'source': 'Natural Earth 1:110m land (public domain), coordinates projected and rounded by the prototype', 'sourceUrl': 'https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_land.geojson'},
-        'milestones': milestones, 'notes': notes, 'sources': D['sources'], 'validation': D['validation'], 'corrections': D['corrections'], 'aliases': D['aliases'],
+        'season': KEY if WINTER else 'summer', 'name': NAME, 'milestones': milestones, 'notes': notes, 'sources': D['sources'], 'validation': D['validation'], 'corrections': D.get('corrections', []), 'aliases': D.get('aliases', {}),
         'licence': 'CC BY-SA 4.0', 'licenceUrl': 'https://creativecommons.org/licenses/by-sa/4.0/', 'retrieved': D['retrieved'], 'snapshot': D['retrieved'], 'lastYear': max(g['y'] for g in held),
         'coverage': {'games': len(games), 'held': len(held), 'cancelled': len(games) - len(held), 'events': len(events), 'medalEvents': len({w[0] for w in awards}), 'awards': len(awards), 'gold': sum(1 for w in awards if w[1] == 1),
                      'athletes': len(athletes), 'medallists': len({a for w in awards for a in w[3]}), 'nations': len(nations), 'sports': len(sports), 'validated': sum(1 for v in D['validation'] if v['status'] == 'matched')},
-        'method': 'Every medal event of every Summer Games, read from Wikipedia’s list of medal winners for that Games at the recorded revision: the event and its sport, the men’s, women’s, mixed or open category, and the gold, silver and bronze awards with the delegation and the athletes the list names. A team, pair or relay counts once in a delegation’s table; ties are separate awards; the medal table of every Games reconciles by delegation and colour against the cited comparison table. Art competitions, demonstration events and the 1906 Intercalated Games are outside the archive. Host cities are placed on the Natural Earth land silhouette at approximate coordinates.'}
-out = ROOT/'data'/'olympics.json'; out.write_text(json.dumps(core, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+        'method': f'Every medal event of every {SEASON} Games, read from Wikipedia’s list of medal winners for that Games at the recorded revision: the event and its sport, the men’s, women’s, mixed or open category, and the gold, silver and bronze awards with the delegation and the athletes the list names. A team, pair or relay counts once in a delegation’s table; ties are separate awards; the medal table of every Games reconciles by delegation and colour against the cited comparison table. ' + ('Demonstration events are outside the archive. ' if WINTER else 'Art competitions, demonstration events and the 1906 Intercalated Games are outside the archive. ') + 'Host cities are placed on the Natural Earth land silhouette at approximate coordinates.'}
+out = ROOT/'data'/f'{KEY}.json'; out.write_text(json.dumps(core, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
 c = core['coverage']
-print(f'olympics: {c["held"]} Games held ({c["cancelled"]} cancelled) · {c["events"]:,} events · {c["awards"]:,} awards ({c["gold"]:,} gold) · {c["medallists"]:,} medallists of {c["athletes"]:,} names · {c["nations"]} delegations · {c["sports"]} sports · {c["validated"]}/{c["held"]} medal tables reconciled · lineages {len({e[9] for e in events}):,} · {out.stat().st_size/1e6:.1f} MB')
+if fixed: print(f'{KEY}: category corrected to women for {len(fixed)} events named "…woman": {", ".join(fixed[:3])}{" …" if len(fixed) > 3 else ""}')
+print(f'{KEY}: {c["held"]} Games held ({c["cancelled"]} cancelled) · {c["events"]:,} events · {c["awards"]:,} awards ({c["gold"]:,} gold) · {c["medallists"]:,} medallists of {c["athletes"]:,} names · {c["nations"]} delegations · {c["sports"]} sports · {c["validated"]}/{c["held"]} medal tables reconciled · lineages {len({e[9] for e in events}):,} · {out.stat().st_size/1e6:.1f} MB')

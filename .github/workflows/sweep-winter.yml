@@ -1,0 +1,24 @@
+name: Sweep · Winter Olympics
+# The Games run in February every fourth year (French Alps 2030, Salt Lake City 2034); Mondays and Thursdays from January to
+# March every year — in the years between, the next list does not exist yet and the sweep reports "nothing new".
+# Times are UTC. Run workflow by hand any time; tick "dry run" to read and report without committing.
+on:
+  schedule:
+    - cron: '17 11 * 1-3 1,4'
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep-winter, cancel-in-progress: false }   # one group per atlas: GitHub keeps only one pending run per group, so a shared group would cancel sweeps that overlap
+jobs:
+  sweep:
+    uses: ./.github/workflows/sweep-run.yml
+    with:
+      sport: winter
+      dry_run: ${{ inputs.dry_run == true }}
+    permissions: { contents: write }
+  deploy:
+    needs: sweep
+    if: needs.sweep.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

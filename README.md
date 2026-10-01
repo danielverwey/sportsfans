@@ -1,6 +1,6 @@
 # APEX / Sports atlases · sportsfans.co.za
 
-Ten sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
+Eleven sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
 
 | Atlas | Span | Live path |
 |---|---|---|
@@ -9,10 +9,11 @@ Ten sporting archives, each drawn as an ode in one shared visual language — th
 | Formula 1 | 1950–2026 · 1,163 Grands Prix · 26,181 results | `/f1/` |
 | Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` |
-| Rugby union · ten nations | 1871–2026 · 3,960 Test matches · 20,539 players · 2,321 team sheets | `/rugby/` |
+| Rugby union · ten nations | 1871–2026 · 3,960 Test matches | `/rugby/` |
 | Summer Olympics | 1896–2024 · 30 Games · 5,766 medal events · 17,825 medals · 27,685 medallists | `/olympics/` |
 | Tennis · the tour | 1877–2026 · 11,043 titles · 388,665 matches | `/tennis/` |
 | UFC bouts | 1993–2026 · 791 events · 8,917 bouts | `/ufc/` |
+| Winter Olympics | 1924–2026 · 25 Games · 1,279 medal events · 3,849 medals · 4,861 medallists | `/winter/` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` |
 
 Every page loads its own archive and needs no server-side code: no build step at view time, no external requests other than Google Fonts. Each carries an opening in the sport's own idiom (lights out; kick-off; the toss; the serve; the ten-second start), the River of its entire history at once, the Stage of seasons, races or matches, replays, careers, records, barcodes and duels under one era lens, every circuit to its own outline and every ground or tournament listed — never drawn — in the colours of the side that has won there most or of its surface, and a plain reading edition that works with scripts off. The landing page (`docs/index.html`) carries a miniature of each River, drawn from the data at build time.
@@ -23,7 +24,7 @@ Every page loads its own archive and needs no server-side code: no build step at
 Sportsfans/
 ├── docs/                          ← the published site (GitHub Pages root, sportsfans.co.za)
 │   ├── index.html                 landing page, with a miniature of each River drawn at build time
-│   ├── cricket/  dakar/  f1/  motogp/  olympics/  rugby/  sbk/  tennis/  tt/  ufc/
+│   ├── cricket/  dakar/  f1/  motogp/  olympics/  rugby/  sbk/  tennis/  tt/  ufc/  winter/
 │   │   ├── index.html             the atlas: a 7–13 KB shell that loads its stylesheet, app and archive
 │   │   ├── reading/index.html     the reading edition, generated from the archive (plain tables, no scripts)
 │   │   ├── seasons/<year>/        one static page per season
@@ -82,11 +83,11 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 2. `python tools/prepare_dakar.py path/to/paris_dakar_atlas_1979_2026.html` → `data/dakar.json` (editions, podium rows, people, marques, colours, map).
 3. Commit `data/dakar.json` and push — the deploy workflow builds and publishes. Routes are drawn schematically between the named towns; a town missing from the gazetteer is simply not drawn (the build prints any edition with fewer than two drawable stops).
 
-### Summer Olympics (prototype → prepare → publish)
+### Summer and Winter Olympics (prototype → prepare → publish)
 
 1. The archive is the prototype page `summer_olympics_atlas_1896_2024.html` — every medal event of every Summer Games with its gold, silver and bronze awards (delegation and named athletes), transcribed from Wikipedia's per-Games lists of medal winners at recorded revisions and reconciled against each Games' medal table, plus the Natural Earth land silhouette. Keep a copy at `build/harvest/summer_olympics_atlas_1896_2024.html`.
-2. `python tools/prepare_olympics.py path/to/summer_olympics_atlas_1896_2024.html` → `data/olympics.json` (the Games with the three cancelled editions kept as gaps, events and awards as rows, athletes' names, delegation colours, the map, sources, validation, corrections, aliases). Each event gets a lineage key (`tools/olympics_common.py`) so the same event can be followed across Games whatever a year's list called it.
-3. Commit `data/olympics.json` and push — the deploy workflow builds and publishes: the atlas, a page for every Games, every champion and multiple medallist, every delegation, every sport, every event held at three Games or more, and every host city. `python tools/audit_olympics.py` checks the archive against itself and a few well-known facts (`audits/DATA-AUDIT-olympics.md`).
+2. `python tools/prepare_olympics.py path/to/summer_olympics_atlas_1896_2024.html` → `data/olympics.json`; the Winter prototype (`winter_olympics_atlas_1924_2026.html`, the same generator) goes through the same script → `data/winter.json`. The two atlases share the app (`src/olympics/app*.js`, which reads the season from the archive); each has its own shell and stylesheet (`src/olympics/`, `src/winter/`), eras, opening and hub card (the Games with the three cancelled editions kept as gaps, events and awards as rows, athletes' names, delegation colours, the map, sources, validation, corrections, aliases). Each event gets a lineage key (`tools/olympics_common.py`) so the same event can be followed across Games whatever a year's list called it.
+3. Commit `data/olympics.json` and push — the deploy workflow builds and publishes: the atlas, a page for every Games, every champion and multiple medallist, every delegation, every sport, every event held at three Games or more, and every host city. `python tools/audit_olympics.py` (or `… winter`) checks the archive against itself and a few well-known facts (`audits/DATA-AUDIT-olympics.md`, `-winter.md`).
 
 ### Sweeping the data (automatic)
 
@@ -103,6 +104,7 @@ Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that 
 | Isle of Man TT | `tt.py` | Wikipedia "<year> Isle of Man TT" | daily 09:53, 25 May–20 June |
 | Dakar Rally | `dakar.py` | Wikipedia "Dakar Rally" | daily 10:03, 3–31 January |
 | Summer Olympics | `olympics.py` | Wikipedia "List of <year> Summer Olympics medal winners", "<year> Summer Olympics medal table", "<year> Summer Olympics" | Mon + Thu 11:07, July–September (every fourth year has a Games; in between it reports nothing new) |
+| Winter Olympics | `olympics.py` (season winter) | the same three articles for the Winter Games | Mon + Thu 11:17, January–March |
 
 Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests, the latest Games' medals) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
 
@@ -112,7 +114,7 @@ By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read
 
 The gate (`tools/gate.py <atlas>`) compares the new archive with the last commit: nothing may be missing, the snapshot may not go backwards, changes to past records are listed, and every new record must have the same fields and types as the archive's own (so a reader that misreads a page cannot slip a malformed row in). `--accept` overrides it after a human has looked.
 
-The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar|olympics> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
+The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar|olympics|winter> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
 
 ### Cricket: bringing in a harvest
 
@@ -124,17 +126,6 @@ python tools/audit_cricket.py
 ```
 
 It never overwrites a result, a date, a ground or a Cricsheet scorecard; it gives a scorecard only to a match that has none, fills the toss and last day only where they were blank, links every scorecard player to the register (the harvest's own link, then the Cricinfo id, then name, side and career years, then surname with the same initial or given name — two register entries that are one player are joined, and a career list attached to the wrong namesake moves to the one the scorecards show), recomputes the player-season figures of every season it touches, and prints what it did. The audit then checks the whole archive against itself and against known facts (Bradman 6,996 runs at 99.94, the three ten-wicket innings, 952/6 and 26 all out). The historical cards carry nulls where their source recorded nothing (balls faced before the 1970s, the bowler credited with a catch), so `tools/gate.py cricket` flags them as a new shape the first time; that is expected for this one merge.
-
-### Rugby: bringing in a harvest
-
-The player register, team sheets and scorers come from Daniel's consolidated harvest (`rugby_harvest_consolidated_<batch>.json`, the Wikipedia national player lists and match articles, Wikidata, and factual cross-checks against the unions' own match records). A new batch goes in with
-
-```
-python tools/merge_rugby_harvest.py build/harvest/rugby_harvest_consolidated_021.json
-python tools/audit_rugby.py
-```
-
-It keeps the archive's own shape: the 484 original profiles keep their ids and figures and gain the harvest's histories; every other register entry is added with the caps, tries and points its national list gives and a history built from the team sheets and scorers, linked to the atlas's match ids by the perspective index the existing histories use (`historyFields` names the packed columns). A Test gains a scoring breakdown only where the named scorers reconcile to the recorded score under the values of the day. Names printed in a match source that no register entry could be linked to are kept as printed and marked for review. The only changes to existing records are the harvest's reviewed corrections, each listed in `harvestCorrections` with its evidence.
 
 ### Search engines
 
@@ -161,7 +152,7 @@ The site is non-commercial for good and uses no logos; every source and the lice
 ## Data
 
 - **F1** — results, standings, circuit layouts and car eras; sources listed inside the atlas.
-- **Rugby** — ten nations' Test archives and coaching records (Nuck's Rugby Archive, Springbok Rugby History, credited); the national player registers of every side in the archive, team sheets and named scorers (Wikipedia, CC BY-SA 4.0), dates from Wikidata (CC0); recognition scope and coverage notes inside the atlas. `tools/merge_rugby_harvest.py` brings a consolidated harvest in.
+- **Rugby** — ten nations' Test archives, careers and coaching records; recognition scope and coverage notes inside the atlas.
 - **Cricket** — every men's and women's international from 1877 with its scorecard: ball by ball from Cricsheet (ODC-By) from the 2000s (innings worms), historical scorecards before that (Hugging Face datasets and Cricbuzz, no licence stated, credited); batting and bowling figures, line-ups and player-season totals are added up from the cards; full names and the published career of every Test and ODI player from Wikipedia's national player lists (CC BY-SA). `tools/merge_cricket_harvest.py` brings a new harvest in (see below).
 - **Tennis** — every tour-level ATP and WTA match from 1968 (Jeff Sackmann, CC BY-NC-SA 4.0) with seedings, rankings, durations and serve statistics; Wimbledon's roll of honour from 1877.
 - **MotoGP / WorldSBK** — rebuilt in September 2026 entirely from Wikipedia's season articles (CC BY-SA 4.0): results, calendars and published standings; circuit outlines from OpenStreetMap, or the F1DB survey at shared venues. `tools/prepare_bikes.py` brings a new export in; `tools/osm_outlines.py` (the *Circuit outlines* workflow) fetches the missing outlines.

@@ -9,7 +9,8 @@ def slug(s):
 def lineage(sport, gender, name):
     """'100 metres', '100 m' and '100m' are one event; 'Men's 100 metres' under Athletics is the same as '100 metres' under 'Men's events'."""
     n = name.strip()
-    n = re.sub(r"^(Men's|Women's|Mixed|Open|Men|Women)\s+", '', n, flags=re.I)
+    n = re.sub(r"^(Men's|Women's|Ladies'?|Mixed|Open|Men|Women)\s+", '', n, flags=re.I)
+    n = re.sub(r'\bwoman\b', 'man', n, flags=re.I)   # 'Two-woman' and "Women's two-man" are one event under women
     n = re.sub(r'(\d),(\d{3})', r'\1\2', n)
     n = re.sub(r'(\d)\s*[×x]\s*(\d)', r'\1×\2', n)
     n = re.sub(r'(\d)\s*(metres|meters|metre|meter|m)\b', r'\1 m', n, flags=re.I)
@@ -26,8 +27,8 @@ def gender_of(name, section='', url=''):
     for t in (name or '', tail, section or ''):
         m = re.match(r"\s*(men|women|mixed|open)\b", t, re.I)
         if m: return m.group(1).capitalize()
-        if re.search(r"\bwomen'?s?\b|\bgirls?\b|\bladies\b", t, re.I): return 'Women'
-        if re.search(r"\bmen'?s?\b|\bboys?\b", t, re.I): return 'Men'
+        if re.search(r"\bwomen'?s?\b|\bwoman\b|\bgirls?\b|\bladies'?\b", t, re.I): return 'Women'
+        if re.search(r"\bmen'?s?\b|\bman\b|\bboys?\b", t, re.I): return 'Men'
         if re.search(r'\bmixed\b', t, re.I): return 'Mixed'
         if re.search(r'\bopen\b', t, re.I): return 'Open'
     return 'Open'

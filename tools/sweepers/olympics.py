@@ -1,4 +1,4 @@
-"""Summer Olympics: the next Games from Wikipedia's "List of {year} Summer Olympics medal winners" (CC BY-SA 4.0) — the
+"""Summer and Winter Olympics: the next Games from Wikipedia's "List of {year} Summer|Winter Olympics medal winners" (CC BY-SA 4.0) — the
 same lists the archive was transcribed from: one table per sport (Event | Gold | Silver | Bronze), each medal cell naming
 the delegation and the athletes. The reader first reads the latest Games the archive already holds and must reproduce
 its awards; if it does not, nothing is written. A new Games is written only when its medal table article reconciles,
@@ -14,10 +14,10 @@ from olympics_common import slug, lineage, gender_of
 
 AGREE = 0.9
 SKIP_H2 = re.compile(r'medal table|leading|multiple|see also|references|notes|external links|changes|footnotes|bibliography|sources|contents|summary', re.I)
-NATION_AT = re.compile(r'^(.+?) at the (\d{4}) Summer Olympics$')
-NOT_A_PERSON = re.compile(r'Summer_Olympics|Olympic_Games|^List_of|_at_the_|^Category:|^File:|^Wikipedia:|^Help:|^Template:', re.I)
+NATION_AT = re.compile(r'^(.+?) at the (\d{4}) (Summer|Winter) Olympics$')
+NOT_A_PERSON = re.compile(r'Summer_Olympics|Winter_Olympics|Olympic_Games|^List_of|_at_the_|^Category:|^File:|^Wikipedia:|^Help:|^Template:', re.I)
 MONTHS = 'January February March April May June July August September October November December'.split()
-GAZETTEER = {'Los Angeles': [-118.24, 34.05], 'Brisbane': [153.03, -27.47], 'Paris': [2.35, 48.86], 'Tokyo': [139.69, 35.68]}   # used only when the coordinates API cannot be read
+GAZETTEER = {'Los Angeles': [-118.24, 34.05], 'Brisbane': [153.03, -27.47], 'Paris': [2.35, 48.86], 'Tokyo': [139.69, 35.68], 'Salt Lake City': [-111.89, 40.76], 'Nice': [7.27, 43.7], 'French Alps': [6.87, 45.92], 'Milan': [9.19, 45.46]}   # used only when the coordinates API cannot be read
 
 def heading_text(h):
     """The heading's own words, its [edit] link left out."""
@@ -63,33 +63,57 @@ def award_of(cell, y):
             if len(tok.split()) >= 2 and not re.search(r'\d', tok) and len(tok) < 60: athletes.append((tok.replace(' ', '_'), tok))
     return nation.strip(), athletes
 
-def read_list(page, y):
-    """The Games' medal events as the list page holds them: [{'sport','section','event','url','gender','awards': [(rank, nation, [(id, name)])]}] in page order."""
+GENERIC_SECTION = re.compile(r"^(medal(l)?ists?|events?|men'?s? events?|women'?s? events?|mixed events?|open events?|results?)$", re.I)
+MEDAL_HEAD = (('gold', 1), ('silver', 2), ('bronze', 3))
+
+def read_list(page, y, diag=None):
+    """The Games' medal events as the list page holds them: [{'sport','section','event','url','gender','awards': [(rank, nation, [(id, name)])]}]
+    in page order. A table counts when a row among its first six holds Gold, Silver and Bronze headers; a row that spans the whole
+    table ("Men's events", "Freestyle") names the section of the rows below it. `diag`, a list, collects what was skipped and why."""
     out = []
     for t in page.soup.find_all('table', class_=re.compile('wikitable')):
+        if t.find_parent('table'): continue   # the inner table of a layout wrapper is read on its own
         m = grid(t)
         if len(m) < 2: continue
-        head = [text(c).lower() for c in m[0]]
-        if not head or not head[0].startswith('event'): continue
-        cols = {}
-        for i, h in enumerate(head):
-            for k, r in (('gold', 1), ('silver', 2), ('bronze', 3)):
-                if h.startswith(k) and r not in cols: cols[r] = i
-        if len(cols) < 3: continue
         h2 = t.find_previous('h2'); sport = heading_text(h2)
         if not sport or SKIP_H2.search(sport): continue
+        hi = cols = None
+        for i, row in enumerate(m[:6]):
+            head = [text(c).lower() for c in row]
+            if any(h.startswith(('rank', 'noc', 'total')) or h in ('nation', 'nations', 'country', 'team') for h in head): break   # a medal-count table, not an event table
+            c = {}
+            for j, h in enumerate(head):
+                for k, r in MEDAL_HEAD:
+                    if h.startswith(k) and r not in c and (j == 0 or row[j] is not row[j - 1]): c[r] = j
+            if len(c) == 3: hi, cols = i, c; break
+        if hi is None:
+            if diag is not None and len(m) >= 3: diag.append(f'{sport}: table of {len(m)} rows not read — first row: ' + ' | '.join(text(c)[:24] for c in m[0][:5]))
+            continue
+        head = [text(c).lower() for c in m[hi]]
+        evc = next((j for j in range(cols[1]) if not head[j].startswith(('gold', 'silver', 'bronze', 'time', 'score', 'result', 'mark', 'note'))), 0)
         sub = t.find_previous(['h2', 'h3', 'h4']); section = heading_text(sub) if sub is not None and sub.name != 'h2' else 'Medalists'
-        rows = {}
-        for ri, row in enumerate(m[1:]):
-            if not row or row[0] in (m[0][0],): continue
-            ec = row[0]; ename = text(ec); ename = re.sub(r'\s*\bdetails\b\s*$', '', ename, flags=re.I).strip()
-            if not ename or ename.lower().startswith(('event', 'total')): continue
-            link = next((a for a in ec.find_all('a', href=True) if a.get_text(strip=True).lower() != 'details' and (a.get('href') or '').startswith('/wiki/')), None) or next((a for a in ec.find_all('a', href=True) if (a.get('href') or '').startswith('/wiki/')), None)
-            url = 'https://en.wikipedia.org' + link['href'].split('#')[0] if link else page.url
-            key = (id(ec) if ec.get('rowspan') else ('row', ri), ename)
-            e = rows.get(key)
+        group = None
+        for row in m[:hi]:
+            if len(row) >= 3 and all(c is row[0] for c in row): group = text(row[0])
+        rows = {}; n_before = len(out); last = None
+        for ri, row in enumerate(m[hi + 1:]):
+            if not row or len(row) <= evc: continue
+            if len(row) >= 3 and all(c is row[0] for c in row): group = text(row[0]); last = None; continue   # a group row: the section of what follows
+            ec = row[evc]; ename = text(ec); ename = re.sub(r'\s*\bdetails\b\s*$', '', ename, flags=re.I).strip()
+            if ename.lower().startswith(('event', 'total')): continue
+            if not ename:   # a tie written as a second row with an empty event cell belongs to the event above
+                if last is None: continue
+                e = last
+            else:
+                link = next((a for a in ec.find_all('a', href=True) if a.get_text(strip=True).lower() != 'details' and (a.get('href') or '').startswith('/wiki/')), None) or next((a for a in ec.find_all('a', href=True) if (a.get('href') or '').startswith('/wiki/')), None)
+                url = 'https://en.wikipedia.org' + link['href'].split('#')[0] if link else page.url
+                url = urllib.parse.unquote(url); gender = gender_of(ename, (group or '') + ' ' + section, url)
+                key = (group, ename, gender)   # the same name twice in one table for one category (a tie written as a repeated row, or a rowspan the grid expanded) is one event
+                e = rows.get(key)
             if e is None:
-                e = {'sport': sport, 'section': section, 'event': ename, 'url': urllib.parse.unquote(url), 'awards': []}; e['gender'] = gender_of(ename, section, e['url']); rows[key] = e; out.append(e)
+                sec = group if group and not GENERIC_SECTION.match(group) else (section if not GENERIC_SECTION.match(section) or not group else group)
+                e = {'sport': sport, 'section': sec, 'event': ename, 'url': url, 'gender': gender, 'awards': []}; rows[key] = e; out.append(e)
+            last = e
             for r, ci in sorted(cols.items()):
                 if ci >= len(row): continue
                 aw = award_of(row[ci], y)
@@ -97,7 +121,23 @@ def read_list(page, y):
                 sig = (r, fold(aw[0]), tuple(i for i, _ in aw[1]))
                 if sig in {(a[0], fold(a[1]), tuple(i for i, _ in a[2])) for a in e['awards']}: continue
                 e['awards'].append((r, aw[0], aw[1]))
+        if diag is not None and len(out) == n_before: diag.append(f'{sport}: table of {len(m)} rows gave no events — header: ' + ' | '.join(head[:5]))
     return [e for e in out if e['awards']]
+
+def adopt_categories(rd, A):
+    """An event whose list gives no category cue ('Pair skating', 'Team relay', nordic combined's 'Individual large hill/10 km') takes the
+    category the archive already files that event under in its sport — mixed, men's, open — so lineages continue as the archive drew them."""
+    EF = A['eventFields']; isp, ig, ie, iy = EF.index('sport'), EF.index('gender'), EF.index('event'), EF.index('y')
+    seen = {}
+    for r in A['events']:
+        k = (r[isp], lineage(r[isp], 'x', r[ie].split(' · ')[-1]).split('|', 2)[2])
+        if r[iy] >= seen.get(k, (0, None))[0]: seen[k] = (r[iy], r[ig])
+    n = 0
+    for e in rd:
+        if e['gender'] != 'Open': continue
+        k = (e['sport'], lineage(e['sport'], 'x', e['event']).split('|', 2)[2])
+        if k in seen and seen[k][1] != 'Open': e['gender'] = seen[k][1]; n += 1
+    return n
 
 def read_medal_table(page):
     """{nation: (gold, silver, bronze)} from the Games' medal table article."""
@@ -166,26 +206,29 @@ def reconcile(awards, table):
         if tuple(a[1]) != tuple(b[1]): diff[a[0] or b[0]] = {'archive': list(a[1]), 'table': list(b[1])}
     return diff
 
-def sweep(log, get_page=None, today=None, coords=None):
+def sweep(log, sport='olympics', get_page=None, today=None, coords=None):
+    """sport is 'olympics' (the Summer Games, data/olympics.json) or 'winter' (the Winter Games, data/winter.json)."""
     today = today or datetime.date.today()
     if get_page is None:
         from wiki import parse_page as get_page
     coords = coords or city_coords
-    path = ROOT/'data'/'olympics.json'; A = json.loads(path.read_text(encoding='utf-8'))
+    SEASON = 'Winter' if sport == 'winter' else 'Summer'
+    path = ROOT/'data'/f'{sport}.json'; A = json.loads(path.read_text(encoding='utf-8'))
     EF, WF = A['eventFields'], A['awardFields']; ATH = A['athletes']
     games = {g['y']: g for g in A['games']}; last = A['lastYear']
     # 1. prove the reader on the latest Games the archive holds
-    page = get_page(f'List of {last} Summer Olympics medal winners')
-    if page is None: raise SystemExit(f'the {last} list of medal winners could not be read — nothing written')
-    read = read_list(page, last)
+    page = get_page(f'List of {last} {SEASON} Olympics medal winners')
+    if page is None: raise SystemExit(f'the {last} {SEASON} list of medal winners could not be read — nothing written')
+    diag = []; read = read_list(page, last, diag); adopt_categories(read, A)
     held = [dict(zip(EF, r)) for r in A['events'] if r[EF.index('y')] == last]; byid = {e['id']: e for e in held}
     hw = [dict(zip(WF, r)) for r in A['awards'] if r[0] in byid]
+    plain = lambda sport, gender, name: lineage(sport, gender, name.split(' · ')[-1])   # the archive prefixes some names with their section ("Men's freestyle · 57 kg"); compare without it
     got = {}
     for e in read:
-        for r, n, ath in e['awards']: got.setdefault((lineage(e['sport'], e['gender'], e['event']), r, fold(n)), []).append({i for i, _ in ath})
+        for r, n, ath in e['awards']: got.setdefault((plain(e['sport'], e['gender'], e['event']), r, fold(n)), []).append({i for i, _ in ath})
     have = rosters = 0; bad = []
     for w in hw:
-        e = byid[w['e']]; k = (e['key'], w['rank'], fold(w['nation']))
+        e = byid[w['e']]; k = (plain(e['sport'], e['gender'], e['event']), w['rank'], fold(w['nation']))
         if k in got:
             have += 1
             if any(set(w['athletes']) == s for s in got[k]): rosters += 1
@@ -193,18 +236,22 @@ def sweep(log, get_page=None, today=None, coords=None):
     log.append(f'Check on {last}: the reader reproduces {have} of the archive\'s {len(hw)} awards ({have / max(len(hw), 1):.1%}); {rosters} with the same named athletes.')
     if not hw or have / len(hw) < AGREE:
         log += [f'  - not read back: {b}' for b in bad[:15]]
-        log.append(f'  - read {len(read)} events with awards from {page.url}; sports seen: {", ".join(sorted({e["sport"] for e in read})[:20])}')
+        held_by = collections.Counter(e['sport'] for e in held); read_by = collections.Counter(e['sport'] for e in read)
+        log.append(f'  - read {len(read)} events with awards from {page.url}; archive holds {len(held)}')
+        log.append('  - by sport (archive → read): ' + ', '.join(f'{sp} {held_by[sp]}→{read_by.get(sp, 0)}' for sp in sorted(held_by) if read_by.get(sp, 0) != held_by[sp]) + (f'; read but not in the archive: {", ".join(sorted(set(read_by) - set(held_by)))}' if set(read_by) - set(held_by) else ''))
+        log += [f'  - {d}' for d in diag[:25]]
         raise SystemExit('the list did not read back as the archive holds it — the layout may have changed; nothing written')
     # 2. the newest Games if provisional, then the next one
     todo = ([last] if games[last].get('provisional') else []) + [last + 4]
     changed = False
     for y in todo:
-        lp = page if y == last else get_page(f'List of {y} Summer Olympics medal winners')
+        lp = page if y == last else get_page(f'List of {y} {SEASON} Olympics medal winners')
         if lp is None: log.append(f'- {y}: no list of medal winners yet'); continue
         rd = read if y == last else read_list(lp, y)
+        if y != last: adopt_categories(rd, A)
         awards_read = [(e, r, n, ath) for e in rd for r, n, ath in e['awards']]
         if not awards_read: log.append(f'- {y}: the list holds no medal awards yet'); continue
-        mt = get_page(f'{y} Summer Olympics medal table')
+        mt = get_page(f'{y} {SEASON} Olympics medal table')
         table = read_medal_table(mt) if mt else {}
         diff = reconcile([(None, r, n) for _, r, n, _ in awards_read], table) if table else None
         if diff is None: log.append(f'- {y}: {len(awards_read)} awards read, but the medal table article could not be read; nothing written until it reconciles'); continue
@@ -213,7 +260,7 @@ def sweep(log, get_page=None, today=None, coords=None):
         old_n = sum(1 for r in A['awards'] if r[0] in {e[EF.index('id')] for e in A['events'] if e[EF.index('y')] == y})
         if y == last and len(awards_read) <= old_n and not games[y].get('provisional'): continue
         if y == last and len(awards_read) < old_n: log.append(f'- {y}: the list now holds fewer awards ({len(awards_read)}) than the archive ({old_n}); left as it is'); continue
-        gp = get_page(f'{y} Summer Olympics'); info = read_infobox(gp) if gp else {}
+        gp = get_page(f'{y} {SEASON} Olympics'); info = read_infobox(gp) if gp else {}
         g = games.get(y) or {'y': y, 'city': '', 'country': '', 'dates': '', 'athletes': None, 'men': None, 'women': None, 'scheduled': None, 'delegations': None, 'points': [], 'cancelled': False}
         for k in ('city', 'country', 'dates', 'athletes', 'delegations', 'scheduled'):
             if info.get(k): g[k] = info[k]
@@ -227,7 +274,14 @@ def sweep(log, get_page=None, today=None, coords=None):
         for e in old_ev: by_key.setdefault(e['key'], []).append(e['id'])
         n = max([int(e['id'].split('-')[1]) for e in old_ev if e['id'].split('-')[1].isdigit()] or [0])
         new_events, new_awards, new_names = [], [], 0
+        prefixed = collections.defaultdict(lambda: [0, 0])   # (sport, section) → [names carrying "section · ", names]: the archive's own habit, learned from what it holds
+        for r in A['events']:
+            sec = r[EF.index('section')]
+            if sec and not GENERIC_SECTION.match(sec): c = prefixed[(r[EF.index('sport')], fold(sec))]; c[1] += 1; c[0] += r[EF.index('event')].startswith(sec + ' · ')
+        plain_names = collections.Counter((e['sport'], e['gender'], fold(e['event'])) for e in rd)
         for e in rd:
+            sec = e['section']; c = prefixed.get((e['sport'], fold(sec)))
+            if sec and not GENERIC_SECTION.match(sec) and ((c and c[0] * 2 > c[1]) or (not c and plain_names[(e['sport'], e['gender'], fold(e['event']))] > 1)) and not e['event'].startswith(sec + ' · '): e['event'] = f'{sec} · {e["event"]}'
             key = lineage(e['sport'], e['gender'], e['event'])
             if by_key.get(key): eid = by_key[key].pop(0)
             else: n += 1; eid = f'{y}-{n}'
