@@ -178,7 +178,7 @@ def sweep(log, get_page=None, today=None):
         stops = stops_of(e['route'], A['map']['cities'])
         missing = [s for s in towns if s not in stops]
         ed = {'y': y, 'route': re.sub(r'\s*[–]\s*', '–', e['route']), 'stops': stops, 'era': era_of(y), 'cancelled': False, 'results': rows, 'cats': [c for c in CATS if any(r[0] == c for r in rows)]}
-        if old: A['editions'] = [ed if x['y'] == y else x for x in A['editions']]; log.append(f'- **{y}** completed: {len(rows)} podium places')
+        if old: ed = {**old, **ed}; A['editions'] = [ed if x['y'] == y else x for x in A['editions']]; log.append(f'- **{y}** completed: {len(rows)} podium places')
         else: A['editions'].append(ed); log.append(f'- **{y} Dakar Rally** ({ed["route"]}): {len(rows)} podium places in {len(ed["cats"])} classes; Cars won by {P[rows[0][2]]["name"] if rows[0][0] == "Cars" else "—"}')
         if missing: log.append(f'  - towns not in the gazetteer (not drawn on the route map): {", ".join(missing)}')
         for r in rows:
