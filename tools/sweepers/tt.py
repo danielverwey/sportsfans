@@ -139,7 +139,9 @@ def sweep(log, get_page=None, today=None):
     have_ids = {r['id'] for r in A['races']}
     add = [r for r in build(y, races, A['riders'], page.url, new_riders) if r['id'] not in have_ids and r['results']]
     if not add: log.append('- nothing new'); return
+    width = len(A.get('resultFields') or [])
     for r in add:
+        for x in r['results']: x.extend([0] * (width - len(x)))   # fields added after the reader was written (the competition number) stay empty, never absent
         A['races'].append(r)
         w = r['results'][0]
         log.append(f'- **{y} {r["name"]}**: {len(r["results"])} places, won by {" / ".join(A["riders"].get(i, next((v for v in new_riders.values() if v["id"] == i), {})).get("name", i) for i in w[0])} ({w[3]})')

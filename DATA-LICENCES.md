@@ -15,7 +15,7 @@ The site is **non-commercial for good** — no advertising, sponsorship or paywa
 | Rugby | Wikidata | CC0 1.0 | dates of birth and death, linked by exact Wikipedia sitelink | — |
 | Rugby | National unions and World Rugby (UAR, JRFU, IRFU, FIR, SA Rugby, Scottish Rugby, Six Nations; World Rugby hall of fame) | no licence stated | factual cross-checks only: a date, a score, a starting fifteen, two identities | — |
 | Rugby | RugbyScope v1.2.0 (Labatut and O'Sullivan) | CC BY 4.0 | identity cross-checks for early players printed by initials | — |
-| MotoGP, WorldSBK, Isle of Man TT | Wikipedia (English season articles; the German list of TT winners) | CC BY-SA 4.0 | every result, calendar and published standing; every TT winner and classification | `data/motogp.json`, `data/sbk.json`, `data/tt.json`: CC BY-SA 4.0; attribute; share alike |
+| MotoGP, WorldSBK, Isle of Man TT | Wikipedia (English season articles; the German list of TT winners; a second rights-cleared transcription of the TT pages, `tools/merge_tt_harvest.py`) | CC BY-SA 4.0 | every result, calendar and published standing; every TT winner and classification, with the 2024–2026 competition numbers. The official TT results database (iomttraces.com, Manx National Heritage) was inspected and excluded: reproduction there needs permission | `data/motogp.json`, `data/sbk.json`, `data/tt.json`: CC BY-SA 4.0; attribute; share alike |
 | MotoGP, WorldSBK | Wikidata | CC0 1.0 | circuit coordinates and countries | — |
 | MotoGP, WorldSBK, Isle of Man TT | OpenStreetMap | ODbL 1.0 | circuit outlines; the Mountain Course and its named places | ODbL |
 | MotoGP, WorldSBK | F1DB | CC BY 4.0 | circuit surveys at shared venues | attribution |

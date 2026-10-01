@@ -7,7 +7,7 @@ Eleven sporting archives, each drawn as an ode in one shared visual language —
 | Cricket · every international | 1877–2026 · 13,823 matches · 13,823 scorecards · 11,970 players | `/cricket/` |
 | Dakar Rally | 1979–2026 · 47 editions · 534 podium places in 8 classes · 1,115 classified places beyond the podium | `/dakar/` |
 | Formula 1 | 1950–2026 · 1,163 Grands Prix · 26,181 results | `/f1/` |
-| Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` |
+| Isle of Man TT | 1907–2026 · 693 races · 5,897 results · 229 finishers with their competition number | `/tt/` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` |
 | Rugby union · ten nations | 1871–2026 · 3,960 Test matches · 20,539 players · 2,321 team sheets | `/rugby/` |
 | Summer Olympics | 1896–2024 · 30 Games · 5,766 medal events · 17,825 medals · 27,685 medallists | `/olympics/` |
@@ -177,7 +177,7 @@ The site is non-commercial for good and uses no logos; every source and the lice
 - **Cricket** — every men's and women's international from 1877 with its scorecard: ball by ball from Cricsheet (ODC-By) from the 2000s (innings worms), historical scorecards before that (Hugging Face datasets and Cricbuzz, no licence stated, credited); batting and bowling figures, line-ups and player-season totals are added up from the cards; full names and the published career of every Test and ODI player from Wikipedia's national player lists (CC BY-SA). `tools/merge_cricket_harvest.py` brings a new harvest in (see below).
 - **Tennis** — every tour-level ATP and WTA match from 1968 (Jeff Sackmann, CC BY-NC-SA 4.0) with seedings, rankings, durations and serve statistics; Wimbledon's roll of honour from 1877.
 - **MotoGP / WorldSBK** — rebuilt in September 2026 entirely from Wikipedia's season articles (CC BY-SA 4.0): results, calendars and published standings; circuit outlines from OpenStreetMap, or the F1DB survey at shared venues. `tools/prepare_bikes.py` brings a new export in; `tools/osm_outlines.py` (the *Circuit outlines* workflow) fetches the missing outlines.
-- **Isle of Man TT** — every race since 1907 from Wikipedia's lists and race articles (CC BY-SA 4.0), the Mountain Course and its named places from OpenStreetMap. `tools/prepare_tt.py` brings a new export in.
+- **Isle of Man TT** — every race since 1907 from Wikipedia's lists and race articles (CC BY-SA 4.0), the Mountain Course and its named places from OpenStreetMap. `tools/prepare_tt.py` brings a new export in; `tools/merge_tt_harvest.py` checks a second rights-cleared transcription of the same pages against every winner and carries in what it adds (the 2024–2026 competition numbers, the years without a meeting, one disputed classification), keeping the winners it reads differently as listed discrepancies.
 
 The archives are not edited by hand. The sweepers in `tools/sweepers/` extend the current season from each sport's source on a schedule; `tools/gate.py` refuses any change to history. Replacing a `data/<sport>.json` with a newer export and rebuilding also works.
 
