@@ -285,3 +285,35 @@ def reading_olympics(core):
 def footer_olympics(core):
     w = core.get('season') == 'winter'; name = 'WINTER OLYMPICS · AN ODE TO THE WINTER GAMES' if w else 'SUMMER OLYMPICS · AN ODE TO THE GAMES'
     return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / {name}</div><p>An independent, fan-made record of the {"Winter Olympic Games from Chamonix 1924" if w else "Summer Olympic Games from Athens 1896"}. Every medal event and every gold, silver and bronze transcribed from Wikipedia’s lists of medal winners for each Games (CC BY-SA 4.0) at recorded revisions; the land silhouette from Natural Earth (public domain). Host cities are placed at approximate coordinates. No Olympic rings, emblems or pictograms are used or reproduced. Latest included Games: {core.get("lastYear", "")}. This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · Not affiliated with, endorsed by or connected to the International Olympic Committee; the names identify the Games</span><span><a href="https://en.wikipedia.org/wiki/{"Winter" if w else "Summer"}_Olympic_Games" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain) · <a href="#top">Back to top ↑</a></span></div></footer>'
+
+def _wc_rows(core):
+    MF = core['matchFields']; return [dict(zip(MF, r)) for r in core['matches']]
+
+def reading_worldcup(core):
+    """Every tournament, newest first, the men's then the women's: hosts, dates, the final four, the groups, and every match with its score."""
+    ST = core['stadiums']; SL = core.get('stageLabel', {}); c = core['coverage']
+    ms = collections.defaultdict(list)
+    for m in _wc_rows(core): ms[m['t']].append(m)
+    tours = sorted(core['tournaments'], key=lambda t: (t['sex'], -t['y']))
+    label = lambda m: (m['group'] or SL.get(m['stage'], m['stage'])) if m['stage'] in ('group', 'group2') else SL.get(m['stage'], m['stage'])
+    res = lambda m: f'{m["hs"]}–{m["as"]}' + (' a.e.t.' if m['et'] else '') + (f' ({m["ph"]}–{m["pa"]} pens)' if m['ph'] is not None else '') + (f' · {m["replay"]}' if m['replay'] else '')
+    out = ['<div id="staticArchive"><nav class="staticnav" aria-label="Tournament archive">' + ''.join(f'<a href="#static-{t["id"]}">{t["y"]}{"W" if t["sex"] == "W" else ""}</a>' for t in tours) + '</nav>']
+    out.append(f'<section class="panel"><p class="eyebrow">World Cup · 1930–{core["lastYear"]["M"]} · Women’s World Cup · 1991–{core["lastYear"]["W"]}</p><h2>Every tournament, on the page</h2><p>{c["tournaments"]} tournaments ({c["men"]} men’s, {c["women"]} women’s), {c["matches"]:,} matches, {c["goals"]:,} goals with their scorers, {c["lineups"]:,} matches with their line-ups, {c["players"]:,} players. Each tournament with its hosts and dates, its final four, its groups with points, and every match with its score after extra time and its shoot-out where there was one.</p></section>')
+    for t in tours:
+        rows = sorted(ms[t['id']], key=lambda m: (m['date'], m['time'] or '', m['id']))
+        st = t['standings']
+        out.append(f'<section class="panel" id="static-{t["id"]}"><p class="eyebrow">{t["y"]} · {E(" / ".join(t["hosts"]))} · {E(longdate(t["start"]))} – {E(longdate(t["end"]))}</p><h2>{E(t["name"])}</h2><p class="small muted">{t["count"]} teams · {len(rows)} matches · {sum(m["hs"] + m["as"] for m in rows)} goals' + (f' · champions <b>{E(st[0])}</b>' if st[0] else '') + (f' · runners-up {E(st[1])}' if st[1] else '') + (f' · third {E(st[2])}' if st[2] else '') + (f' · fourth {E(st[3])}' if st[3] else '') + (f'<br>{E(t["note"])}' if t.get('note') else '') + '</p>')
+        if t['groups']:
+            out.append('<h3>The groups</h3><div class="tablewrap"><table><thead><tr><th>Group</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>Pts</th></tr></thead><tbody>')
+            for g in t['groups']:
+                for r in g['table']: out.append(f'<tr class="{"win" if r[8] else ""}"><td>{E(g["name"])}</td><td>{E(r[0])}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td><td>{r[5]}</td><td>{r[6]}</td><td><b>{r[7]}</b></td></tr>')
+            out.append('</tbody></table></div>')
+        out.append('<h3>Every match</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Stage</th><th>Home</th><th>Score</th><th>Away</th><th>Ground</th></tr></thead><tbody>')
+        for m in rows:
+            s = ST.get(m['stadium']) if m['stadium'] else None
+            out.append(f'<tr class="{"win" if m["stage"] == "final" else ""}"><td>{E(m["date"])}</td><td>{E(label(m))}</td><td>{E(m["home"])}</td><td><b>{E(res(m))}</b></td><td>{E(m["away"])}</td><td>{E(s["name"] + ", " + s["city"] if s else "")}</td></tr>')
+        out.append('</tbody></table></div></section>')
+    out.append('</div>'); return '\n'.join(out)
+
+def footer_worldcup(core):
+    return f'<footer><div class="footer-top"><div><div class="brand" style="font-size:11px">APEX / WORLD CUP · AN ODE TO THE WORLD CUP</div><p>An independent, fan-made record of the men’s World Cup from Uruguay 1930 and the women’s from China 1991. Matches, goals, line-ups, squads, cards, substitutions, shoot-outs, referees, managers and awards from the Fjelstul World Cup Database (© 2023 Joshua C. Fjelstul, Ph.D., CC BY-SA 4.0); the 2026 tournament from OpenFootball (CC0); the 2023 Women’s World Cup from Wikipedia (CC BY-SA 4.0); the land silhouette from Natural Earth (public domain). Finals are placed at approximate coordinates; grounds are listed, not drawn. No official emblems, trophies or marks are used. Latest included tournaments: {core["lastYear"]["M"]} (men), {core["lastYear"]["W"]} (women). This is a dated snapshot, not a live feed.</p></div><button class="js-only" id="sources">Sources &amp; coverage ↗</button></div><div class="footer-bottom"><span>Snapshot: {E(longdate(core.get("snapshot", "")))} · Self-contained offline HTML · Not affiliated with, endorsed by or connected to FIFA or any federation; the name identifies the competition</span><span><a href="https://github.com/jfjelstul/worldcup" target="_blank" rel="noopener">Fjelstul World Cup Database</a> (CC BY-SA 4.0) · <a href="https://github.com/openfootball/worldcup.json" target="_blank" rel="noopener">OpenFootball</a> (CC0) · <a href="https://en.wikipedia.org/wiki/2023_FIFA_Women%27s_World_Cup" target="_blank" rel="noopener">Wikipedia</a> (CC BY-SA 4.0) · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> · <a href="#top">Back to top ↑</a></span></div></footer>'

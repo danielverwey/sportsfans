@@ -1,0 +1,27 @@
+name: Sweep · World Cup
+# Men's World Cups run June–July every fourth year (2030 Spain/Portugal/Morocco, 2034 Saudi Arabia); women's June–August the
+# year after (2027 Brazil, 2031 United States). Mondays and Thursdays from June to August every year, when OpenFootball fills
+# the fixtures with results; and the first Monday of every month, for the day the Fjelstul database publishes a tournament.
+# In the years between, the sweep reports "nothing new". Times are UTC. Run workflow by hand any time; tick "dry run" to read
+# and report without committing.
+on:
+  schedule:
+    - cron: '23 10 * 6-8 1,4'
+    - cron: '23 10 1-7 * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run: { description: 'Read and report only, commit nothing', type: boolean, default: false }
+permissions: { contents: write, pages: write, id-token: write }
+concurrency: { group: sweep-worldcup, cancel-in-progress: false }   # one group per atlas: GitHub keeps only one pending run per group, so a shared group would cancel sweeps that overlap
+jobs:
+  sweep:
+    uses: ./.github/workflows/sweep-run.yml
+    with:
+      sport: worldcup
+      dry_run: ${{ inputs.dry_run == true }}
+    permissions: { contents: write }
+  deploy:
+    needs: sweep
+    if: needs.sweep.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions: { contents: read, pages: write, id-token: write }

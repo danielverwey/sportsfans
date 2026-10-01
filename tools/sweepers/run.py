@@ -1,6 +1,6 @@
 """Run one atlas's sweeper.
 
-    python tools/sweepers/run.py <f1|motogp|sbk|ufc|cricket|tennis|rugby|tt|dakar|olympics|winter>
+    python tools/sweepers/run.py <f1|motogp|sbk|ufc|cricket|tennis|rugby|tt|dakar|olympics|winter|worldcup>
 
 Reads the source, merges what is new into data/ (and src/bikes/ for the circuit outlines), and writes the report to
 build/harvest/<sport>.md. It never commits: the workflow runs tools/gate.py, rebuilds, checks links and commits only if
@@ -9,7 +9,7 @@ all of that passes. Exits 1 if the source could not be read, so a broken sweep s
 import datetime, importlib, pathlib, sys, traceback
 ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT/'tools')); sys.path.insert(0, str(ROOT/'tools'/'harvest'))
-SPORTS = ['f1', 'motogp', 'sbk', 'ufc', 'cricket', 'tennis', 'rugby', 'tt', 'dakar', 'olympics', 'winter']
+SPORTS = ['f1', 'motogp', 'sbk', 'ufc', 'cricket', 'tennis', 'rugby', 'tt', 'dakar', 'olympics', 'winter', 'worldcup']
 try: sys.stdout.reconfigure(encoding='utf-8')
 except Exception: pass
 

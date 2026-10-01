@@ -1,6 +1,6 @@
 # APEX / Sports atlases · sportsfans.co.za
 
-Eleven sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
+Twelve sporting archives, each drawn as an ode in one shared visual language — the River, the Stage, the Grid (or the Grounds, the Courts, the Course, the Arenas, the Routes) — and a landing page that opens onto all of them:
 
 | Atlas | Span | Live path |
 |---|---|---|
@@ -14,6 +14,7 @@ Eleven sporting archives, each drawn as an ode in one shared visual language —
 | Tennis · the tour | 1877–2026 · 11,043 titles · 388,665 matches | `/tennis/` |
 | UFC bouts | 1993–2026 · 791 events · 8,917 bouts | `/ufc/` |
 | Winter Olympics | 1924–2026 · 25 Games · 1,279 medal events · 3,849 medals · 4,861 medallists | `/winter/` |
+| World Cup · men's and women's | 1930–2026 · 32 tournaments · 1,416 matches · 3,945 goals · 1,119 line-ups · 11,150 players | `/worldcup/` |
 | World Superbike | 1988–2026 · 1,043 races · 24,506 results | `/sbk/` |
 
 Every page loads its own archive and needs no server-side code: no build step at view time, no external requests other than Google Fonts. Each carries an opening in the sport's own idiom (lights out; kick-off; the toss; the serve; the ten-second start), the River of its entire history at once, the Stage of seasons, races or matches, replays, careers, records, barcodes and duels under one era lens, every circuit to its own outline and every ground or tournament listed — never drawn — in the colours of the side that has won there most or of its surface, and a plain reading edition that works with scripts off. The landing page (`docs/index.html`) carries a miniature of each River, drawn from the data at build time.
@@ -24,13 +25,13 @@ Every page loads its own archive and needs no server-side code: no build step at
 Sportsfans/
 ├── docs/                          ← the published site (GitHub Pages root, sportsfans.co.za)
 │   ├── index.html                 landing page, with a miniature of each River drawn at build time
-│   ├── cricket/  dakar/  f1/  motogp/  olympics/  rugby/  sbk/  tennis/  tt/  ufc/  winter/
+│   ├── cricket/  dakar/  f1/  motogp/  olympics/  rugby/  sbk/  tennis/  tt/  ufc/  winter/  worldcup/
 │   │   ├── index.html             the atlas: a 7–13 KB shell that loads its stylesheet, app and archive
 │   │   ├── reading/index.html     the reading edition, generated from the archive (plain tables, no scripts)
 │   │   ├── seasons/<year>/        one static page per season
 │   │   ├── drivers|riders|players/<id>/      … per career
 │   │   ├── constructors|makers|nations|teams/<id>/ … per team, side or nation
-│   │   ├── circuits|grounds|tournaments/<id>/ … per venue or event
+│   │   ├── circuits|grounds|tournaments/<id>/ … per venue or event (the World Cup: tournaments/, matches/, teams/, players/, grounds/)
 │   │   └── coaches/<id>/          (rugby)
 │   ├── assets/   site.css (static pages) · <sport>.css · <sport>.js
 │   ├── data/     <sport>.json — the archives, byte-identical to the embedded ones; cricket_details/<year>.json and tennis_matches/<year>.json — the per-season shards the live pages fetch on demand
@@ -43,13 +44,15 @@ Sportsfans/
 │   ├── cricket/  shell.html  style.css  app1–4.js  pako.min.js (the single-file edition embeds its 42 MB archive gzipped)
 │   ├── tennis/   shell.html  style.css  app1–4.js  pako.min.js
 │   ├── tt/       shell.html  style.css  app1–3.js   (the Isle of Man TT: the course is drawn from OpenStreetMap relation 188240)
+│   ├── worldcup/ shell.html  style.css  app1–3.js   (men's and women's World Cups in one atlas, a Competition selector)
 │   ├── bikes/    shared shell/style/adapter + config_<sport>.js, app_<sport>.js (generated from src/f1 by tools/patch_bike_app.py), assets_<sport>.json
 │   ├── common/   stage.js + search.js + stage.css — the Stage's shared navigation (season timeline, ‹ › stepping, ← → keys, Back button) and the find-anything box, put into every atlas by build.py
 │   └── hub/      index.html  favicon.svg  favicon-32.png  apple-touch-icon.png
 ├── data/                          the archives; cricket_details/ and tennis_matches/ hold the yearly shards (tools/prepare_cricket.py and tools/prepare_tennis.py split them from the prototype exports)
+├── build/harvest/worldcup/        the World Cup's inputs: the Fjelstul CSV tables (fetched when missing, git-ignored), the OpenFootball files and the ledger (kept)
 ├── audits/                        DATA-AUDIT-<sport>.md, the cross-check reports the audit tools write
 ├── tools/                         sitegen.py (static pages), reading.py (reading editions), sweepers/ (one reader per atlas), harvest/ (shared readers), gate.py, osm_outlines.py, check_site.js, check_links.py, audits
-├── .github/workflows/             deploy, sweep-run + sweep-<atlas> ×9, verify, harvest-bikes, harvest-ufc, outlines
+├── .github/workflows/             deploy, sweep-run + sweep-<atlas> ×12, verify, harvest-bikes, harvest-ufc, outlines
 ├── DATA-LICENCES.md  PERMISSIONS.md  ACTION-PLAN.md
 ├── build.py                       builds everything above from src/ + data/
 └── RELEASE.md                     how to publish
@@ -99,6 +102,12 @@ python tools/merge_dakar_harvest.py build/harvest/dakar_rights_cleared_final_har
 
 It leaves every podium row as it is (the harvest's podium records must agree with the archive before anything is added), gives each edition its `places` (the classified finishers after third place, `placeFields` naming the columns) and `entrants` (the entry lists the recent articles print), and adds the people named only beyond the podium to the register. The sweeper keeps those fields when it completes a new edition's podiums.
 
+### World Cup (three open sources → prepare → publish)
+
+1. The archive is built from three sources kept in `build/harvest/worldcup/`: the **Fjelstul World Cup Database** (CC BY-SA 4.0; its seventeen CSV tables, fetched from GitHub when missing — `python tools/prepare_worldcup.py --fetch`): every men's World Cup 1930–2022 and women's 1991–2019 with every match, goal, line-up, substitution, booking, penalty kick, squad, referee, manager, award and standing; **OpenFootball** (public domain) for the tournaments the database does not hold yet (`openfootball-<year>.json`, with `-full` beside it for line-ups, cards, kicks and referees — 2026 today); and Daniel's ledger of Wikipedia results (`world_cup_complete_history.json`) for the 2023 Women's World Cup, which neither holds.
+2. `python tools/prepare_worldcup.py` → `data/worldcup.json`: tournaments with their hosts, standings, group tables (computed from the matches and ordered as the database ranks them), awards and the final's place on the map; every match with its sheet (goals with minute, period, own goal and penalty; line-ups with shirt and position; substitutions; cards; the shoot-out kick by kick; referee; managers); squads; the registers of players (the database's ids, with players a fixture source names but the database does not yet know minted as `X-<name>-<team>` until it does), teams, grounds, referees and managers; team colours. `tools/worldcup_common.py` keeps the stage codes, the team-name aliases between the sources, the readers and the gazetteer of finals.
+3. Commit `data/worldcup.json` and push — the deploy workflow builds and publishes: the atlas (one page, a Competition selector for the men's and the women's World Cups), a page for every tournament, every match (group matches without a line-up marked noindex), every team, every player with a goal, an appearance or two tournaments, and every ground. `python tools/audit_worldcup.py` checks the archive against itself (every table against its matches, every goal against its scorer, every final against its winner) and a few well-known facts (`audits/DATA-AUDIT-worldcup.md`).
+
 ### Sweeping the data (automatic)
 
 Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that runs on its own schedule, reads its source, merges what is new into `data/`, runs `tools/gate.py`, rebuilds the site, checks every link, commits and deploys. Nothing is committed unless every step passes; a failed run shows red in Actions and GitHub e-mails the repository owner. Each run leaves its report in the run summary (and in `build/harvest/<atlas>.md` in the commit).
@@ -115,8 +124,9 @@ Every atlas keeps itself current. Each has a workflow, *Sweep · <atlas>*, that 
 | Dakar Rally | `dakar.py` | Wikipedia "Dakar Rally" | daily 10:03, 3–31 January |
 | Summer Olympics | `olympics.py` | Wikipedia "List of <year> Summer Olympics medal winners", "<year> Summer Olympics medal table", "<year> Summer Olympics" | Mon + Thu 11:07, July–September (every fourth year has a Games; in between it reports nothing new) |
 | Winter Olympics | `olympics.py` (season winter) | the same three articles for the Winter Games | Mon + Thu 11:17, January–March |
+| World Cup | `worldcup.py` | the Fjelstul World Cup Database and OpenFootball, as raw files on GitHub | Mon + Thu 10:23, June–August, and the first Monday of every month |
 
-Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests, the latest Games' medals) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
+Every reader proves itself before it writes: it reads data the archive already holds from the same source (last season's rounds, last year's races, the last two editions, the last two years of Tests, the latest Games' medals, the latest World Cups the database holds) and must reproduce at least 90% of it, or it stops with "nothing written" — that is how a changed page layout is caught. Readers only add; results before the current season are never rewritten, and anything that looks like a correction is listed in the report for review.
 
 By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read and report without committing. Locally: `python tools/sweepers/run.py <atlas>` (then `python tools/gate.py <atlas>`; `git restore data` undoes it).
 
@@ -124,7 +134,7 @@ By hand: Actions → *Sweep · <atlas>* → Run workflow; tick *dry run* to read
 
 The gate (`tools/gate.py <atlas>`) compares the new archive with the last commit: nothing may be missing, the snapshot may not go backwards, changes to past records are listed, and every new record must have the same fields and types as the archive's own (so a reader that misreads a page cannot slip a malformed row in). `--accept` overrides it after a human has looked.
 
-The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar|olympics|winter> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
+The older manual route still works for a whole new export (a prototype page or a Wikipedia harvest): `python tools/sweep.py <motogp|sbk|ufc|cricket|tennis|tt|dakar|olympics|winter|worldcup> build/harvest/<the export>` runs the prepare script, the audit and the gate, then prints the `git add` line. `tools/prepare_bikes.py` keeps every circuit outline already in `src/bikes/assets_<sport>.json` and only adds outlines for circuits that have none.
 
 ### Cricket: bringing in a harvest
 
@@ -164,7 +174,7 @@ node tools/check_site.js                                 # all pages; or: node t
 python tools/check_links.py                              # every internal link in docs/ resolves
 ```
 
-`check_site.js` serves `docs/` over HTTP, opens each live atlas, renders every season × tab × era (and every circuit, nation and drill-down), confirms no script errors, checks a 390px phone viewport for horizontal overflow, follows one deep link per sport, and opens each offline edition from disk. Data audits live in `tools/audit_*.py` (`python tools/audit_rugby.py`, `python tools/audit_f1.py`, `python tools/audit_cricket.py`, `python tools/audit_tennis.py`, `python tools/audit_bikes.py motogp|sbk`); each writes a markdown report of cross-checks against reference facts into `audits/`.
+`check_site.js` serves `docs/` over HTTP, opens each live atlas, renders every season × tab × era (and every circuit, nation and drill-down), confirms no script errors, checks a 390px phone viewport for horizontal overflow, follows one deep link per sport, and opens each offline edition from disk. Data audits live in `tools/audit_*.py` (`python tools/audit_rugby.py`, `python tools/audit_f1.py`, `python tools/audit_cricket.py`, `python tools/audit_tennis.py`, `python tools/audit_bikes.py motogp|sbk`, `python tools/audit_olympics.py [winter]`, `python tools/audit_worldcup.py`); each writes a markdown report of cross-checks against reference facts into `audits/`.
 
 ## Rights
 
@@ -177,6 +187,7 @@ The site is non-commercial for good and uses no logos; every source and the lice
 - **Cricket** — every men's and women's international from 1877 with its scorecard: ball by ball from Cricsheet (ODC-By) from the 2000s (innings worms), historical scorecards before that (Hugging Face datasets and Cricbuzz, no licence stated, credited); batting and bowling figures, line-ups and player-season totals are added up from the cards; full names and the published career of every Test and ODI player from Wikipedia's national player lists (CC BY-SA). `tools/merge_cricket_harvest.py` brings a new harvest in (see below).
 - **Tennis** — every tour-level ATP and WTA match from 1968 (Jeff Sackmann, CC BY-NC-SA 4.0) with seedings, rankings, durations and serve statistics; Wimbledon's roll of honour from 1877.
 - **MotoGP / WorldSBK** — rebuilt in September 2026 entirely from Wikipedia's season articles (CC BY-SA 4.0): results, calendars and published standings; circuit outlines from OpenStreetMap, or the F1DB survey at shared venues. `tools/prepare_bikes.py` brings a new export in; `tools/osm_outlines.py` (the *Circuit outlines* workflow) fetches the missing outlines.
+- **World Cup** — every men's World Cup from 1930 and women's from 1991: the Fjelstul World Cup Database (CC BY-SA 4.0) for every match, goal, line-up, substitution, booking, penalty kick, squad, referee, manager and award through 2022 (men) and 2019 (women); OpenFootball (public domain) for 2026; Wikipedia's results (CC BY-SA 4.0) for the 2023 Women's World Cup. `tools/prepare_worldcup.py` builds the archive from the three; the sweeper takes each tournament from the database the month it publishes it.
 - **Isle of Man TT** — every race since 1907 from Wikipedia's lists and race articles (CC BY-SA 4.0), the Mountain Course and its named places from OpenStreetMap. `tools/prepare_tt.py` brings a new export in.
 
 The archives are not edited by hand. The sweepers in `tools/sweepers/` extend the current season from each sport's source on a schedule; `tools/gate.py` refuses any change to history. Replacing a `data/<sport>.json` with a newer export and rebuilding also works.

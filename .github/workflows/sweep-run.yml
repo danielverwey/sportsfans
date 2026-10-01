@@ -49,6 +49,7 @@ jobs:
         run: |
           git config user.name "apex-sweeper"; git config user.email "sweeper@users.noreply.github.com"
           git add data src/bikes
+          git add build/harvest/${{ inputs.sport }} 2>/dev/null || true   # an atlas's kept inputs (the World Cup's OpenFootball files), when it has a folder
           git add -f build/harvest/${{ inputs.sport }}.md
           git commit -q -m "data: ${{ inputs.sport }} sweep $(date -u +%Y-%m-%d)" -m "$(head -c 6000 build/harvest/${{ inputs.sport }}.md)"
           for i in 1 2 3 4; do git pull -q --rebase && git push -q && break; echo "push retry $i"; sleep 15; done

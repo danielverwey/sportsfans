@@ -2,7 +2,7 @@
 """The gate every sweep must pass before a build is committed.
 
     python tools/gate.py f1            # compare data/f1.json against the last committed version
-    python tools/gate.py ufc           # the same for any atlas: motogp, sbk, ufc, cricket, tennis, rugby, tt, dakar, olympics, winter
+    python tools/gate.py ufc           # the same for any atlas: motogp, sbk, ufc, cricket, tennis, rugby, tt, dakar, olympics, winter, worldcup
     python tools/gate.py ufc --accept  # pass after you have read the report and the changes are genuine
 
 Formula 1 (swept from an API, season by season): history is immutable (every season before the current one is
@@ -96,8 +96,12 @@ def recs_dakar(A, shard):
 def recs_olympics(A, shard):
     EF = A['eventFields']; ei, ey = EF.index('id'), EF.index('y'); yr = {e[ei]: e[ey] for e in A['events']}
     return _keyed([(('games', g['y']), g['y'], g) for g in A['games']] + [(('event', e[ei]), e[ey], e) for e in A['events']] + [(('award', w[0], w[1], w[2]), yr.get(w[0]), w) for w in A['awards']])
-RECORDS = {'motogp': recs_bikes, 'sbk': recs_bikes, 'ufc': recs_ufc, 'cricket': recs_cricket, 'tennis': recs_tennis, 'rugby': recs_rugby, 'tt': recs_tt, 'dakar': recs_dakar, 'olympics': recs_olympics, 'winter': recs_olympics}
-REGISTERS = {'motogp': ['riders', 'circuits'], 'sbk': ['riders', 'circuits'], 'ufc': ['fighters'], 'cricket': ['players', 'teams', 'venues'], 'tennis': ['players', 'tournaments'], 'rugby': [], 'tt': ['riders'], 'dakar': ['people'], 'olympics': ['athletes'], 'winter': ['athletes']}
+def recs_worldcup(A, shard):
+    MF = A['matchFields']; i, iy = MF.index('id'), MF.index('y')
+    view = lambda t: {**t, 'winner': t['winner'] or '', 'final': t['final'] or ''}   # a tournament in progress has no winner or final yet; the archive's completed ones all do
+    return _keyed([(('tournament', t['id']), t['y'], view(t)) for t in A['tournaments']] + [(('match', r[i]), r[iy], r) for r in A['matches']] + [(('sheet', k), int(k.split('-')[1]) if k.split('-')[1].isdigit() else 0, d) for k, d in A['details'].items() if d.get('g') or d.get('l')])
+RECORDS = {'motogp': recs_bikes, 'sbk': recs_bikes, 'ufc': recs_ufc, 'cricket': recs_cricket, 'tennis': recs_tennis, 'rugby': recs_rugby, 'tt': recs_tt, 'dakar': recs_dakar, 'olympics': recs_olympics, 'winter': recs_olympics, 'worldcup': recs_worldcup}
+REGISTERS = {'motogp': ['riders', 'circuits'], 'sbk': ['riders', 'circuits'], 'ufc': ['fighters'], 'cricket': ['players', 'teams', 'venues'], 'tennis': ['players', 'tournaments'], 'rugby': [], 'tt': ['riders'], 'dakar': ['people'], 'olympics': ['athletes'], 'winter': ['athletes'], 'worldcup': ['players', 'teams', 'stadiums']}
 def label(k):
     k = k[0] if isinstance(k, tuple) and isinstance(k[0], tuple) else k
     return ' '.join(str(x) for x in (k if isinstance(k, tuple) else (k,)))
@@ -167,7 +171,7 @@ def check_generic(sport, new, old):
         kd = kind(k)
         if kd not in shapes: shapes[kd] = profile([v[1] for kk, v in O.items() if kind(kk) == kd])
         if shapes[kd]['n']:
-            bad = misfits(N[k][1], shapes[kd], names={('ufc', 'bout'): new.get('boutFields'), ('tennis', 'edition'): new.get('eFields'), ('tennis', 'title'): new.get('cFields'), ('olympics', 'event'): new.get('eventFields'), ('olympics', 'award'): new.get('awardFields'), ('winter', 'event'): new.get('eventFields'), ('winter', 'award'): new.get('awardFields')}.get((sport, kd)))
+            bad = misfits(N[k][1], shapes[kd], names={('ufc', 'bout'): new.get('boutFields'), ('tennis', 'edition'): new.get('eFields'), ('tennis', 'title'): new.get('cFields'), ('olympics', 'event'): new.get('eventFields'), ('olympics', 'award'): new.get('awardFields'), ('winter', 'event'): new.get('eventFields'), ('winter', 'award'): new.get('awardFields'), ('worldcup', 'match'): new.get('matchFields')}.get((sport, kd)))
             if bad: odd.append(f'{label(k)}: {"; ".join(bad)}')
     errs, rep = [], [f'gate · {sport} · committed snapshot {snap(old) or "—"} → new {snap(new) or "—"}',
                      f'  records {len(O):,} → {len(N):,}: {len(added):,} added · {len(gone):,} missing · {len(changed):,} changed']
