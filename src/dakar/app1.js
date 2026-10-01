@@ -19,7 +19,8 @@ const hsl2hex=(h,s,l)=>{s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l)
 const yspan=o=>o.first===o.last?String(o.first):`${o.first}–${o.last}`;
 const PEOPLE=A.people; const pname=id=>PEOPLE[id]?.name||id; const crewName=ids=>(ids||[]).map(pname).join(' / ');
 const RF=A.resultFields;
-const EDS=A.editions.map(e=>({...e,year:e.y,results:e.results.map(row=>Object.fromEntries(RF.map((k,i)=>[k,row[i]])))}));
+const PF=A.placeFields||['cat','rank','driver','crew','make','vehicle','time','gap','no','team','sub'],EF=A.entrantFields||['cat','no','text'];
+const EDS=A.editions.map(e=>({...e,year:e.y,results:e.results.map(row=>Object.fromEntries(RF.map((k,i)=>[k,row[i]]))),places:(e.places||[]).map(row=>Object.fromEntries(PF.map((k,i)=>[k,row[i]]))),entrants:(e.entrants||[]).map(row=>Object.fromEntries(EF.map((k,i)=>[k,row[i]])))}));
 for(const e of EDS){e.winners=Object.fromEntries(e.results.filter(x=>x.rank===1).map(x=>[x.cat,x]));e.car=e.winners.Cars||e.winners.Bikes||null;}
 const byYearAll=Object.fromEntries(EDS.map(e=>[e.year,e]));
 const CATS=A.categories.map(c=>c.key); const CAT_NOTE=Object.fromEntries(A.categories.map(c=>[c.key,c.note]));

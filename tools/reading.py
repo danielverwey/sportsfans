@@ -239,7 +239,10 @@ def reading_dakar(core):
         for r in rows:
             crew = ' / '.join(pn(i) for i in r['crew'] if i != r['driver'])
             out.append(f'<tr class="{"win" if r["rank"] == 1 else ""}"><td>{E(r["cat"])}</td><td>{r["rank"]}</td><td><b>{E(pn(r["driver"]))}</b></td><td>{E(crew)}</td><td>{E(r["make"])}</td></tr>')
-        out.append('</tbody></table></div></section>')
+        out.append('</tbody></table></div>')
+        PF = core.get('placeFields') or []; pl = [dict(zip(PF, x)) for x in e.get('places') or []]
+        if pl: out.append('<p class="small muted" style="margin-top:10px">Beyond the podium, as the rally-year article prints it:</p><div class="tablewrap"><table><thead><tr><th>Class</th><th>Place</th><th>Crew</th><th>Vehicle</th><th>Time</th><th>Gap</th></tr></thead><tbody>' + ''.join(f'<tr><td>{E(r["cat"])}{(" · " + E(r["sub"])) if r.get("sub") else ""}</td><td>{r["rank"]}</td><td>{E(" / ".join(pn(i) for i in r["crew"]))}</td><td>{E(r.get("vehicle") or r.get("make") or "")}</td><td>{E(r.get("time") or "")}</td><td>{E(r.get("gap") or "")}</td></tr>' for r in pl) + '</tbody></table></div>')
+        out.append('</section>')
     out.append('</div>'); return '\n'.join(out)
 
 def footer_dakar(core):

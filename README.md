@@ -5,7 +5,7 @@ Eleven sporting archives, each drawn as an ode in one shared visual language —
 | Atlas | Span | Live path |
 |---|---|---|
 | Cricket · every international | 1877–2026 · 13,823 matches · 13,823 scorecards · 11,970 players | `/cricket/` |
-| Dakar Rally | 1979–2026 · 47 editions · 534 podium places in 8 classes | `/dakar/` |
+| Dakar Rally | 1979–2026 · 47 editions · 534 podium places in 8 classes · 1,115 classified places beyond the podium | `/dakar/` |
 | Formula 1 | 1950–2026 · 1,163 Grands Prix · 26,181 results | `/f1/` |
 | Isle of Man TT | 1907–2026 · 693 races · 5,897 results | `/tt/` |
 | MotoGP · premier class | 1949–2026 · 1,024 Grands Prix and 76 Sprints · 26,435 results | `/motogp/` |
@@ -88,6 +88,16 @@ python build.py --no-pages                        # skip the ~16,000 static enti
 1. The archive is the prototype page `summer_olympics_atlas_1896_2024.html` — every medal event of every Summer Games with its gold, silver and bronze awards (delegation and named athletes), transcribed from Wikipedia's per-Games lists of medal winners at recorded revisions and reconciled against each Games' medal table, plus the Natural Earth land silhouette. Keep a copy at `build/harvest/summer_olympics_atlas_1896_2024.html`.
 2. `python tools/prepare_olympics.py path/to/summer_olympics_atlas_1896_2024.html` → `data/olympics.json`; the Winter prototype (`winter_olympics_atlas_1924_2026.html`, the same generator) goes through the same script → `data/winter.json`. The two atlases share the app (`src/olympics/app*.js`, which reads the season from the archive); each has its own shell and stylesheet (`src/olympics/`, `src/winter/`), eras, opening and hub card (the Games with the three cancelled editions kept as gaps, events and awards as rows, athletes' names, delegation colours, the map, sources, validation, corrections, aliases). Each event gets a lineage key (`tools/olympics_common.py`) so the same event can be followed across Games whatever a year's list called it.
 3. Commit `data/olympics.json` and push — the deploy workflow builds and publishes: the atlas, a page for every Games, every champion and multiple medallist, every delegation, every sport, every event held at three Games or more, and every host city. `python tools/audit_olympics.py` (or `… winter`) checks the archive against itself and a few well-known facts (`audits/DATA-AUDIT-olympics.md`, `-winter.md`).
+
+### Dakar Rally: bringing in a classification harvest
+
+Beyond the podium, the classification comes from Daniel's rights-cleared harvest (`dakar_rights_cleared_final_harvest.json`: the rally-year articles in the English and Spanish Wikipedias, CC BY-SA 4.0, nothing without a stated licence). A new file goes in with
+
+```
+python tools/merge_dakar_harvest.py build/harvest/dakar_rights_cleared_final_harvest.json
+```
+
+It leaves every podium row as it is (the harvest's podium records must agree with the archive before anything is added), gives each edition its `places` (the classified finishers after third place, `placeFields` naming the columns) and `entrants` (the entry lists the recent articles print), and adds the people named only beyond the podium to the register. The sweeper keeps those fields when it completes a new edition's podiums.
 
 ### Sweeping the data (automatic)
 
