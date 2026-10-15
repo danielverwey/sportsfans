@@ -1,80 +1,64 @@
-# cricket sweep · 2026-10-08 11:27 UTC
+# cricket sweep · 2026-10-15 09:13 UTC
 
 Round trip: the archive comes back unchanged through prepare_cricket.py.
-Archive through 2026-09-17; reading the matches Cricsheet added in the last 30 days.
+Archive through 2026-10-07; reading the matches Cricsheet added in the last 30 days.
 
-- **added**: 2026-09-19 M T20I Sri Lanka v England — England by 8 wickets
-- **added**: 2026-09-22 M ODI England v Sri Lanka — England by 89 runs
-- **added**: 2026-09-24 M ODI Sri Lanka v England — Sri Lanka by 16 runs
-- **added**: 2026-09-27 M ODI England v Sri Lanka — England by 223 runs
-- **added**: 2026-09-24 M ODI South Africa v Australia — South Africa by 67 runs
-- **added**: 2026-09-27 M ODI South Africa v Australia — South Africa by 32 runs
-- **added**: 2026-09-30 M ODI Australia v South Africa — Australia by 45 runs
-- **added**: 2026-09-27 M ODI West Indies v India — India by 8 wickets
-- **added**: 2026-09-30 M ODI West Indies v India — India by 8 wickets
-- **added**: 2026-10-03 M ODI India v West Indies — West Indies by 5 wickets
-- **added**: 2026-10-06 M T20I West Indies v India — India by 8 wickets
-- **added**: 2026-09-18 M ODI Australia v Zimbabwe — Australia by 84 runs
-- **added**: 2026-09-20 M ODI Zimbabwe v Australia — Australia by 1 wickets
-- **added**: 2026-09-19 W T20I South Africa v Zimbabwe — South Africa by 14 runs
-- **added**: 2026-09-18 W T20I Sri Lanka v Malaysia — Sri Lanka by 86 runs
-- **added**: 2026-09-18 W T20I Japan v India — India by 8 wickets
-- **added**: 2026-09-20 W T20I Pakistan v Sri Lanka — Sri Lanka by 8 wickets
-- **added**: 2026-09-20 W T20I India v Bangladesh — India by 114 runs
-- **added**: 2026-09-22 W T20I Pakistan v Bangladesh — Pakistan by 31 runs
-- **added**: 2026-09-22 W T20I India v Sri Lanka — India by 147 runs
-- **added**: 2026-09-19 M T20I Japan v Hong Kong — Hong Kong by 4 wickets
-- **added**: 2026-09-24 M T20I Hong Kong v Malaysia — Malaysia by 8 wickets
-- **added**: 2026-09-25 M T20I Hong Kong v Oman — Hong Kong by 41 runs
-- **added**: 2026-09-26 M T20I Nepal v Japan — no result
-- **added**: 2026-10-01 M T20I Bangladesh v Pakistan — Pakistan by 6 wickets
-- **added**: 2026-10-01 M T20I India v Sri Lanka — India by 124 runs
-- **added**: 2026-10-03 M T20I Sri Lanka v Bangladesh — Sri Lanka by 63 runs
-- **added**: 2026-10-03 M T20I India v Pakistan — India by 19 runs
-- **added**: 2026-09-24 M T20I Cayman Islands v Bahamas — Cayman Islands by 131 runs
-- **added**: 2026-09-23 M T20I Cayman Islands v Bermuda — Bermuda by 10 wickets
-- **added**: 2026-09-26 M T20I Bahamas v Bermuda — Bermuda by 8 wickets
-- **added**: 2026-09-27 M T20I Bermuda v Cayman Islands — Bermuda by 42 runs
-- **added**: 2026-09-22 M T20I India v Japan — India by 2 runs
-- **added**: 2026-09-18 M T20I Uganda v Kenya — Uganda by 47 runs
-- **added**: 2026-09-18 M T20I Botswana v Sierra Leone — Botswana by 21 runs
-- **added**: 2026-09-19 M T20I Kenya v Uganda — Kenya by 39 runs
-- **added**: 2026-10-03 M ODI Namibia v United Arab Emirates — no result
-- **added**: 2026-10-05 M ODI United Arab Emirates v United States of America — United States of America by 6 wickets
-- **added**: 2026-10-05 M T20I Bhutan v Myanmar — Bhutan by 27 runs
-- **added**: 2026-10-05 M T20I Bahrain v Thailand — Bahrain by 7 runs
-- **added**: 2026-10-05 M T20I Kuwait v Qatar — Kuwait by 58 runs
-- **added**: 2026-10-06 M T20I Thailand v Qatar — Qatar by 7 wickets
-- **added**: 2026-10-06 M T20I Bahrain v Bhutan — Bahrain by 66 runs
-- **added**: 2026-10-06 M T20I Mongolia v Kuwait — Kuwait by 10 wickets
-- **added**: 2026-09-21 M T20I Ghana v Nigeria — Nigeria by 8 wickets
-- **added**: 2026-09-22 M T20I Ghana v Sierra Leone — Sierra Leone by 6 wickets
-- **added**: 2026-09-25 M T20I Sierra Leone v Ghana — Sierra Leone by 13 runs
-- **added**: 2026-09-26 M T20I Nigeria v Ghana — Nigeria by 91 runs
-- **added**: 2026-09-27 M T20I Nigeria v Sierra Leone — Nigeria by 71 runs
-- **added**: 2026-09-24 W ODI West Indies v Zimbabwe — West Indies by 99 runs
-- **added**: 2026-09-27 W ODI West Indies v Zimbabwe — Zimbabwe by 4 wickets
-- **added**: 2026-09-30 W ODI West Indies v Zimbabwe — West Indies by 91 runs
-- **added**: 2026-10-03 W T20I Zimbabwe v West Indies — West Indies by 8 wickets
-- **added**: 2026-10-05 W T20I Zimbabwe v West Indies — West Indies by 8 wickets
-- **added**: 2026-10-07 W T20I Zimbabwe v West Indies — West Indies by 8 wickets
-- **added**: 2026-10-03 M T20I Indonesia v South Korea — South Korea by 7 wickets
-- **added**: 2026-10-04 M T20I Indonesia v South Korea — South Korea by 9 wickets
-- **added**: 2026-10-05 M T20I Indonesia v South Korea — South Korea by 8 wickets
-- **added**: 2026-10-05 M T20I South Korea v Indonesia — South Korea by 42 runs
-- **added**: 2026-09-23 W T20I Chile v Costa Rica — Costa Rica by 9 wickets
-- **added**: 2026-09-25 W T20I Chile v Costa Rica — Costa Rica by 8 wickets
-- **added**: 2026-09-23 M T20I Bermuda v Cayman Islands — Cayman Islands by 2 wickets
-- 34 new players (S Colombage, Naman Dhir, Auqib Nabi, K Pooran, Waheed Al Balushi, J Kusuda-Nairn …)
+- **added**: 2026-10-09 M Test Australia v South Africa — Australia by 214 runs
+- **added**: 2026-10-09 W ODI Bangladesh v Australia — Australia by 7 wickets
+- **added**: 2026-10-11 W ODI Bangladesh v Australia — Australia by 9 wickets
+- **added**: 2026-10-14 W ODI Bangladesh v Australia — Australia by 8 wickets
+- **added**: 2026-10-09 M T20I India v West Indies — West Indies by 6 wickets
+- **added**: 2026-10-11 M T20I India v West Indies — India by 14 runs
+- **added**: 2026-10-09 M T20I Sri Lanka v Pakistan — Pakistan by 4 wickets
+- **added**: 2026-10-11 M T20I Pakistan v Sri Lanka — Pakistan by 82 runs
+- **added**: 2026-10-13 M T20I Pakistan v Sri Lanka — Sri Lanka by 8 wickets
+- **added**: 2026-10-07 M ODI Namibia v United States of America — United States of America by 4 wickets
+- **added**: 2026-10-09 M ODI United Arab Emirates v Namibia — Namibia by 8 wickets
+- **added**: 2026-10-11 M ODI United Arab Emirates v United States of America — United States of America by 5 wickets
+- **added**: 2026-10-13 M ODI United States of America v Namibia — Namibia by 6 wickets
+- **added**: 2026-10-09 M ODI Oman v Canada — Oman by 41 runs
+- **added**: 2026-10-11 M ODI Nepal v Canada — Nepal by 24 runs
+- **added**: 2026-10-13 M ODI Nepal v Oman — Nepal by 113 runs
+- **added**: 2026-10-08 M T20I Thailand v Kuwait — Kuwait by 9 wickets
+- **added**: 2026-10-08 M T20I Bhutan v Mongolia — Bhutan by 136 runs
+- **added**: 2026-10-08 M T20I Myanmar v Bahrain — Bahrain by 8 wickets
+- **added**: 2026-10-09 M T20I Thailand v Mongolia — Thailand by 183 runs
+- **added**: 2026-10-09 M T20I Kuwait v Bahrain — Bahrain by 6 wickets
+- **added**: 2026-10-09 M T20I Myanmar v Qatar — Qatar by 9 wickets
+- **added**: 2026-10-11 M T20I Myanmar v Kuwait — Kuwait by 9 wickets
+- **added**: 2026-10-11 M T20I Bhutan v Qatar — Qatar by 9 wickets
+- **added**: 2026-10-11 M T20I Mongolia v Bahrain — Bahrain by 8 wickets
+- **added**: 2026-10-12 M T20I Qatar v Mongolia — no result
+- **added**: 2026-10-12 M T20I Myanmar v Thailand — Thailand by 9 wickets
+- **added**: 2026-10-12 M T20I Bhutan v Kuwait — Kuwait by 8 wickets
+- **added**: 2026-10-14 M T20I Mongolia v Myanmar — Myanmar by 9 wickets
+- **added**: 2026-10-14 M T20I Bahrain v Qatar — Qatar by 2 wickets
+- **added**: 2026-10-14 M T20I Thailand v Bhutan — Thailand by 37 runs
+- **added**: 2026-10-08 M T20I China v Maldives — Maldives by 10 wickets
+- **added**: 2026-10-08 M T20I Saudi Arabia v Singapore — Saudi Arabia by 75 runs
+- **added**: 2026-10-08 M T20I Hong Kong v Malaysia — Hong Kong by 7 runs
+- **added**: 2026-10-09 M T20I Malaysia v Saudi Arabia — Saudi Arabia by 3 wickets
+- **added**: 2026-10-09 M T20I China v Hong Kong — Hong Kong by 8 wickets
+- **added**: 2026-10-09 M T20I Singapore v Maldives — Singapore by 33 runs
+- **added**: 2026-10-11 M T20I Saudi Arabia v Hong Kong — Saudi Arabia by 10 runs
+- **added**: 2026-10-11 M T20I Maldives v Malaysia — Malaysia by 6 wickets
+- **added**: 2026-10-11 M T20I Singapore v China — Singapore by 50 runs
+- **added**: 2026-10-12 M T20I Malaysia v Singapore — Malaysia by 37 runs
+- **added**: 2026-10-12 M T20I Hong Kong v Maldives — no result
+- **added**: 2026-10-12 M T20I Saudi Arabia v China — Saudi Arabia by 64 runs
+- **added**: 2026-10-14 M T20I China v Malaysia — Malaysia by 6 wickets
+- **added**: 2026-10-14 M T20I Hong Kong v Singapore — Hong Kong by 38 runs
+- **added**: 2026-10-14 M T20I Saudi Arabia v Maldives — Saudi Arabia by 125 runs
+- 26 new players (Disha Biswas, Q Sampson, Hassan Khan, Awais Ali Shah, Sheel Patel, Samit Gohel …)
 
-Archive now 13,885 internationals (62 added, 0 re-read), through 2026-10-07.
+Archive now 13,931 internationals (46 added, 0 re-read), through 2026-10-14.
 
 ## Gate
 
-gate · cricket · committed snapshot 2026-09-24 → new 2026-10-08
-  records 27,646 → 27,770: 124 added · 0 missing · 0 changed
-  2026: +124 added — match 1530204, match 1550476, match 1550477, match 1552924 …
-  players: 11,970 → 12,004
+gate · cricket · committed snapshot 2026-10-08 → new 2026-10-15
+  records 27,770 → 27,862: 92 added · 0 missing · 0 changed
+  2026: +92 added — match 1554411, match 1554539, match 1554540, match 1554541 …
+  players: 12,004 → 12,030
   teams: 113 → 113
-  venues: 560 → 561
+  venues: 561 → 561
 gate passed: nothing the committed cricket archive holds is missing
