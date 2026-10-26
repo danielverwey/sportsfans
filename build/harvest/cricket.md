@@ -1,64 +1,67 @@
-# cricket sweep · 2026-10-15 09:13 UTC
+# cricket sweep · 2026-10-26 10:17 UTC
 
 Round trip: the archive comes back unchanged through prepare_cricket.py.
-Archive through 2026-10-07; reading the matches Cricsheet added in the last 30 days.
+Archive through 2026-10-14; reading the matches Cricsheet added in the last 30 days.
 
-- **added**: 2026-10-09 M Test Australia v South Africa — Australia by 214 runs
-- **added**: 2026-10-09 W ODI Bangladesh v Australia — Australia by 7 wickets
-- **added**: 2026-10-11 W ODI Bangladesh v Australia — Australia by 9 wickets
-- **added**: 2026-10-14 W ODI Bangladesh v Australia — Australia by 8 wickets
-- **added**: 2026-10-09 M T20I India v West Indies — West Indies by 6 wickets
-- **added**: 2026-10-11 M T20I India v West Indies — India by 14 runs
-- **added**: 2026-10-09 M T20I Sri Lanka v Pakistan — Pakistan by 4 wickets
-- **added**: 2026-10-11 M T20I Pakistan v Sri Lanka — Pakistan by 82 runs
-- **added**: 2026-10-13 M T20I Pakistan v Sri Lanka — Sri Lanka by 8 wickets
-- **added**: 2026-10-07 M ODI Namibia v United States of America — United States of America by 4 wickets
-- **added**: 2026-10-09 M ODI United Arab Emirates v Namibia — Namibia by 8 wickets
-- **added**: 2026-10-11 M ODI United Arab Emirates v United States of America — United States of America by 5 wickets
-- **added**: 2026-10-13 M ODI United States of America v Namibia — Namibia by 6 wickets
-- **added**: 2026-10-09 M ODI Oman v Canada — Oman by 41 runs
-- **added**: 2026-10-11 M ODI Nepal v Canada — Nepal by 24 runs
-- **added**: 2026-10-13 M ODI Nepal v Oman — Nepal by 113 runs
-- **added**: 2026-10-08 M T20I Thailand v Kuwait — Kuwait by 9 wickets
-- **added**: 2026-10-08 M T20I Bhutan v Mongolia — Bhutan by 136 runs
-- **added**: 2026-10-08 M T20I Myanmar v Bahrain — Bahrain by 8 wickets
-- **added**: 2026-10-09 M T20I Thailand v Mongolia — Thailand by 183 runs
-- **added**: 2026-10-09 M T20I Kuwait v Bahrain — Bahrain by 6 wickets
-- **added**: 2026-10-09 M T20I Myanmar v Qatar — Qatar by 9 wickets
-- **added**: 2026-10-11 M T20I Myanmar v Kuwait — Kuwait by 9 wickets
-- **added**: 2026-10-11 M T20I Bhutan v Qatar — Qatar by 9 wickets
-- **added**: 2026-10-11 M T20I Mongolia v Bahrain — Bahrain by 8 wickets
-- **added**: 2026-10-12 M T20I Qatar v Mongolia — no result
-- **added**: 2026-10-12 M T20I Myanmar v Thailand — Thailand by 9 wickets
-- **added**: 2026-10-12 M T20I Bhutan v Kuwait — Kuwait by 8 wickets
-- **added**: 2026-10-14 M T20I Mongolia v Myanmar — Myanmar by 9 wickets
-- **added**: 2026-10-14 M T20I Bahrain v Qatar — Qatar by 2 wickets
-- **added**: 2026-10-14 M T20I Thailand v Bhutan — Thailand by 37 runs
-- **added**: 2026-10-08 M T20I China v Maldives — Maldives by 10 wickets
-- **added**: 2026-10-08 M T20I Saudi Arabia v Singapore — Saudi Arabia by 75 runs
-- **added**: 2026-10-08 M T20I Hong Kong v Malaysia — Hong Kong by 7 runs
-- **added**: 2026-10-09 M T20I Malaysia v Saudi Arabia — Saudi Arabia by 3 wickets
-- **added**: 2026-10-09 M T20I China v Hong Kong — Hong Kong by 8 wickets
-- **added**: 2026-10-09 M T20I Singapore v Maldives — Singapore by 33 runs
-- **added**: 2026-10-11 M T20I Saudi Arabia v Hong Kong — Saudi Arabia by 10 runs
-- **added**: 2026-10-11 M T20I Maldives v Malaysia — Malaysia by 6 wickets
-- **added**: 2026-10-11 M T20I Singapore v China — Singapore by 50 runs
-- **added**: 2026-10-12 M T20I Malaysia v Singapore — Malaysia by 37 runs
-- **added**: 2026-10-12 M T20I Hong Kong v Maldives — no result
-- **added**: 2026-10-12 M T20I Saudi Arabia v China — Saudi Arabia by 64 runs
-- **added**: 2026-10-14 M T20I China v Malaysia — Malaysia by 6 wickets
-- **added**: 2026-10-14 M T20I Hong Kong v Singapore — Hong Kong by 38 runs
-- **added**: 2026-10-14 M T20I Saudi Arabia v Maldives — Saudi Arabia by 125 runs
-- 26 new players (Disha Biswas, Q Sampson, Hassan Khan, Awais Ali Shah, Sheel Patel, Samit Gohel …)
+- **added**: 2026-10-18 M Test South Africa v Australia — South Africa by 1 innings & 31 runs
+- **added**: 2026-10-18 W T20I New Zealand v Australia — Australia by 2 wickets
+- **added**: 2026-10-20 W T20I Australia v New Zealand — Australia by 40 runs
+- **added**: 2026-10-22 W T20I New Zealand v Australia — no result
+- **added**: 2026-10-14 M T20I West Indies v India — West Indies by 24 runs
+- **added**: 2026-10-17 M T20I India v West Indies — no result
+- **added**: 2026-10-16 W T20I Zimbabwe v India — India by 4 wickets
+- **added**: 2026-10-18 W T20I Zimbabwe v India — India by 9 wickets
+- **added**: 2026-10-20 W T20I India v Zimbabwe — India by 92 runs
+- **added**: 2026-10-23 W ODI Zimbabwe v India — India by 9 wickets
+- **added**: 2026-10-25 W ODI India v Zimbabwe — India by 121 runs
+- **added**: 2026-10-22 M T20I New Zealand v India — India by 4 wickets
+- **added**: 2026-10-24 M T20I New Zealand v India — India by 4 wickets
+- **added**: 2026-10-18 M ODI Pakistan v Sri Lanka — Pakistan by 37 runs
+- **added**: 2026-10-20 M ODI Pakistan v England — Pakistan by 87 runs
+- **added**: 2026-10-22 M ODI England v Sri Lanka — Sri Lanka by 2 wickets
+- **added**: 2026-10-25 M ODI England v Pakistan — Pakistan by 1 wickets
+- **added**: 2026-10-15 M ODI Canada v Oman — Canada by 58 runs
+- **added**: 2026-10-17 M ODI Canada v Nepal — Canada by 24 runs
+- **added**: 2026-10-19 M ODI Nepal v Oman — Nepal by 10 runs
+- **added**: 2026-10-17 M ODI Zimbabwe v Bangladesh — Zimbabwe by 99 runs
+- **added**: 2026-10-20 M T20I Uganda v Zambia — Uganda by 87 runs
+- **added**: 2026-10-20 M T20I Lesotho v Mozambique — Lesotho by 74 runs
+- **added**: 2026-10-20 M T20I Nigeria v Gambia — Nigeria by 160 runs
+- **added**: 2026-10-21 M T20I Mozambique v Gambia — Mozambique by 28 runs
+- **added**: 2026-10-21 M T20I Lesotho v Uganda — Uganda by 5 wickets
+- **added**: 2026-10-21 M T20I Zambia v Nigeria — Nigeria by 9 wickets
+- **added**: 2026-10-23 M T20I Mozambique v Nigeria — Nigeria by 7 wickets
+- **added**: 2026-10-23 M T20I Lesotho v Zambia — Zambia by 7 wickets
+- **added**: 2026-10-23 M T20I Gambia v Uganda — Uganda by 10 wickets
+- **added**: 2026-10-24 M T20I Mozambique v Uganda — Uganda by 10 wickets
+- **added**: 2026-10-24 M T20I Gambia v Zambia — Zambia by 8 wickets
+- **added**: 2026-10-24 M T20I Lesotho v Nigeria — Nigeria by 7 wickets
+- **added**: 2026-10-25 M T20I Gambia v Lesotho — Gambia by 3 runs
+- **added**: 2026-10-25 M T20I Zambia v Mozambique — Mozambique by 3 wickets
+- **added**: 2026-10-25 M T20I Nigeria v Uganda — Nigeria by 1 runs
+- **added**: 2026-10-22 M ODI Ireland v Namibia — Ireland by 55 runs
+- **added**: 2026-10-24 M ODI Namibia v Ireland — Namibia by 31 runs
+- **added**: 2026-10-15 W T20I Austria v Sweden — Sweden by 9 wickets
+- **added**: 2026-10-15 W T20I Bulgaria v Sweden — Sweden by 10 wickets
+- **added**: 2026-10-16 W T20I Romania v Bulgaria — Bulgaria by 2 wickets
+- **added**: 2026-10-16 W T20I Bulgaria v Austria — Austria by 10 wickets
+- **added**: 2026-10-17 W T20I Romania v Austria — Austria by 7 wickets
+- **added**: 2026-10-17 W T20I Romania v Sweden — Sweden by 10 wickets
+- **added**: 2026-10-18 W T20I Sweden v Austria — Sweden by 64 runs
+- **added**: 2026-10-18 W T20I Romania v Bulgaria — Bulgaria by 5 wickets
+- **added**: 2026-10-24 W T20I Argentina v Mexico — Argentina by 223 runs
+- **added**: 2026-10-24 W T20I Argentina v Mexico — Argentina by 165 runs
+- **added**: 2026-10-25 M ODI United Arab Emirates v Netherlands — Netherlands by 3 wickets
+- 33 new players (MJ Ackerman, NS Prasad, JN Kalita, Saad Baig, HT Crocombe, Zahirbhai Patel …)
 
-Archive now 13,931 internationals (46 added, 0 re-read), through 2026-10-14.
+Archive now 13,980 internationals (49 added, 0 re-read), through 2026-10-25.
 
 ## Gate
 
-gate · cricket · committed snapshot 2026-10-08 → new 2026-10-15
-  records 27,770 → 27,862: 92 added · 0 missing · 0 changed
-  2026: +92 added — match 1554411, match 1554539, match 1554540, match 1554541 …
-  players: 12,004 → 12,030
+gate · cricket · committed snapshot 2026-10-15 → new 2026-10-26
+  records 27,862 → 27,960: 98 added · 0 missing · 0 changed
+  2026: +98 added — match 1529233, match 1554418, match 1558244, match 1558245 …
+  players: 12,030 → 12,063
   teams: 113 → 113
-  venues: 561 → 561
+  venues: 561 → 562
 gate passed: nothing the committed cricket archive holds is missing
