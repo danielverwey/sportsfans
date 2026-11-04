@@ -1,67 +1,35 @@
-# cricket sweep · 2026-10-26 10:17 UTC
+# cricket sweep · 2026-11-04 12:17 UTC
 
 Round trip: the archive comes back unchanged through prepare_cricket.py.
-Archive through 2026-10-14; reading the matches Cricsheet added in the last 30 days.
+Archive through 2026-10-25; reading the matches Cricsheet added in the last 30 days.
 
-- **added**: 2026-10-18 M Test South Africa v Australia — South Africa by 1 innings & 31 runs
-- **added**: 2026-10-18 W T20I New Zealand v Australia — Australia by 2 wickets
-- **added**: 2026-10-20 W T20I Australia v New Zealand — Australia by 40 runs
-- **added**: 2026-10-22 W T20I New Zealand v Australia — no result
-- **added**: 2026-10-14 M T20I West Indies v India — West Indies by 24 runs
-- **added**: 2026-10-17 M T20I India v West Indies — no result
-- **added**: 2026-10-16 W T20I Zimbabwe v India — India by 4 wickets
-- **added**: 2026-10-18 W T20I Zimbabwe v India — India by 9 wickets
-- **added**: 2026-10-20 W T20I India v Zimbabwe — India by 92 runs
-- **added**: 2026-10-23 W ODI Zimbabwe v India — India by 9 wickets
-- **added**: 2026-10-25 W ODI India v Zimbabwe — India by 121 runs
-- **added**: 2026-10-22 M T20I New Zealand v India — India by 4 wickets
-- **added**: 2026-10-24 M T20I New Zealand v India — India by 4 wickets
-- **added**: 2026-10-18 M ODI Pakistan v Sri Lanka — Pakistan by 37 runs
-- **added**: 2026-10-20 M ODI Pakistan v England — Pakistan by 87 runs
-- **added**: 2026-10-22 M ODI England v Sri Lanka — Sri Lanka by 2 wickets
-- **added**: 2026-10-25 M ODI England v Pakistan — Pakistan by 1 wickets
-- **added**: 2026-10-15 M ODI Canada v Oman — Canada by 58 runs
-- **added**: 2026-10-17 M ODI Canada v Nepal — Canada by 24 runs
-- **added**: 2026-10-19 M ODI Nepal v Oman — Nepal by 10 runs
-- **added**: 2026-10-17 M ODI Zimbabwe v Bangladesh — Zimbabwe by 99 runs
-- **added**: 2026-10-20 M T20I Uganda v Zambia — Uganda by 87 runs
-- **added**: 2026-10-20 M T20I Lesotho v Mozambique — Lesotho by 74 runs
-- **added**: 2026-10-20 M T20I Nigeria v Gambia — Nigeria by 160 runs
-- **added**: 2026-10-21 M T20I Mozambique v Gambia — Mozambique by 28 runs
-- **added**: 2026-10-21 M T20I Lesotho v Uganda — Uganda by 5 wickets
-- **added**: 2026-10-21 M T20I Zambia v Nigeria — Nigeria by 9 wickets
-- **added**: 2026-10-23 M T20I Mozambique v Nigeria — Nigeria by 7 wickets
-- **added**: 2026-10-23 M T20I Lesotho v Zambia — Zambia by 7 wickets
-- **added**: 2026-10-23 M T20I Gambia v Uganda — Uganda by 10 wickets
-- **added**: 2026-10-24 M T20I Mozambique v Uganda — Uganda by 10 wickets
-- **added**: 2026-10-24 M T20I Gambia v Zambia — Zambia by 8 wickets
-- **added**: 2026-10-24 M T20I Lesotho v Nigeria — Nigeria by 7 wickets
-- **added**: 2026-10-25 M T20I Gambia v Lesotho — Gambia by 3 runs
-- **added**: 2026-10-25 M T20I Zambia v Mozambique — Mozambique by 3 wickets
-- **added**: 2026-10-25 M T20I Nigeria v Uganda — Nigeria by 1 runs
-- **added**: 2026-10-22 M ODI Ireland v Namibia — Ireland by 55 runs
-- **added**: 2026-10-24 M ODI Namibia v Ireland — Namibia by 31 runs
-- **added**: 2026-10-15 W T20I Austria v Sweden — Sweden by 9 wickets
-- **added**: 2026-10-15 W T20I Bulgaria v Sweden — Sweden by 10 wickets
-- **added**: 2026-10-16 W T20I Romania v Bulgaria — Bulgaria by 2 wickets
-- **added**: 2026-10-16 W T20I Bulgaria v Austria — Austria by 10 wickets
-- **added**: 2026-10-17 W T20I Romania v Austria — Austria by 7 wickets
-- **added**: 2026-10-17 W T20I Romania v Sweden — Sweden by 10 wickets
-- **added**: 2026-10-18 W T20I Sweden v Austria — Sweden by 64 runs
-- **added**: 2026-10-18 W T20I Romania v Bulgaria — Bulgaria by 5 wickets
-- **added**: 2026-10-24 W T20I Argentina v Mexico — Argentina by 223 runs
-- **added**: 2026-10-24 W T20I Argentina v Mexico — Argentina by 165 runs
-- **added**: 2026-10-25 M ODI United Arab Emirates v Netherlands — Netherlands by 3 wickets
-- 33 new players (MJ Ackerman, NS Prasad, JN Kalita, Saad Baig, HT Crocombe, Zahirbhai Patel …)
+- **added**: 2026-10-27 M Test South Africa v Australia — South Africa by 176 runs
+- **added**: 2026-10-28 W ODI Zimbabwe v India — India by 8 wickets
+- **added**: 2026-10-27 M T20I New Zealand v India — India by 6 wickets
+- **added**: 2026-10-30 M T20I New Zealand v India — New Zealand by 87 runs
+- **added**: 2026-11-01 M T20I India v New Zealand — New Zealand by 7 wickets
+- **added**: 2026-10-27 M ODI Pakistan v Sri Lanka — Sri Lanka by 8 wickets
+- **added**: 2026-10-29 M ODI England v Sri Lanka — England by 55 runs
+- **added**: 2026-10-31 M ODI Sri Lanka v Pakistan — Pakistan by 3 wickets
+- **added**: 2026-10-28 M Test Bangladesh v West Indies — West Indies by 8 wickets
+- **added**: 2026-10-27 M ODI Namibia v Ireland — Namibia by 63 runs
+- **added**: 2026-10-30 M ODI Ireland v Namibia — Ireland by 130 runs
+- **added**: 2026-11-01 M ODI Ireland v Namibia — Namibia by 5 wickets
+- **added**: 2026-10-25 W T20I Argentina v Mexico — Argentina by 135 runs
+- **added**: 2026-10-27 M ODI Netherlands v Oman — Netherlands by 106 runs
+- **added**: 2026-10-29 M ODI Oman v United Arab Emirates — United Arab Emirates by 4 wickets
+- **added**: 2026-10-31 M ODI Netherlands v United Arab Emirates — United Arab Emirates by 5 wickets
+- **added**: 2026-11-02 M ODI Oman v Netherlands — Netherlands by 7 wickets
+- 2 new players (J Bishop, Jeet Shah)
 
-Archive now 13,980 internationals (49 added, 0 re-read), through 2026-10-25.
+Archive now 13,997 internationals (17 added, 0 re-read), through 2026-11-02.
 
 ## Gate
 
-gate · cricket · committed snapshot 2026-10-15 → new 2026-10-26
-  records 27,862 → 27,960: 98 added · 0 missing · 0 changed
-  2026: +98 added — match 1529233, match 1554418, match 1558244, match 1558245 …
-  players: 12,030 → 12,063
+gate · cricket · committed snapshot 2026-10-26 → new 2026-11-04
+  records 27,960 → 27,994: 34 added · 0 missing · 0 changed
+  2026: +34 added — match 1558573, match 1525661, match 1539434, match 1550717 …
+  players: 12,063 → 12,065
   teams: 113 → 113
-  venues: 561 → 562
+  venues: 562 → 563
 gate passed: nothing the committed cricket archive holds is missing
