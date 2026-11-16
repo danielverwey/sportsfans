@@ -1,19 +1,19 @@
-# rugby sweep · 2026-11-09 19:09 UTC
+# rugby sweep · 2026-11-16 18:55 UTC
 
-Read 11,300 matches from Nuck's Rugby Archive (built 2026-11-09T09:11:39, last match 2026-11-08).
-Check on 2024-10-17 to 2026-10-17: the file reproduces 139 of the atlas's 139 Tests from this source (100.0%).
-- **2026-11-06** Ireland 42–12 Argentina · Aviva Stadium, Dublin · 2026 Nations Championship
-- **2026-11-07** France 54–17 Fiji · Groupama Stadium, Lyon · 2026 Nations Championship
-- **2026-11-07** Wales 28–21 Japan · Principality Stadium, Cardiff · 2026 Nations Championship
-- **2026-11-07** Scotland 21–43 New Zealand · Murrayfield, Edinburgh · 2026 Nations Championship
-- **2026-11-07** Italy 7–66 South Africa · Allianz Stadium, Turin · 2026 Nations Championship
-- **2026-11-08** England 45–22 Australia · Twickenham, London · 2026 Nations Championship
+Read 11,317 matches from Nuck's Rugby Archive (built 2026-11-16T14:53:21, last match 2026-11-15).
+Check on 2024-11-08 to 2026-11-08: the file reproduces 142 of the atlas's 142 Tests from this source (100.0%).
+- **2026-11-13** France 21–19 South Africa · Stade de France, Saint-Denis · 2026 Nations Championship
+- **2026-11-14** Ireland 43–15 Fiji · Aviva Stadium, Dublin · 2026 Nations Championship
+- **2026-11-14** England 78–15 Japan · Twickenham, London · 2026 Nations Championship
+- **2026-11-14** Wales 35–28 New Zealand · Principality Stadium, Cardiff · 2026 Nations Championship
+- **2026-11-14** Italy 14–19 Argentina · Stadio Luigi Ferraris, Genova · 2026 Nations Championship
+- **2026-11-15** Scotland 15–12 Australia · Murrayfield, Edinburgh · 2026 Nations Championship
 
-Atlas now 3,969 Tests, through 2026-11-08. Player and coach snapshots stay dated 2026-09-23.
+Atlas now 3,975 Tests, through 2026-11-15. Player and coach snapshots stay dated 2026-09-23.
 
 ## Gate
 
-gate · rugby · committed snapshot 2026-10-19 → new 2026-11-09
-  records 3,963 → 3,969: 6 added · 0 missing · 0 changed
-  2026: +6 added — test 2026-11-06 Ireland Argentina, test 2026-11-07 France Fiji, test 2026-11-07 Wales Japan, test 2026-11-07 Scotland New Zealand …
+gate · rugby · committed snapshot 2026-11-09 → new 2026-11-16
+  records 3,969 → 3,975: 6 added · 0 missing · 0 changed
+  2026: +6 added — test 2026-11-13 France South Africa, test 2026-11-14 Ireland Fiji, test 2026-11-14 England Japan, test 2026-11-14 Wales New Zealand …
 gate passed: nothing the committed rugby archive holds is missing
